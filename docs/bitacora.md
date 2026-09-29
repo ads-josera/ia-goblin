@@ -8,22 +8,28 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- `/` lleva al inicio de sesión (diseño aprobado Goblin Creative); tras entrar
-  se llega al panel del módulo. Se entra con usuario o correo. Sitio en
-  español.
+**Cierre del 2026-09-29.**
+
+- Funciona: `/` → inicio de sesión (diseño Goblin Creative) → panel del
+  módulo. Acceso con usuario o correo. Sitio en español. QA visual en
+  Chromium, WebKit, Firefox y Firefox real: sin problemas.
 - Repositorio en `main` en GitHub, al día.
-- **Siguiente paso:** decidir la navegación de los clientes (pendiente 1):
-  hoy entran al panel pero no tienen menú ni forma de cerrar sesión.
+- **Mañana:** definir el **rol de cliente**. El equipo dirá a qué puede
+  entrar un cliente y a qué no; con eso se crea el rol (también en
+  instalaciones nuevas) y su navegación con salida (pendientes 1 y 2).
+- **Safari real:** lo revisa el equipo por su cuenta. Automatización ya
+  activada, pero la sesión no abría (Safari estaba abierto; posible diálogo
+  pendiente). Para reintentar: cerrar Safari (⌘Q) y `cd tests/visual && npm run qa:real`.
 
 ## Pendientes
 
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
-| 1 | **Clientes sin navegación ni salida.** `update_11036` les quitó la barra de Drupal contando con un menú propio del panel que no está en este código. Un cliente entra al panel y no puede ir a otra sección ni cerrar sesión. Decidir: construir el menú del panel o darles la barra lateral de Navigation | **Crítica** |
-| 2 | **El rol de cliente no se crea en instalaciones nuevas.** Solo lo crea `update_11034`, que no corre al instalar. En este sitio no existe. Añadir la creación en `hook_install` y un update para sitios ya instalados | **Alta** |
+| 1 | **Clientes sin navegación ni salida.** `update_11036` les quitó la barra de Drupal contando con un menú propio del panel que no está en este código. Un cliente entra al panel y no puede ir a otra sección ni cerrar sesión. Propuesta: menú propio del panel (opción A). **Se ve mañana junto con el rol** | **Crítica** |
+| 2 | **Rol de cliente.** Hoy solo lo crea `update_11034`, que no corre al instalar; en este sitio no existe. Mañana el equipo define qué puede ver/hacer un cliente; después: crearlo en `hook_install` + un update para sitios ya instalados, y recorrerlo con su propia cuenta | **Alta — mañana** |
 | 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
-| 4 | Safari real: activar la automatización (una vez, necesita tu contraseña de admin del Mac) y correr `npm run qa:real`. Firefox real ya comprobado | Media |
-| 5 | Decidir si los `.ai` de `docs/` se versionan (hoy fuera de git) | Baja |
+| 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
+| 5 | Decidir si los `.ai` de `docs/` se versionan (hoy fuera de git; sin respuesta aún) | Baja |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
