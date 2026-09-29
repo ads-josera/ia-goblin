@@ -1,0 +1,14 @@
+/**
+ * @file
+ * Visual styles for table drag.
+ */
+
+tr.drag {
+  background-color: var(--goblin-color-warning-soft);
+}
+tr.drag-previous {
+  background-color: var(--goblin-color-accent-soft);
+}
+body div.tabledrag-changed-warning {
+  margin-bottom: 0.5em;
+}

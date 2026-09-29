@@ -29,6 +29,8 @@ config/sync/               Configuración exportada del sitio (se despliega con 
 docs/                      Documentación del proyecto
 private/                   Archivos privados, fuera de web/ (no se versiona)
 web/modules/custom/        Código propio — aquí vive ai_whatsapp_automation
+web/themes/custom/goblin/  Tema del frontend (colores, logo y favicon configurables)
+tests/visual/              QA visual con navegador (contraste, desbordes, móvil)
 web/sites/default/settings.php        Versionado, sin secretos
 web/sites/default/settings.local.php  Secretos por entorno (no se versiona)
 ```
@@ -82,9 +84,16 @@ git add -A && git commit    # código y configuración van juntos
 git push
 ```
 
+## Tema
+
+El frontend usa el tema **Goblin**. Colores, logo y favicon se cambian en
+Apariencia → Goblin → Settings. Detalle en
+[web/themes/custom/goblin/README.md](web/themes/custom/goblin/README.md).
+
 ## Pruebas
 
 ```bash
-ddev exec 'SIMPLETEST_DB=mysql://db:db@db/db SIMPLETEST_BASE_URL=http://web \
-  vendor/bin/phpunit -c web/core web/modules/custom/ai_whatsapp_automation/tests'
+# Módulo y tema (unitarias, kernel y funcionales)
+ddev exec 'SIMPLETEST_DB=mysql://db:db@db/db SIMPLETEST_BASE_URL=http://localhost \
+  vendor/bin/phpunit -c web/core web/modules/custom/ai_whatsapp_automation/tests web/themes/custom/goblin/tests'
 ```

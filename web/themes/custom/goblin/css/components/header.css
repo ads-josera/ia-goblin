@@ -1,0 +1,86 @@
+/**
+ * @file
+ * Site branding and header menus.
+ */
+
+.site-header .block {
+  margin: 0;
+}
+
+.site-header .block-system-branding-block {
+  display: flex;
+  align-items: center;
+  gap: var(--goblin-space-3);
+}
+
+.site-logo {
+  display: block;
+  line-height: 0;
+}
+
+/* Any upload format (SVG, PNG, JPG, WebP) sits at the same height. */
+.site-logo img {
+  width: auto;
+  max-width: 12rem;
+  height: auto;
+  max-height: var(--goblin-logo-height);
+  object-fit: contain;
+}
+
+.site-name {
+  font-size: var(--goblin-text-lg);
+  font-weight: var(--goblin-weight-bold);
+  line-height: var(--goblin-leading-tight);
+}
+
+.site-name a {
+  color: var(--goblin-color-on-header);
+  text-decoration: none;
+}
+
+.site-slogan {
+  color: var(--goblin-color-on-header-muted);
+  font-size: var(--goblin-text-sm);
+}
+
+.site-header nav .menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--goblin-space-1) var(--goblin-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-header nav .menu-item {
+  margin: 0;
+  padding: 0;
+}
+
+/* Also .is-active: menu.css colors active links for the page background. */
+.site-header nav a,
+.site-header nav a.is-active {
+  display: inline-block;
+  padding-block: var(--goblin-space-2);
+  color: var(--goblin-color-on-header);
+  font-weight: var(--goblin-weight-medium);
+  text-decoration: none;
+}
+
+.site-header nav a:hover,
+.site-header nav a.is-active {
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
+
+/* The focus ring must contrast with the header band, not the page. */
+.site-header :focus-visible {
+  outline-color: var(--goblin-color-on-header);
+}
+
+/* Account menu reads as secondary. */
+.site-header .menu--account a,
+.site-header .menu--account a.is-active {
+  color: var(--goblin-color-on-header-muted);
+  font-weight: var(--goblin-weight-regular);
+}

@@ -1,0 +1,86 @@
+/**
+ * @file
+ * Design tokens for Goblin. Every other stylesheet consumes these; no raw
+ * color, size or spacing value should appear anywhere else.
+ *
+ * Brand colors (--goblin-color-*) are printed in <head> from the theme
+ * settings by GoblinHooks::pageAttachmentsAlter(). The values below are only
+ * the fallback for the default palette, so a missing token never leaves a
+ * transparent background. They must equal ColorScheme::defaults()->tokens();
+ * ColorSchemeTest fails when they drift.
+ */
+
+:root {
+  /* goblin-color-defaults:start */
+  --goblin-color-background: #f6f6fa;
+  --goblin-color-surface: #ffffff;
+  --goblin-color-text: #1c1b29;
+  --goblin-color-text-muted: #686872;
+  --goblin-color-border: #dfdfe1;
+  --goblin-color-border-strong: #8e8d94;
+  --goblin-color-accent: #4338ca;
+  --goblin-color-accent-hover: #372ea6;
+  --goblin-color-accent-soft: #ecebfa;
+  --goblin-color-on-accent: #ffffff;
+  --goblin-color-link: #4338ca;
+  --goblin-color-focus: #4338ca;
+  --goblin-color-header: #1e1b4b;
+  --goblin-color-on-header: #ffffff;
+  --goblin-color-on-header-muted: #bcbbc9;
+  /* goblin-color-defaults:end */
+
+  /*
+   * Semantic colors are independent of the brand: they keep their meaning
+   * whatever accent the client picks. Text/background pairs are >= 4.5:1.
+   */
+  --goblin-color-success: #1a7f37;
+  --goblin-color-success-soft: #eaf6ec;
+  --goblin-color-warning: #7a5200;
+  --goblin-color-warning-soft: #fdf4e1;
+  --goblin-color-danger: #b42318;
+  --goblin-color-danger-soft: #fdecea;
+
+  /* Always dark: sits behind white loading icons, whatever the brand. */
+  --goblin-color-scrim: #232323;
+
+  /* Typography: system stacks (no web font request), 1.25 modular scale. */
+  --goblin-font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --goblin-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --goblin-text-sm: 0.8125rem;
+  --goblin-text-base: 1rem;
+  --goblin-text-lg: 1.25rem;
+  --goblin-text-xl: 1.5625rem;
+  --goblin-text-2xl: 1.953rem;
+  --goblin-text-3xl: 2.441rem;
+  --goblin-leading-tight: 1.2;
+  --goblin-leading-body: 1.6;
+  --goblin-weight-regular: 400;
+  --goblin-weight-medium: 500;
+  --goblin-weight-bold: 650;
+  --goblin-measure: 70ch;
+
+  /* Spacing: 4px base. */
+  --goblin-space-1: 0.25rem;
+  --goblin-space-2: 0.5rem;
+  --goblin-space-3: 0.75rem;
+  --goblin-space-4: 1rem;
+  --goblin-space-6: 1.5rem;
+  --goblin-space-8: 2rem;
+  --goblin-space-12: 3rem;
+  --goblin-space-16: 4rem;
+
+  /* Shape and layout. */
+  --goblin-radius-control: 6px;
+  --goblin-radius-panel: 10px;
+  --goblin-shadow-panel: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.06);
+  --goblin-container: 72rem;
+  --goblin-gutter: var(--goblin-space-4);
+  --goblin-logo-height: 48px;
+  --goblin-control-height: 2.75rem;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --goblin-gutter: var(--goblin-space-8);
+  }
+}

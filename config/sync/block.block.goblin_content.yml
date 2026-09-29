@@ -1,0 +1,22 @@
+uuid: b7dba529-6ab0-44e8-a747-63a07930eecd
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - goblin
+_core:
+  default_config_hash: erQSEZF2XUjNmgTl0uNRBzmg18ZGXwUcw2FhApoeuHk
+id: goblin_content
+theme: goblin
+region: content
+weight: 0
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility: {  }

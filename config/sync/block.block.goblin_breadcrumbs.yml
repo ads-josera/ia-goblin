@@ -1,0 +1,22 @@
+uuid: 5f777524-ccbf-47f8-becb-3229e87505ab
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - goblin
+_core:
+  default_config_hash: VhBzWb7lMRtIOg9G7VSw_0uopi-7zXeHq4vXqqV1HFE
+id: goblin_breadcrumbs
+theme: goblin
+region: breadcrumb
+weight: 0
+provider: null
+plugin: system_breadcrumb_block
+settings:
+  id: system_breadcrumb_block
+  label: Breadcrumbs
+  label_display: '0'
+  provider: system
+visibility: {  }

@@ -1,0 +1,22 @@
+uuid: c8afbef3-0974-4b01-9f7d-c11928aa0c51
+langcode: en
+status: true
+dependencies:
+  theme:
+    - goblin
+_core:
+  default_config_hash: nGE3EoPQQaQCuqTUtZgw0-KIzmrqdKDzdNQf2JyPUt4
+id: goblin_primary_local_tasks
+theme: goblin
+region: content
+weight: -15
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Primary tabs'
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: false
+visibility: {  }

@@ -1,0 +1,57 @@
+/**
+ * @file
+ * Visual styles for progress bar.
+ *
+ * @see progress.js
+ */
+
+.progress__track {
+  border-color: var(--goblin-color-border-strong);
+  border-radius: 10em;
+  background-color: var(--goblin-color-background);
+  box-shadow: inset 0 1px 3px hsl(0, 0%, 0%, 0.16);
+}
+.progress__bar {
+  height: 16px;
+  margin-top: -1px;
+  margin-left: -1px; /* LTR */
+  padding: 0 1px;
+  -webkit-transition: width 0.5s ease-out;
+  transition: width 0.5s ease-out;
+  -webkit-animation: animate-stripes 3s linear infinite;
+  border: 1px var(--goblin-color-accent-hover) solid;
+  border-radius: 10em;
+  background: var(--goblin-color-accent);
+  background-image: linear-gradient(135deg, transparent 25%, rgb(255 255 255 / 0.18) 25%, rgb(255 255 255 / 0.18) 50%, transparent 50%, transparent 75%, rgb(255 255 255 / 0.18) 75%);
+  background-size: 40px 40px;
+}
+[dir="rtl"] .progress__bar {
+  margin-right: -1px;
+  margin-left: 0;
+  -webkit-animation-direction: reverse;
+  animation-direction: reverse;
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  .progress__bar {
+    -webkit-transition: none;
+    transition: none;
+    -webkit-animation: none;
+  }
+}
+
+/**
+ * Progress bar animations.
+ */
+@keyframes animate-stripes {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      0 0,
+      -80px 0;
+  }
+}

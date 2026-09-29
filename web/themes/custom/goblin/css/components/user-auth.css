@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Sign-in, password reset and registration forms.
+ *
+ * These are the first screens a client sees, so the form sits on a surface
+ * panel that separates it from the page background.
+ */
+
+.user-login-form,
+.user-pass,
+.user-register-form {
+  box-sizing: border-box;
+  max-width: 28rem;
+  padding: var(--goblin-space-8) var(--goblin-space-6);
+  border: 1px solid var(--goblin-color-border);
+  border-radius: var(--goblin-radius-panel);
+  background-color: var(--goblin-color-surface);
+  box-shadow: var(--goblin-shadow-panel);
+}
+
+.user-login-form .form-text,
+.user-login-form .form-email,
+.user-login-form .form-password,
+.user-pass .form-text,
+.user-pass .form-email,
+.user-register-form .form-text,
+.user-register-form .form-email,
+.user-register-form .form-password {
+  max-width: none;
+}
+
+.user-login-form .form-actions .button--primary,
+.user-pass .form-actions .button--primary {
+  width: 100%;
+}
+
+@media (max-width: 30rem) {
+  .user-login-form,
+  .user-pass,
+  .user-register-form {
+    padding: var(--goblin-space-6) var(--goblin-space-4);
+  }
+}

@@ -1,0 +1,23 @@
+goblin.settings:
+  type: theme_settings
+  label: 'Goblin settings'
+  mapping:
+    colors:
+      type: mapping
+      label: 'Brand colors'
+      mapping:
+        accent:
+          type: color_hex
+          label: 'Accent: buttons, links, focus'
+        header:
+          type: color_hex
+          label: 'Header and footer'
+        background:
+          type: color_hex
+          label: 'Page background'
+        surface:
+          type: color_hex
+          label: 'Surface: cards, forms, inputs'
+        text:
+          type: color_hex
+          label: 'Body text'

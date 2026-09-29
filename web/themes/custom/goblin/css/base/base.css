@@ -1,0 +1,132 @@
+/**
+ * @file
+ * Element defaults: typography, links, focus, motion.
+ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--goblin-color-text);
+  background-color: var(--goblin-color-background);
+  font-family: var(--goblin-font-body);
+  font-size: var(--goblin-text-base);
+  line-height: var(--goblin-leading-body);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--goblin-space-4);
+  line-height: var(--goblin-leading-tight);
+  font-weight: var(--goblin-weight-bold);
+}
+
+h1 {
+  font-size: var(--goblin-text-2xl);
+}
+
+h2 {
+  font-size: var(--goblin-text-xl);
+}
+
+h3 {
+  font-size: var(--goblin-text-lg);
+}
+
+h4 {
+  font-size: var(--goblin-text-base);
+}
+
+@media (min-width: 48rem) {
+  h1 {
+    font-size: var(--goblin-text-3xl);
+  }
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 var(--goblin-space-4);
+}
+
+p {
+  max-width: var(--goblin-measure);
+}
+
+/* Links are always underlined so they never depend on color alone. */
+a {
+  color: var(--goblin-color-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--goblin-color-focus);
+  outline-offset: 2px;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--goblin-font-mono);
+  font-size: 0.9em;
+}
+
+pre {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: var(--goblin-space-2) var(--goblin-space-3);
+  text-align: start;
+  border-bottom: 1px solid var(--goblin-color-border);
+}
+
+th {
+  font-weight: var(--goblin-weight-bold);
+}
+
+.skip-link:focus {
+  position: absolute;
+  z-index: 10;
+  top: var(--goblin-space-2);
+  left: var(--goblin-space-2);
+  padding: var(--goblin-space-2) var(--goblin-space-4);
+  color: var(--goblin-color-on-accent);
+  background: var(--goblin-color-accent);
+  border-radius: var(--goblin-radius-control);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

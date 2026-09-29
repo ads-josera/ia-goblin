@@ -1,0 +1,41 @@
+/**
+ * @file
+ * Local tasks (View / Edit tabs).
+ */
+
+ul.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--goblin-space-1);
+  margin: 0 0 var(--goblin-space-6);
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--goblin-color-border);
+}
+
+.tabs > li {
+  margin: 0;
+}
+
+.tabs a {
+  display: block;
+  margin-bottom: -1px;
+  padding: var(--goblin-space-2) var(--goblin-space-4);
+  color: var(--goblin-color-text-muted);
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+}
+
+.tabs a:hover {
+  color: var(--goblin-color-text);
+}
+
+.tabs a.is-active {
+  color: var(--goblin-color-text);
+  border-bottom-color: var(--goblin-color-accent);
+  font-weight: var(--goblin-weight-medium);
+}
+
+ul.tabs.secondary {
+  font-size: var(--goblin-text-sm);
+}

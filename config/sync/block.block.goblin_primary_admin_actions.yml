@@ -1,0 +1,20 @@
+uuid: 75ac2ef1-621d-4849-b254-31d9d3e695c3
+langcode: en
+status: true
+dependencies:
+  theme:
+    - goblin
+_core:
+  default_config_hash: Q9_2whdOj1YIomfvsIfopROW4FT_X5pY0DjdOiOaQ5U
+id: goblin_primary_admin_actions
+theme: goblin
+region: content
+weight: -13
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }

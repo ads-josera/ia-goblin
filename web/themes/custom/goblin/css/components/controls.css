@@ -1,0 +1,132 @@
+/**
+ * @file
+ * Buttons and form controls.
+ *
+ * Loaded in the "theme" CSS category so it overrides the structural starterkit
+ * rules in css/components/form.css and button.css.
+ */
+
+/* Buttons: one primary per screen; the rest are secondary. */
+.button,
+input[type="submit"],
+input[type="button"],
+button:not(.link) {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--goblin-control-height);
+  margin: 0;
+  padding: var(--goblin-space-2) var(--goblin-space-6);
+  cursor: pointer;
+  color: var(--goblin-color-text);
+  border: 1px solid var(--goblin-color-border-strong);
+  border-radius: var(--goblin-radius-control);
+  background-color: var(--goblin-color-surface);
+  font: inherit;
+  font-weight: var(--goblin-weight-medium);
+  line-height: var(--goblin-leading-tight);
+  text-decoration: none;
+}
+
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+button:not(.link):hover {
+  border-color: var(--goblin-color-text);
+}
+
+.button--primary,
+input.button--primary {
+  color: var(--goblin-color-on-accent);
+  border-color: var(--goblin-color-accent);
+  background-color: var(--goblin-color-accent);
+}
+
+.button--primary:hover,
+input.button--primary:hover {
+  border-color: var(--goblin-color-accent-hover);
+  background-color: var(--goblin-color-accent-hover);
+}
+
+.button:disabled,
+.button.is-disabled,
+input[type="submit"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--goblin-space-3);
+  margin-top: var(--goblin-space-6);
+}
+
+/* Fields. */
+.form-item {
+  margin-block: 0 var(--goblin-space-4);
+}
+
+.form-item label,
+.form-composite > legend {
+  display: block;
+  margin-bottom: var(--goblin-space-1);
+  font-weight: var(--goblin-weight-medium);
+}
+
+.form-item label.option {
+  display: inline;
+  margin: 0;
+  font-weight: var(--goblin-weight-regular);
+}
+
+.form-text,
+.form-email,
+.form-password,
+.form-search,
+.form-tel,
+.form-url,
+.form-number,
+.form-date,
+.form-select,
+.form-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 32rem;
+  min-height: var(--goblin-control-height);
+  padding: var(--goblin-space-2) var(--goblin-space-3);
+  color: var(--goblin-color-text);
+  border: 1px solid var(--goblin-color-border-strong);
+  border-radius: var(--goblin-radius-control);
+  background-color: var(--goblin-color-surface);
+  font: inherit;
+}
+
+.form-textarea {
+  max-width: none;
+}
+
+.form-item .description {
+  max-width: 32rem;
+  margin-top: var(--goblin-space-1);
+  color: var(--goblin-color-text-muted);
+  font-size: var(--goblin-text-sm);
+}
+
+.form-item input.error,
+.form-item textarea.error,
+.form-item select.error {
+  border: 2px solid var(--goblin-color-danger);
+}
+
+.form-item--error-message {
+  margin-top: var(--goblin-space-1);
+  color: var(--goblin-color-danger);
+  font-size: var(--goblin-text-sm);
+}
+
+.marker,
+.form-required::after {
+  color: var(--goblin-color-danger);
+}

@@ -18,6 +18,9 @@
 /web/sites/*/services.local.yml
 .env
 
+# Test runs (BrowserTestBase output, simpletest sites).
+/web/sites/simpletest/
+
 # Database dumps.
 *.sql
 *.sql.gz

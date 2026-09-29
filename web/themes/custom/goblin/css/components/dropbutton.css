@@ -1,0 +1,33 @@
+/**
+ * @file
+ * General styles for dropbuttons.
+ */
+
+.js .dropbutton-widget {
+  border: 1px solid var(--goblin-color-border-strong);
+  background-color: white;
+}
+.js .dropbutton-widget:hover {
+  border-color: var(--goblin-color-text);
+}
+.dropbutton .dropbutton-action > * {
+  padding: 0.1em 0.5em;
+  white-space: nowrap;
+}
+.dropbutton .secondary-action {
+  border-top: 1px solid var(--goblin-color-border);
+}
+.dropbutton-multiple .dropbutton {
+  border-right: 1px solid var(--goblin-color-border); /* LTR */
+}
+[dir="rtl"] .dropbutton-multiple .dropbutton {
+  border-right: 0 none;
+  border-left: 1px solid var(--goblin-color-border);
+}
+.dropbutton-multiple .dropbutton .dropbutton-action > * {
+  margin-right: 0.25em; /* LTR */
+}
+[dir="rtl"] .dropbutton-multiple .dropbutton .dropbutton-action > * {
+  margin-right: 0;
+  margin-left: 0.25em;
+}
