@@ -50,6 +50,27 @@ combinación deje algo ilegible:
 - Tipografía: **Poppins** 400/500/600/700, alojada en `fonts/poppins`
   (licencia OFL). Ningún visitante pide fuentes a terceros.
 
+### Archivos de marca en el tema
+
+`images/brand/` guarda las versiones que usa el sitio (fuentes en `docs/`):
+
+| Archivo | Uso |
+|---------|-----|
+| `logo-color.svg` | Copia de `logo.svg` (logo predeterminado del tema) |
+| `logo-white.svg` | Logo en blanco, para fondos oscuros (sin uso todavía) |
+| `logo-mark.svg` | Solo la «G», recortada del logo original sin redibujar. Logo de la barra lateral de administración (Navigation) |
+
+### Dónde se cambian
+
+| Qué | Dónde |
+|-----|-------|
+| Logo y favicon del sitio | Apariencia → Configuración → Goblin → «Imagen del logotipo» / «Favicon» (`/admin/appearance/settings/goblin`). Desmarcar «Utilizar el … proporcionado por el tema» y subir el archivo |
+| Logo de la barra lateral de administración | `/admin/config/user-interface/navigation/settings`. Su subida solo acepta PNG/JPG de 40×40; para SVG se escribe la ruta (hoy `themes/custom/goblin/images/brand/logo-mark.svg`) |
+
+Un archivo **subido** desde el formulario se guarda en `sites/default/files`,
+que no va en git: hay que subirlo también en producción. Uno puesto en el
+tema (como los actuales) viaja con el código.
+
 ## Pantalla de acceso
 
 `templates/layout/page--goblin-auth.html.twig` + `css/layout/auth.css`, para

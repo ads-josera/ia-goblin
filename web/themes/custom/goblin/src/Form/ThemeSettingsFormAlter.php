@@ -70,7 +70,7 @@ final class ThemeSettingsFormAlter {
 
     if (isset($form['logo']['settings']['logo_upload'])) {
       $form['logo']['settings']['logo_upload']['#upload_validators']['FileExtension']['extensions'] = self::LOGO_EXTENSIONS;
-      $form['logo']['settings']['logo_upload']['#description'] = $this->t('Formatos: @formats. Se muestra con una altura máxima de 48 px; el SVG se ve nítido en cualquier pantalla.', [
+      $form['logo']['settings']['logo_upload']['#description'] = $this->t('Formatos: @formats. Se usa en la pantalla de acceso (hasta 176 px de ancho) y en el encabezado (48 px de alto). Recomendado: SVG, que se ve nítido a cualquier tamaño.', [
         '@formats' => strtoupper(str_replace(' ', ', ', self::LOGO_EXTENSIONS)),
       ]);
     }

@@ -1,0 +1,14 @@
+{
+  "name": "ia-goblin-visual-qa",
+  "private": true,
+  "description": "Visual QA across browser engines (Chromium, WebKit/Safari, Firefox) and the real Safari/Firefox apps.",
+  "type": "module",
+  "scripts": {
+    "qa": "node run.mjs",
+    "qa:real": "node run-real.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0",
+    "selenium-webdriver": "4.49.0"
+  }
+}

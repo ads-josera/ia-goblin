@@ -25,6 +25,10 @@
 *.sql
 *.sql.gz
 
+# QA tooling dependencies (tests/visual: npm install).
+node_modules/
+tests/visual/screenshots/
+
 # Tooling and OS noise.
 .DS_Store
 .idea/

@@ -22,13 +22,44 @@ lo **no comprobado**.
 | 1 | **Clientes sin navegación ni salida.** `update_11036` les quitó la barra de Drupal contando con un menú propio del panel que no está en este código. Un cliente entra al panel y no puede ir a otra sección ni cerrar sesión. Decidir: construir el menú del panel o darles la barra lateral de Navigation | **Crítica** |
 | 2 | **El rol de cliente no se crea en instalaciones nuevas.** Solo lo crea `update_11034`, que no corre al instalar. En este sitio no existe. Añadir la creación en `hook_install` y un update para sitios ya instalados | **Alta** |
 | 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
-| 4 | Revisión en Safari y Firefox reales (ver opciones en la entrada de hoy) | Media |
+| 4 | Safari real: activar la automatización (una vez, necesita tu contraseña de admin del Mac) y correr `npm run qa:real`. Firefox real ya comprobado | Media |
 | 5 | Decidir si los `.ai` de `docs/` se versionan (hoy fuera de git) | Baja |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
 | 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-29 — QA en varios navegadores y logos
+
+**Qué se hizo**
+
+- `tests/visual` como paquete npm con versiones fijas: Playwright (motores
+  Chromium, WebKit, Firefox) y selenium-webdriver (Safari y Firefox reales).
+  `geckodriver` instalado con Homebrew. Instrucciones: [tests/visual/README.md](../tests/visual/README.md).
+- Logos SVG en el tema (`images/brand/`): color, blanco y la «G» sola
+  (recortada del SVG original, sin redibujar).
+- La «G» es el logo de la barra lateral de administración en lugar de la gota
+  de Drupal (`navigation.settings`, en `config/sync`).
+- Texto de ayuda del logo corregido: ya no dice «48 px máximo» (en acceso se
+  ve más grande).
+- Permisos de archivos del tema normalizados (el generador los dejó en
+  700/600; git no los guarda, pero en local impedían servirlos bien).
+
+**Comprobado**
+
+- QA visual: 28 pantallas × 3 motores (Chromium 153, WebKit 26.6, Firefox
+  155): 0 problemas. Capturas revisadas: idénticas.
+- Firefox real 156: redirige a `/user/login`, Poppins cargada, imagen en WebP,
+  botón 20 px/700 con 3.16:1, logo cargado, sin scroll horizontal.
+- Logo de la barra lateral: carga a 40×40 (captura revisada).
+- 37 pruebas de tema y portal en verde tras los cambios.
+
+**No comprobado**
+
+- Safari real: falta activar la automatización (requiere tu contraseña).
 
 ---
 
