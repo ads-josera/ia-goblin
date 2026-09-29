@@ -8,24 +8,69 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- Entorno local funcionando en https://ia-goblin.ddev.site con el módulo
-  activado y el tema **Goblin** como tema del frontend.
+- `/` lleva al inicio de sesión (diseño aprobado Goblin Creative); tras entrar
+  se llega al panel del módulo. Se entra con usuario o correo. Sitio en
+  español.
 - Repositorio en `main` en GitHub, al día.
-- **Siguiente paso:** aplicar la marca real (Goblin Creative, archivos en
-  `docs/`) desde los ajustes del tema — pendiente de decidir cómo (ver
-  pendiente 1).
+- **Siguiente paso:** decidir la navegación de los clientes (pendiente 1):
+  hoy entran al panel pero no tienen menú ni forma de cerrar sesión.
 
 ## Pendientes
 
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
-| 1 | Aplicar la marca Goblin Creative: qué logo (color o blanco) y qué colores por papel. Decidir si los archivos fuente de `docs/` (.ai, .svg, .png) se versionan | Alta |
-| 2 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
-| 3 | Recorrer el módulo con las cuentas de los roles cliente y operador, no solo como admin | Alta |
-| 4 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
-| 5 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en Drupal 11.3, se elimina en 13) | Baja |
-| 6 | Tema Goblin: campo de texto hexadecimal junto a cada selector de color (hoy solo hay selector nativo) | Baja |
-| 7 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+| 1 | **Clientes sin navegación ni salida.** `update_11036` les quitó la barra de Drupal contando con un menú propio del panel que no está en este código. Un cliente entra al panel y no puede ir a otra sección ni cerrar sesión. Decidir: construir el menú del panel o darles la barra lateral de Navigation | **Crítica** |
+| 2 | **El rol de cliente no se crea en instalaciones nuevas.** Solo lo crea `update_11034`, que no corre al instalar. En este sitio no existe. Añadir la creación en `hook_install` y un update para sitios ya instalados | **Alta** |
+| 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
+| 4 | Revisión en Safari y Firefox reales (ver opciones en la entrada de hoy) | Media |
+| 5 | Decidir si los `.ai` de `docs/` se versionan (hoy fuera de git) | Baja |
+| 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
+| 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
+| 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
+| 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+| 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-29 — Acceso: portada → login → panel
+
+**Qué se hizo**
+
+- Módulo nuevo `goblin_portal` ([README](../web/modules/custom/goblin_portal/README.md)):
+  `/` redirige (`/inicio`) al acceso o al panel; tras iniciar sesión se va al
+  panel (o a la cuenta si no hay permiso); acceso con usuario o correo
+  (decorador de `user.auth`, control de fuerza bruta de core intacto).
+- Pantalla de acceso según el diseño aprobado: dos columnas, logo a color,
+  eslogan «Bot automatizado IA», imagen de fondo, botón naranja «Entrar».
+  También en recuperar contraseña. Se añadió «¿Olvidaste tu contraseña?», que
+  el diseño no tenía; «Contaseña» del diseño corregido a «Contraseña».
+- Marca como predeterminada del tema: logo, favicon, paleta y Poppins
+  alojada en el tema.
+- Sitio en español (módulos language y locale, traducciones de core), sin
+  prefijo `/es` en las URLs.
+- `ai_whatsapp_automation.info.yml`: declarada la dependencia `drupal:options`
+  que faltaba (usa campos `list_string`). Sin ella el módulo falla en una
+  instalación sin `options`.
+
+**Comprobado**
+
+- 148 pruebas (módulo 111, tema 30, portal 7), 1301 aserciones, en verde.
+- Sabotaje: sin la búsqueda por correo y sin la redirección, las pruebas del
+  portal se ponen en rojo.
+- QA visual: 28 pantallas, anónimo y admin, 4 anchos: 0 problemas.
+  Encontrado y corregido midiendo: botón «Entrar» a 16 px (blanco sobre
+  naranja no cumplía); placeholder a 4.3:1; palabras partidas en español en
+  Claro y en la barra de Navigation (causado por el cambio de idioma).
+- Botón «Entrar»: blanco sobre naranja 3.16:1 a 20 px/700 = texto grande
+  (mínimo 3:1). Imagen de fondo: 62 KB WebP; en móvil no se descarga.
+- Recorrido con un rol cliente **temporal** (los permisos del módulo para
+  clientes): portada → acceso con correo → panel. Rol y usuario borrados;
+  no quedó nada en la configuración.
+
+**No comprobado / encontrado sin resolver**
+
+- El cliente llega al panel **sin menú y sin cerrar sesión** (pendiente 1).
+- Safari y Firefox reales (pendiente 4); solo Chrome automatizado.
 
 ---
 

@@ -29,14 +29,24 @@ final class ColorScheme {
   public const UI_CONTRAST = 3.0;
 
   /**
-   * Default palette, used for any role that is missing or invalid.
+   * Minimum contrast for large text (WCAG AA: >= 24px, or >= 18.66px bold).
+   *
+   * Only for elements whose CSS guarantees that size, like .button--large.
+   */
+  public const LARGE_TEXT_CONTRAST = 3.0;
+
+  /**
+   * Default palette: the Goblin Creative brand.
+   *
+   * Orange accent and blues from the logo (docs/logo-color.svg); white page
+   * as in the approved sign-in design. Used for any role missing or invalid.
    */
   public const DEFAULTS = [
-    'accent' => '#4338ca',
-    'header' => '#1e1b4b',
-    'background' => '#f6f6fa',
-    'surface' => '#ffffff',
-    'text' => '#1c1b29',
+    'accent' => '#e5700c',
+    'header' => '#ffffff',
+    'background' => '#ffffff',
+    'surface' => '#f7f7f8',
+    'text' => '#1d1d1f',
   ];
 
   /**
@@ -101,6 +111,10 @@ final class ColorScheme {
     $c = $this->colors;
     $on_accent = ColorMath::mostReadable($c['accent'], self::LIGHT, self::DARK);
     $on_header = ColorMath::mostReadable($c['header'], self::LIGHT, self::DARK);
+    // Brand buttons are usually designed with white labels. Large bold text
+    // may use white whenever it reaches the large-text threshold, even where
+    // black would contrast more; otherwise it falls back to the best choice.
+    $on_accent_large = ColorMath::contrast(self::LIGHT, $c['accent']) >= self::LARGE_TEXT_CONTRAST ? self::LIGHT : $on_accent;
 
     return [
       '--goblin-color-background' => $c['background'],
@@ -114,6 +128,8 @@ final class ColorScheme {
       '--goblin-color-accent-hover' => ColorMath::mix($c['accent'], $on_accent === self::LIGHT ? '#000000' : '#ffffff', 0.82),
       '--goblin-color-accent-soft' => ColorMath::mix($c['accent'], $c['surface'], 0.1),
       '--goblin-color-on-accent' => $on_accent,
+      '--goblin-color-on-accent-large' => $on_accent_large,
+      '--goblin-color-accent-hover-large' => ColorMath::mix($c['accent'], $on_accent_large === self::LIGHT ? '#000000' : '#ffffff', 0.85),
       '--goblin-color-link' => $this->linkUsesAccent() ? $c['accent'] : $c['text'],
       '--goblin-color-focus' => $this->minContrast($c['accent'], [$c['background'], $c['surface']]) >= self::UI_CONTRAST ? $c['accent'] : $c['text'],
       '--goblin-color-header' => $c['header'],

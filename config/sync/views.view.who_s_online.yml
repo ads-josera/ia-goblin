@@ -1,5 +1,5 @@
 uuid: b504614e-f181-439f-932b-5c00df3c2620
-langcode: en
+langcode: es
 status: true
 dependencies:
   module:
@@ -16,7 +16,7 @@ base_field: uid
 display:
   default:
     id: default
-    display_title: Default
+    display_title: 'Por defecto'
     display_plugin: default
     position: 0
     display_options:
@@ -64,10 +64,10 @@ display:
       exposed_form:
         type: basic
         options:
-          submit_button: Apply
+          submit_button: Aplicar
           reset_button: false
-          reset_button_label: Reset
-          exposed_sorts_label: 'Sort by'
+          reset_button_label: Restablecer
+          exposed_sorts_label: 'Ordenar por'
           expose_sort_order: true
           sort_asc_label: Asc
           sort_desc_label: Desc
@@ -142,7 +142,7 @@ display:
           exposed: false
           expose:
             operator_id: access_op
-            label: 'Last access'
+            label: 'Último acceso'
             description: 'A user is considered online for this long after they have last viewed a page.'
             use_operator: false
             operator: access_op

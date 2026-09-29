@@ -1,0 +1,51 @@
+{#
+/**
+ * @file
+ * Sign-in, password reset and one-time login pages.
+ *
+ * Split screen from the approved design: brand and form on the left,
+ * decorative artwork on the right (hidden on narrow screens, where its
+ * background image is never downloaded). No header or footer.
+ *
+ * Selected by GoblinHooks::themeSuggestionsPageAlter() for the routes in
+ * GoblinHooks::AUTH_ROUTES. Its stylesheet is attached here, so the layout
+ * never depends on someone remembering to add a library elsewhere.
+ *
+ * Available variables (besides the page.html.twig ones):
+ * - goblin_logo: URL of the theme logo, or empty.
+ * - goblin_site_name: Site name, used as the logo's text alternative.
+ * - goblin_slogan: Site slogan, shown under the logo.
+ * - goblin_auth_route: Current route name, to pick the secondary link.
+ */
+#}
+{{ attach_library('goblin/auth') }}
+<div class="auth">
+  <main class="auth__panel">
+    <a id="main-content" tabindex="-1"></a>{# link is in html.html.twig #}
+    <div class="auth__inner">
+
+      <div class="auth__brand">
+        {% if goblin_logo %}
+          <img class="auth__logo" src="{{ goblin_logo }}" alt="{{ goblin_site_name }}" />
+        {% endif %}
+        {% if goblin_slogan %}
+          <p class="auth__slogan">{{ goblin_slogan }}</p>
+        {% endif %}
+      </div>
+
+      {{ page.highlighted }}
+      {{ page.help }}
+      {{ page.content }}
+
+      <p class="auth__secondary">
+        {% if goblin_auth_route == 'user.login' %}
+          <a href="{{ path('user.pass') }}">{{ '¿Olvidaste tu contraseña?'|t }}</a>
+        {% else %}
+          <a href="{{ path('user.login') }}">{{ 'Volver a iniciar sesión'|t }}</a>
+        {% endif %}
+      </p>
+
+    </div>
+  </main>
+  <div class="auth__art" aria-hidden="true"></div>
+</div>

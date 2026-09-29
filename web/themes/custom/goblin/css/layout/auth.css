@@ -1,0 +1,160 @@
+/**
+ * @file
+ * Split-screen layout for sign-in, password reset and one-time login.
+ *
+ * Wide screens: form panel left, artwork right. Narrow screens: form only;
+ * the artwork's background image lives inside the wide media query, so
+ * phones never download it.
+ */
+
+.auth {
+  display: grid;
+  min-height: 100vh;
+  background-color: var(--goblin-color-background);
+}
+
+@media (min-width: 60rem) {
+  .auth {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Form panel, with the decorative circles from the design. They use the
+ * surface color, so they follow the palette. */
+.auth__panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--goblin-space-12) var(--goblin-gutter);
+  overflow: hidden;
+  background-image:
+    radial-gradient(circle 11rem at -2rem -3rem, var(--goblin-color-surface) 99%, transparent 100%),
+    radial-gradient(circle 2rem at calc(100% - 5rem) 2.5rem, var(--goblin-color-surface) 98%, transparent 100%);
+}
+
+@media (min-width: 60rem) {
+  .auth__panel {
+    padding-inline: var(--goblin-space-16);
+    background-image:
+      radial-gradient(circle 22rem at 2.5rem -4rem, var(--goblin-color-surface) 99.5%, transparent 100%),
+      radial-gradient(circle 2.5rem at calc(100% - 10.5rem) 4.5rem, var(--goblin-color-surface) 98%, transparent 100%),
+      radial-gradient(circle 2.5rem at calc(100% - 3rem) 0.5rem, var(--goblin-color-surface) 98%, transparent 100%);
+  }
+}
+
+.auth__inner {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+}
+
+/* Brand block. */
+.auth__brand {
+  margin-bottom: var(--goblin-space-12);
+  text-align: center;
+}
+
+.auth__logo {
+  display: block;
+  width: auto;
+  max-width: 11rem;
+  height: auto;
+  max-height: 10rem;
+  margin: 0 auto;
+}
+
+.auth__slogan {
+  max-width: none;
+  margin: var(--goblin-space-4) 0 0;
+  font-size: var(--goblin-text-lg);
+  font-weight: var(--goblin-weight-medium);
+}
+
+/* The page title and the Log in / Reset tabs are replaced by the brand
+ * block and the secondary link. The title stays for screen readers. */
+.auth .block-page-title-block {
+  position: absolute !important;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  width: 1px;
+  height: 1px;
+  word-wrap: normal;
+}
+
+.auth .block-local-tasks-block {
+  display: none;
+}
+
+/* The form sits directly on the page: no card, as in the design. */
+.auth form {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.auth .form-item label {
+  margin-bottom: var(--goblin-space-2);
+  font-size: var(--goblin-text-lg);
+  font-weight: var(--goblin-weight-regular);
+}
+
+/* The required mark adds nothing when every field is required. */
+.auth .form-required::after {
+  display: none;
+}
+
+.auth .form-text,
+.auth .form-email,
+.auth .form-password {
+  max-width: none;
+  min-height: 3.25rem;
+  padding-inline: var(--goblin-space-4);
+  border-radius: var(--goblin-radius-panel);
+  background-color: var(--goblin-color-surface);
+}
+
+.auth .form-item {
+  margin-bottom: var(--goblin-space-6);
+}
+
+.auth .form-actions {
+  margin-top: var(--goblin-space-8);
+}
+
+.auth .form-actions .button {
+  width: 100%;
+}
+
+.auth .form-item .description {
+  max-width: none;
+}
+
+.auth .messages {
+  margin-bottom: var(--goblin-space-6);
+}
+
+.auth__secondary {
+  max-width: none;
+  margin: var(--goblin-space-6) 0 0;
+  text-align: center;
+}
+
+/* Artwork. */
+.auth__art {
+  display: none;
+}
+
+@media (min-width: 60rem) {
+  .auth__art {
+    display: block;
+    background-color: var(--goblin-color-text);
+    background-image: url(../../images/auth-background.jpg);
+    background-image: image-set(url(../../images/auth-background.webp) type("image/webp"), url(../../images/auth-background.jpg) type("image/jpeg"));
+    background-position: center;
+    background-size: cover;
+  }
+}

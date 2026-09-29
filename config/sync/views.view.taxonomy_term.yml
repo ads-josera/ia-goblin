@@ -1,5 +1,5 @@
 uuid: 486391ba-8f05-470c-8ed0-fc01b752b6cb
-langcode: en
+langcode: es
 status: true
 dependencies:
   config:
@@ -12,16 +12,16 @@ dependencies:
 _core:
   default_config_hash: 3o-ZjKjvMBpgaHiS3k8RvejhwJB4yX81fbjQjWc-tC8
 id: taxonomy_term
-label: 'Taxonomy term'
+label: 'Término de taxonomía'
 module: taxonomy
-description: 'Content belonging to a certain taxonomy term.'
+description: 'Contenido perteneciente a un determinado término de taxonomía.'
 tag: default
 base_table: node_field_data
 base_field: nid
 display:
   default:
     id: default
-    display_title: Default
+    display_title: 'Por defecto'
     display_plugin: default
     position: 0
     display_options:
@@ -39,19 +39,19 @@ display:
             previous: ‹‹
           expose:
             items_per_page: false
-            items_per_page_label: 'Items per page'
+            items_per_page_label: 'Elementos por página'
             items_per_page_options: '5, 10, 25, 50'
             items_per_page_options_all: false
-            items_per_page_options_all_label: '- All -'
+            items_per_page_options_all_label: '- Todo -'
             offset: false
             offset_label: Offset
       exposed_form:
         type: basic
         options:
-          submit_button: Apply
+          submit_button: Aplicar
           reset_button: false
-          reset_button_label: Reset
-          exposed_sorts_label: 'Sort by'
+          reset_button_label: Restablecer
+          exposed_sorts_label: 'Ordenar por'
           expose_sort_order: true
           sort_asc_label: Asc
           sort_desc_label: Desc
@@ -104,7 +104,7 @@ display:
           exception:
             value: ''
             title_enable: false
-            title: All
+            title: Todo(s)
           title_enable: true
           title: '{{ arguments.tid }}'
           default_argument_type: fixed
@@ -262,7 +262,7 @@ display:
       tags: {  }
   feed_1:
     id: feed_1
-    display_title: Feed
+    display_title: 'Canal de noticias'
     display_plugin: feed
     position: 2
     display_options:
@@ -300,7 +300,7 @@ display:
       tags: {  }
   page_1:
     id: page_1
-    display_title: Page
+    display_title: Página
     display_plugin: page
     position: 1
     display_options:

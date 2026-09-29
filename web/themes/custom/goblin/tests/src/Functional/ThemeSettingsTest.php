@@ -154,6 +154,32 @@ final class ThemeSettingsTest extends BrowserTestBase {
   }
 
   /**
+   * Sign-in screens use the split layout with brand, slogan and artwork.
+   */
+  public function testAuthLayout(): void {
+    $this->config('system.site')->set('slogan', 'Bot automatizado IA')->save();
+    $this->drupalLogout();
+
+    foreach (['user/login' => 'user/password', 'user/password' => 'user/login'] as $path => $secondary) {
+      $this->drupalGet($path);
+      $this->assertSession()->elementExists('css', '.auth .auth__panel .auth__logo');
+      $this->assertSession()->elementTextEquals('css', '.auth__slogan', 'Bot automatizado IA');
+      $this->assertSession()->elementAttributeContains('css', '.auth__art', 'aria-hidden', 'true');
+      $this->assertSession()->elementAttributeContains('css', '.auth__secondary a', 'href', $secondary);
+      $this->assertSession()->elementExists('css', 'form input[type="submit"].button--primary.button--large');
+      // No site header or footer on these screens.
+      $this->assertSession()->elementNotExists('css', '.site-header');
+    }
+
+    // Other pages keep the regular layout. Not <front>: the testing profile
+    // uses /user/login as front page.
+    $this->drupalGet('goblin-no-such-page');
+    $this->assertSession()->statusCodeEquals(404);
+    $this->assertSession()->elementExists('css', '.site-header');
+    $this->assertSession()->elementNotExists('css', '.auth');
+  }
+
+  /**
    * Writes a file to the test's temporary directory and returns its path.
    */
   private function writeTempFile(string $name, string $contents): string {

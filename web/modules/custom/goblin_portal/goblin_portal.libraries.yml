@@ -1,0 +1,5 @@
+spanish-admin:
+  version: VERSION
+  css:
+    theme:
+      css/spanish-admin.css: {}

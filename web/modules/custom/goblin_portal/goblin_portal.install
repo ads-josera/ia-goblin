@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall hooks for goblin_portal.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_install().
+ *
+ * Points the front page at the entry route, so "/" redirects to sign-in or
+ * to the dashboard. The value is ordinary config and travels with
+ * config/sync; this only sets it when the module is first enabled.
+ */
+function goblin_portal_install(bool $is_syncing): void {
+  if ($is_syncing) {
+    return;
+  }
+  \Drupal::configFactory()->getEditable('system.site')->set('page.front', '/inicio')->save();
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Restores core's default so the front page does not point at a route that
+ * no longer exists.
+ */
+function goblin_portal_uninstall(bool $is_syncing): void {
+  if ($is_syncing) {
+    return;
+  }
+  $config = \Drupal::configFactory()->getEditable('system.site');
+  if ($config->get('page.front') === '/inicio') {
+    $config->set('page.front', '/node')->save();
+  }
+}

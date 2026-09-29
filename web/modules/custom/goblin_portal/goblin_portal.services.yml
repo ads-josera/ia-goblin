@@ -1,0 +1,11 @@
+services:
+  _defaults:
+    autowire: true
+
+  Drupal\goblin_portal\StartPage: ~
+
+  # Decorates core's account lookup so the sign-in form accepts an e-mail.
+  # Flood control stays in UserLoginForm, untouched.
+  Drupal\goblin_portal\Auth\EmailOrUsernameAuthentication:
+    decorates: user.auth
+    arguments: ['@.inner', '@entity_type.manager']

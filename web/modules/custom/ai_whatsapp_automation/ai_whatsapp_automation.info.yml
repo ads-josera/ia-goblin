@@ -6,4 +6,6 @@ core_version_requirement: ^11
 configure: ai_whatsapp_automation.settings
 dependencies:
   - drupal:file
+  # list_string fields and the options_select widget.
+  - drupal:options
   - drupal:views

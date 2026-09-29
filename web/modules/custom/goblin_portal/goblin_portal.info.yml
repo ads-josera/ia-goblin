@@ -1,0 +1,8 @@
+name: 'Goblin Portal'
+type: module
+description: 'Entrada al producto: la portada lleva al acceso, el acceso lleva al panel, y se puede entrar con usuario o correo.'
+package: Custom
+core_version_requirement: ^11
+dependencies:
+  - drupal:user
+  - ai_whatsapp_automation:ai_whatsapp_automation

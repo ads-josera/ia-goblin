@@ -1,5 +1,5 @@
 uuid: 3e7e4458-1870-4ba9-8a1a-e310fb83a860
-langcode: en
+langcode: es
 status: true
 dependencies:
   config:
@@ -28,4 +28,5 @@ content:
     weight: 0
     region: content
 hidden:
+  langcode: true
   member_for: true

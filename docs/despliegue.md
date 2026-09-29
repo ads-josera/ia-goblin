@@ -33,6 +33,20 @@
 - Cron del sistema ejecutando `drush cron` (el módulo usa colas para los
   webhooks).
 - HTTPS: los webhooks de WhatsApp, Twilio y Evolution lo exigen.
+- Salida a internet hacia `ftp.drupal.org` para descargar las traducciones al
+  español (o importarlas a mano).
+
+## Idioma: las traducciones no viajan en `config/sync`
+
+El sitio está en español. La configuración (idioma por defecto, prefijos de
+URL) sí va en `config/sync`, pero **las traducciones de la interfaz viven en
+la base de datos**. Tras el primer `drush config:import` en un servidor:
+
+```bash
+drush locale:check && drush locale:update
+```
+
+Sin esto, los textos de core (errores de acceso, menús) salen en inglés.
 
 ## `settings.local.php` de producción
 

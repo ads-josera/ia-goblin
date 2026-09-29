@@ -12,6 +12,7 @@
 
 const BASE = 'http://ia-goblin.ddev.site';
 const WIDTHS = [1440, 1024, 820, 390];
+// '/' redirects to /user/login (goblin_portal); signed in, to the dashboard.
 const ANON = ['/', '/user/login', '/user/password', '/no-such-page'];
 const SIGNED_IN = ['/', '/user/1'];
 
@@ -68,9 +69,16 @@ async function measure(page) {
       }
       return 'rgb(255, 255, 255)';
     };
+    // WCAG large text: >= 24px, or >= 18.66px and bold (700+).
+    const isLarge = (el) => {
+      const cs = getComputedStyle(el), px = parseFloat(cs.fontSize), w = parseInt(cs.fontWeight, 10);
+      return px >= 24 || (px >= 18.66 && w >= 700);
+    };
     const pair = (sel, min) => {
       const el = document.querySelector(sel);
       if (!el) return null;
+      // A large-text allowance only counts if the element really is large.
+      if (min === 'large') min = isLarge(el) ? 3 : 4.5;
       const fg = getComputedStyle(el).color, bg = bgOf(el), r = ratio(fg, bg);
       if (r < min) problems.push(`contrast ${sel}: ${r}:1 < ${min}:1`);
       return { fg, bg, ratio: r };
@@ -117,7 +125,11 @@ async function measure(page) {
         siteName: pair('.site-name a', 4.5),
         headerMenu: pair('.site-header nav a', 4.5),
         footer: pair('.site-footer__legal', 4.5),
-        primaryButton: pair('.button--primary', 4.5),
+        primaryButton: pair('.button--primary:not(.button--large)', 4.5),
+        largeButton: pair('.button--large', 'large'),
+        slogan: pair('.auth__slogan', 4.5),
+        secondaryLink: pair('.auth__secondary a', 4.5),
+        placeholder: (() => { const el = document.querySelector('#edit-name'); if (!el) return null; const fg = getComputedStyle(el, '::placeholder').color, bg = bgOf(el), r = ratio(fg, bg); if (r < 4.5) problems.push(`contrast placeholder: ${r}:1`); return { fg, bg, ratio: r }; })(),
         description: pair('.form-item .description', 4.5),
         link: pair('.layout-content a:not(.button)', 4.5),
         tabs: pair('.tabs a', 4.5),

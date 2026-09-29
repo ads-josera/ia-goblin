@@ -1,0 +1,25 @@
+/**
+ * @file
+ * No automatic hyphenation on a Spanish-language site.
+ *
+ * Claro (body) and core's Navigation sidebar (menu labels) set
+ * `hyphens: auto`. With lang="es" the browser has a Spanish dictionary and
+ * splits ordinary words across lines ("tra-ducción", "pá-gina"), which
+ * reads as a defect. Long unbroken strings (URLs, tokens) still wrap: both
+ * keep their word-wrap rule.
+ *
+ * Attached to every page by GoblinPortalHooks::pageAttachments(), not by
+ * altering core's libraries: Navigation's is marked internal.
+ */
+
+/* `html body`, not `body`: theme CSS (Claro) always loads after module CSS,
+ * so an equal selector would lose. */
+html body {
+  hyphens: manual;
+}
+
+/* Same selector as core's toolbar-block.css plus one class, so it wins by
+ * specificity rather than by load order. */
+:is(#extra-specificity-hack, [data-drupal-admin-styles]) .toolbar-block__list.toolbar-block__list {
+  hyphens: manual;
+}

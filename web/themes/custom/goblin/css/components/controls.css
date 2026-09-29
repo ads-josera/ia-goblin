@@ -107,6 +107,12 @@ input[type="submit"]:disabled {
   max-width: none;
 }
 
+/* The browser default placeholder grey measured 4.3:1 on the surface. */
+::placeholder {
+  color: var(--goblin-color-text-muted);
+  opacity: 1;
+}
+
 .form-item .description {
   max-width: 32rem;
   margin-top: var(--goblin-space-1);
@@ -129,4 +135,29 @@ input[type="submit"]:disabled {
 .marker,
 .form-required::after {
   color: var(--goblin-color-danger);
+}
+
+/*
+ * Large buttons: the only place --goblin-color-on-accent-large may be used,
+ * because only here the CSS guarantees WCAG "large text" (>= 18.66px bold),
+ * whose threshold is 3:1 instead of 4.5:1. Keep the size and weight together
+ * with that token or the label stops being legible.
+ *
+ * Doubled class on purpose: input[type="submit"] above sets `font: inherit`
+ * with higher specificity (0,1,1) and silently shrank this label to 16px.
+ */
+.button.button--large {
+  min-height: 3.5rem;
+  border-radius: var(--goblin-radius-panel);
+  font-size: var(--goblin-text-lg);
+  font-weight: var(--goblin-weight-heavy);
+}
+
+.button--primary.button--large {
+  color: var(--goblin-color-on-accent-large);
+}
+
+.button--primary.button--large:hover {
+  border-color: var(--goblin-color-accent-hover-large);
+  background-color: var(--goblin-color-accent-hover-large);
 }

@@ -1,8 +1,9 @@
 # Goblin
 
-Tema del frontend de IA Goblin: portada, inicio de sesión, recuperación de
-contraseña y cualquier página pública. Las pantallas de `/admin` (incluidas
-las del módulo `ai_whatsapp_automation`) siguen en Claro.
+Tema del frontend de IA Goblin con la marca **Goblin Creative**: inicio de
+sesión, recuperación de contraseña y cualquier página pública. Las pantallas
+de `/admin` (incluidas las del módulo `ai_whatsapp_automation`) siguen en
+Claro.
 
 Generado con el Starterkit de Drupal 11.4 (`vendor/bin/dr generate-theme`);
 a partir de ahí es código propio.
@@ -39,6 +40,45 @@ combinación deje algo ilegible:
 - El formulario **rechaza** un texto que no llegue a 4.5:1 sobre el fondo o la
   superficie.
 
+## Marca predeterminada
+
+- Logo: `logo.svg` (= `docs/logo-color.svg`). Favicon: `favicon.ico`, generado
+  de `docs/favicon-goblin.png` (16/32/48 px).
+- Paleta por defecto (`ColorScheme::DEFAULTS`): naranja `#e5700c` como
+  principal, fondo blanco, superficie `#f7f7f8`, texto `#1d1d1f`. Los azules
+  del logo no tienen papel propio todavía.
+- Tipografía: **Poppins** 400/500/600/700, alojada en `fonts/poppins`
+  (licencia OFL). Ningún visitante pide fuentes a terceros.
+
+## Pantalla de acceso
+
+`templates/layout/page--goblin-auth.html.twig` + `css/layout/auth.css`, para
+las rutas de `GoblinHooks::AUTH_ROUTES` (acceso, recuperar contraseña, acceso
+de un solo uso). Dos columnas según el diseño aprobado:
+
+- Izquierda: logo del tema, eslogan del sitio (*Configuración básica del
+  sitio*), mensajes, formulario y enlace secundario.
+- Derecha: `images/auth-background.{webp,jpg}` (1400 px, 62 KB en WebP),
+  generada desde `docs/diseno/fondo-login-original.jpg`. Diseño de
+  referencia: `docs/diseno/login-diseno-aprobado.jpg`.
+  Por debajo de 60rem la columna desaparece y la imagen **no se descarga**
+  (el `background-image` vive dentro de la media query).
+- El título de la página queda solo para lectores de pantalla; las pestañas
+  *Iniciar sesión / Restablecer* se sustituyen por el enlace secundario.
+
+### Botón blanco sobre naranja
+
+Blanco sobre `#e5700c` da 3.16:1: **no vale** para texto normal (4.5:1), sí
+para texto grande (≥ 18.66 px en negrita, umbral 3:1). Por eso:
+
+- `--goblin-color-on-accent` (texto normal) sale negro con este naranja.
+- `--goblin-color-on-accent-large` sale blanco y **solo** se usa en
+  `.button.button--large` (20 px, peso 700). Mantener tamaño, peso y token
+  juntos. La clase va doble porque `input[type="submit"] { font: inherit }`
+  la pisaba y dejaba el texto en 16 px (encontrado midiendo).
+- Los formularios de cuenta reciben `button--primary button--large`
+  (`GoblinHooks::formAlter`).
+
 ## Arquitectura
 
 ```
@@ -46,7 +86,8 @@ src/Color/ColorMath.php        Aritmética de color y contraste WCAG (pura)
 src/Color/ColorScheme.php      Papeles editables → tokens CSS derivados
 src/Form/ThemeSettingsFormAlter.php  Campos de color, validación, formatos del logo
 src/Hook/GoblinHooks.php       Hooks (OOP): tokens en <head>, botón principal
-                               en formularios de cuenta, pie de página
+                               en formularios de cuenta, plantilla de acceso,
+                               variables de logo/eslogan, pie de página
 css/base/tokens.css            Todos los tokens (colores de respaldo, tipo, espacio)
 config/schema/goblin.schema.yml  Esquema de goblin.settings (colors.*)
 ```
@@ -74,7 +115,8 @@ config/schema/goblin.schema.yml  Esquema de goblin.settings (colors.*)
 - **SVG:** solo quien tiene `administer themes` puede subirlo, y se muestra en
   `<img>`, donde un script embebido no se ejecuta. Si algún día se da ese
   permiso a usuarios no confiables, hay que sanear los SVG.
-- `favicon.svg` es la fuente de `favicon.ico` (generado con ImageMagick).
+- `favicon.ico` se genera con ImageMagick desde `docs/favicon-goblin.png`:
+  `convert favicon-goblin.png -define icon:auto-resize=48,32,16 favicon.ico`.
 
 ## Pruebas
 

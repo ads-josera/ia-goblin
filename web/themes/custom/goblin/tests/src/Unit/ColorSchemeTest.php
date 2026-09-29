@@ -92,6 +92,16 @@ final class ColorSchemeTest extends UnitTestCase {
   }
 
   /**
+   * The Goblin Creative orange keeps its white label only on large text.
+   */
+  public function testBrandOrangeLargeLabelIsWhite(): void {
+    $tokens = ColorScheme::fromSettings(['accent' => '#e5700c'])->tokens();
+
+    $this->assertSame('#000000', $tokens['--goblin-color-on-accent'], 'Normal-size text needs black: white is 3.16:1.');
+    $this->assertSame('#ffffff', $tokens['--goblin-color-on-accent-large']);
+  }
+
+  /**
    * Every derived token meets its threshold for any legible scheme.
    */
   #[DataProvider('providerSchemes')]
@@ -108,6 +118,8 @@ final class ColorSchemeTest extends UnitTestCase {
     }
     $this->assertGreaterThanOrEqual(ColorScheme::TEXT_CONTRAST, ColorMath::contrast($t['--goblin-color-on-accent'], $t['--goblin-color-accent']), 'Button label');
     $this->assertGreaterThanOrEqual(ColorScheme::TEXT_CONTRAST, ColorMath::contrast($t['--goblin-color-on-accent'], $t['--goblin-color-accent-hover']), 'Button label on hover');
+    $this->assertGreaterThanOrEqual(ColorScheme::LARGE_TEXT_CONTRAST, ColorMath::contrast($t['--goblin-color-on-accent-large'], $t['--goblin-color-accent']), 'Large button label');
+    $this->assertGreaterThanOrEqual(ColorScheme::LARGE_TEXT_CONTRAST, ColorMath::contrast($t['--goblin-color-on-accent-large'], $t['--goblin-color-accent-hover-large']), 'Large button label on hover');
     $this->assertGreaterThanOrEqual(ColorScheme::TEXT_CONTRAST, ColorMath::contrast($t['--goblin-color-on-header'], $t['--goblin-color-header']), 'Header text');
     $this->assertGreaterThanOrEqual(ColorScheme::TEXT_CONTRAST, ColorMath::contrast($t['--goblin-color-on-header-muted'], $t['--goblin-color-header']), 'Footer text');
   }
@@ -135,6 +147,14 @@ final class ColorSchemeTest extends UnitTestCase {
       ],
       ],
       'mid grey accent' => [['accent' => '#808080', 'header' => '#777777']],
+      'goblin creative' => [[
+        'accent' => '#e5700c',
+        'header' => '#ffffff',
+        'background' => '#ffffff',
+        'surface' => '#f7f7f8',
+        'text' => '#1d1d1f',
+      ],
+      ],
       'dark page' => [[
         'accent' => '#a78bfa',
         'header' => '#000000',

@@ -4,6 +4,7 @@ base:
     # Goblin design layer. Category order (base, layout, component, theme)
     # lets the "theme" files override the structural starterkit components.
     base:
+      css/base/fonts.css: {}
       css/base/tokens.css: {}
       css/base/base.css: {}
     layout:
@@ -122,3 +123,11 @@ user:
     component:
       css/components/user.css:
         weight: -10
+# Split-screen sign-in layout. Attached by page--goblin-auth.html.twig itself.
+auth:
+  version: VERSION
+  css:
+    layout:
+      css/layout/auth.css: {}
+  dependencies:
+    - goblin/base

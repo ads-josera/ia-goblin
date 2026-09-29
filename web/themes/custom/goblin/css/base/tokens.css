@@ -12,21 +12,23 @@
 
 :root {
   /* goblin-color-defaults:start */
-  --goblin-color-background: #f6f6fa;
-  --goblin-color-surface: #ffffff;
-  --goblin-color-text: #1c1b29;
-  --goblin-color-text-muted: #686872;
-  --goblin-color-border: #dfdfe1;
-  --goblin-color-border-strong: #8e8d94;
-  --goblin-color-accent: #4338ca;
-  --goblin-color-accent-hover: #372ea6;
-  --goblin-color-accent-soft: #ecebfa;
-  --goblin-color-on-accent: #ffffff;
-  --goblin-color-link: #4338ca;
-  --goblin-color-focus: #4338ca;
-  --goblin-color-header: #1e1b4b;
-  --goblin-color-on-header: #ffffff;
-  --goblin-color-on-header-muted: #bcbbc9;
+  --goblin-color-background: #ffffff;
+  --goblin-color-surface: #f7f7f8;
+  --goblin-color-text: #1d1d1f;
+  --goblin-color-text-muted: #6c6c6d;
+  --goblin-color-border: #d8d8da;
+  --goblin-color-border-strong: #8a8a8c;
+  --goblin-color-accent: #e5700c;
+  --goblin-color-accent-hover: #ea8a38;
+  --goblin-color-accent-soft: #f5eae0;
+  --goblin-color-on-accent: #000000;
+  --goblin-color-on-accent-large: #ffffff;
+  --goblin-color-accent-hover-large: #c35f0a;
+  --goblin-color-link: #1d1d1f;
+  --goblin-color-focus: #1d1d1f;
+  --goblin-color-header: #ffffff;
+  --goblin-color-on-header: #000000;
+  --goblin-color-on-header-muted: #4d4d4d;
   /* goblin-color-defaults:end */
 
   /*
@@ -43,8 +45,8 @@
   /* Always dark: sits behind white loading icons, whatever the brand. */
   --goblin-color-scrim: #232323;
 
-  /* Typography: system stacks (no web font request), 1.25 modular scale. */
-  --goblin-font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Typography: Poppins (self-hosted, css/base/fonts.css), 1.25 modular scale. */
+  --goblin-font-body: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --goblin-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --goblin-text-sm: 0.8125rem;
   --goblin-text-base: 1rem;
@@ -56,7 +58,8 @@
   --goblin-leading-body: 1.6;
   --goblin-weight-regular: 400;
   --goblin-weight-medium: 500;
-  --goblin-weight-bold: 650;
+  --goblin-weight-bold: 600;
+  --goblin-weight-heavy: 700;
   --goblin-measure: 70ch;
 
   /* Spacing: 4px base. */

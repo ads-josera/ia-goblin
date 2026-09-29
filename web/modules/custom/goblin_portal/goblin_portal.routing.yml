@@ -1,0 +1,10 @@
+goblin_portal.entry:
+  path: '/inicio'
+  defaults:
+    _controller: '\Drupal\goblin_portal\Controller\EntryController::redirectToStart'
+  requirements:
+    # Everyone may reach the entry; it only decides where to send them.
+    _access: 'TRUE'
+  options:
+    # The target depends on the session; never cache the redirect.
+    no_cache: TRUE
