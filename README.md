@@ -1,62 +1,88 @@
 # IA Goblin
 
-Drupal 11 site that hosts the `ai_whatsapp_automation` custom module
-(WhatsApp/web chat bots with OpenAI, RAG knowledge bases, leads and human
-operators).
+Sitio Drupal 11 que aloja el módulo personalizado `ai_whatsapp_automation`:
+bots de WhatsApp y chat web con OpenAI, bases de conocimiento (RAG),
+prospectos y operadores humanos.
+
+## Documentación
+
+| Documento | Para qué |
+|-----------|----------|
+| [docs/bitacora.md](docs/bitacora.md) | Qué se ha hecho, por qué, y dónde quedamos |
+| [docs/despliegue.md](docs/despliegue.md) | Cómo se despliega a producción |
 
 ## Stack
 
-| Component | Version |
-|-----------|---------|
+| Componente | Versión |
+|------------|---------|
 | Drupal core | 11.x (`drupal/recommended-project`) |
 | PHP | 8.4 |
-| Database | MariaDB 11.8 |
-| Local environment | DDEV (Docker) |
+| Base de datos | MariaDB 11.8 |
+| Entorno local | DDEV (Docker) |
 | CLI | Drush 13 |
 
-## Layout
+## Estructura
 
 ```
-.ddev/                     Local Docker environment (DDEV)
-config/sync/               Exported site configuration (deployed with config:import)
-private/                   Private files, outside the web root (not versioned)
-web/modules/custom/        Custom code — ai_whatsapp_automation lives here
-web/sites/default/settings.php        Versioned, no secrets
-web/sites/default/settings.local.php  Per-environment secrets (not versioned)
+.ddev/                     Entorno Docker local (DDEV)
+config/sync/               Configuración exportada del sitio (se despliega con config:import)
+docs/                      Documentación del proyecto
+private/                   Archivos privados, fuera de web/ (no se versiona)
+web/modules/custom/        Código propio — aquí vive ai_whatsapp_automation
+web/sites/default/settings.php        Versionado, sin secretos
+web/sites/default/settings.local.php  Secretos por entorno (no se versiona)
 ```
 
-## Local setup
+## Levantar el proyecto en local
 
 ```bash
 git clone git@github.com:ads-josera/ia-goblin.git
 cd ia-goblin
 ddev start
 ddev composer install
-ddev drush site:install --existing-config -y
+ddev drush site:install --existing-config -y   # no comprobado aún, ver bitácora
 ddev drush uli
 ```
 
-Site: https://ia-goblin.ddev.site
+Sitio: https://ia-goblin.ddev.site
 
-## Server requirements for the module
+## Requisitos del servidor para el módulo
 
-- **poppler-utils** (`pdftotext`) — PDF extraction for RAG. Installed in DDEV
-  through `webimage_extra_packages`; must be installed on production too.
-- **Private file system** — `$settings['file_private_path']` points to
-  `../private`. The directory must exist and be writable by the web server,
-  otherwise the status report shows an error and client documents would be
-  public.
-- **aws/aws-sdk-php** — only used when the Amazon SES mail backend is selected.
-  SES credentials go in `settings.local.php`, never in configuration.
+- **poppler-utils** (`pdftotext`): extrae el texto de los PDF para la base de
+  conocimiento. En DDEV se instala con `webimage_extra_packages`; en producción
+  hay que instalarlo también.
+- **Archivos privados**: `$settings['file_private_path']` apunta a
+  `../private`. La carpeta debe existir y el servidor web debe poder escribir en
+  ella; si no, el informe de estado marca error y los documentos de los
+  clientes quedarían públicos.
+- **aws/aws-sdk-php**: solo se usa si se elige el envío de correo por Amazon
+  SES. Las credenciales de SES van en `settings.local.php`, nunca en la
+  configuración.
 
-## Daily workflow
+## Secretos: dónde NO van
 
-```bash
-ddev drush cex -y          # export config after changing it in the UI
-git add -A && git commit    # commit code + config together
+El módulo guarda las API keys (OpenAI, Twilio, WhatsApp, Evolution) en su
+configuración `ai_whatsapp_automation.settings`. Si se escriben en el
+formulario y luego se ejecuta `drush cex`, **acaban en git**. Deben ir como
+sobrescritura en `settings.local.php`:
+
+```php
+$config['ai_whatsapp_automation.settings']['openai']['api_key'] = '...';
 ```
 
-## Tests
+Antes de cada commit, revisa que `config/sync/ai_whatsapp_automation.settings.yml`
+tenga las claves vacías.
+
+## Trabajo diario
+
+```bash
+ddev start / ddev stop      # encender y apagar el entorno
+ddev drush cex -y           # exportar configuración tras cambiarla en la interfaz
+git add -A && git commit    # código y configuración van juntos
+git push
+```
+
+## Pruebas
 
 ```bash
 ddev exec 'SIMPLETEST_DB=mysql://db:db@db/db SIMPLETEST_BASE_URL=http://web \
