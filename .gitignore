@@ -21,6 +21,10 @@
 # Test runs (BrowserTestBase output, simpletest sites).
 /web/sites/simpletest/
 
+# Editable design sources (Illustrator) stay out of git by team decision;
+# the exported SVG/PNG in docs/ are the versioned references.
+*.ai
+
 # Database dumps.
 *.sql
 *.sql.gz

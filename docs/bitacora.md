@@ -17,6 +17,8 @@ lo **no comprobado**.
 - **Mañana:** definir el **rol de cliente**. El equipo dirá a qué puede
   entrar un cliente y a qué no; con eso se crea el rol (también en
   instalaciones nuevas) y su navegación con salida (pendientes 1 y 2).
+- Los `.ai` (fuentes editables del logo) **no se versionan**, por decisión del
+  equipo: están en `.gitignore`. En git van los SVG/PNG exportados.
 - **Safari real:** lo revisa el equipo por su cuenta. Automatización ya
   activada, pero la sesión no abría (Safari estaba abierto; posible diálogo
   pendiente). Para reintentar: cerrar Safari (⌘Q) y `cd tests/visual && npm run qa:real`.
@@ -29,7 +31,6 @@ lo **no comprobado**.
 | 2 | **Rol de cliente.** Hoy solo lo crea `update_11034`, que no corre al instalar; en este sitio no existe. Mañana el equipo define qué puede ver/hacer un cliente; después: crearlo en `hook_install` + un update para sitios ya instalados, y recorrerlo con su propia cuenta | **Alta — mañana** |
 | 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
-| 5 | Decidir si los `.ai` de `docs/` se versionan (hoy fuera de git; sin respuesta aún) | Baja |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
