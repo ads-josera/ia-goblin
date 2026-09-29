@@ -1,0 +1,204 @@
+services:
+  ai_whatsapp_automation.openai_service:
+    class: Drupal\ai_whatsapp_automation\Infrastructure\OpenAI\OpenAIService
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.factory'
+
+  Drupal\ai_whatsapp_automation\Application\OpenAI\OpenAIServiceInterface:
+    alias: ai_whatsapp_automation.openai_service
+
+  ai_whatsapp_automation.bot_manager:
+    class: Drupal\ai_whatsapp_automation\Application\AI\BotManagerService
+    arguments:
+      - '@entity_type.manager'
+
+  ai_whatsapp_automation.prompt_builder:
+    class: Drupal\ai_whatsapp_automation\Application\AI\PromptBuilderService
+    arguments:
+      - '@ai_whatsapp_automation.bot_manager'
+      - '@ai_whatsapp_automation.rag'
+      - '@entity_type.manager'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.unintelligible_message_detector:
+    class: Drupal\ai_whatsapp_automation\Application\AI\UnintelligibleMessageDetector
+
+  ai_whatsapp_automation.conversation_engine:
+    class: Drupal\ai_whatsapp_automation\Application\AI\ConversationEngineService
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_whatsapp_automation.bot_manager'
+      - '@ai_whatsapp_automation.prompt_builder'
+      - '@ai_whatsapp_automation.openai_service'
+      - '@ai_whatsapp_automation.unintelligible_message_detector'
+      - '@config.factory'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.web_chat:
+    class: Drupal\ai_whatsapp_automation\Application\WebChat\WebChatService
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_whatsapp_automation.conversation_engine'
+      - '@ai_whatsapp_automation.lead_handoff'
+      - '@file_url_generator'
+      - '@database'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.web_chat_frame_response_subscriber:
+    class: Drupal\ai_whatsapp_automation\EventSubscriber\WebChatFrameResponseSubscriber
+    arguments:
+      - '@ai_whatsapp_automation.web_chat'
+    tags:
+      - { name: event_subscriber }
+
+  ai_whatsapp_automation.webhook_provider:
+    class: Drupal\ai_whatsapp_automation\Application\Webhook\WebhookProviderService
+    arguments:
+      - '@config.factory'
+      - '@request_stack'
+      - '@entity_type.manager'
+
+  ai_whatsapp_automation.webhook_queue:
+    class: Drupal\ai_whatsapp_automation\Application\Webhook\WebhookQueueService
+    arguments:
+      - '@queue'
+
+  ai_whatsapp_automation.webhook_processor:
+    class: Drupal\ai_whatsapp_automation\Application\Webhook\WebhookProcessorService
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_whatsapp_automation.bot_manager'
+      - '@ai_whatsapp_automation.conversation_engine'
+      - '@ai_whatsapp_automation.provider_message_sender'
+      - '@ai_whatsapp_automation.lead_handoff'
+      - '@state'
+      - '@lock'
+      - '@database'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.whatsapp_text_formatter:
+    class: Drupal\ai_whatsapp_automation\Application\Webhook\WhatsAppTextFormatter
+
+  ai_whatsapp_automation.provider_message_sender:
+    class: Drupal\ai_whatsapp_automation\Application\Webhook\ProviderMessageSenderService
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@logger.factory'
+      - '@ai_whatsapp_automation.evolution.qr_provider'
+      - '@ai_whatsapp_automation.whatsapp_text_formatter'
+
+  ai_whatsapp_automation.human_operator:
+    class: Drupal\ai_whatsapp_automation\Application\HumanOperator\HumanOperatorService
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_whatsapp_automation.provider_message_sender'
+      - '@current_user'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.client_access:
+    class: Drupal\ai_whatsapp_automation\Access\ClientAccess
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_whatsapp_automation.human_operator'
+
+  ai_whatsapp_automation.client_access_route_subscriber:
+    class: Drupal\ai_whatsapp_automation\Routing\ClientAccessRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  ai_whatsapp_automation.client_assignment:
+    class: Drupal\ai_whatsapp_automation\Application\Client\ClientAssignmentService
+
+  ai_whatsapp_automation.client_consistency:
+    class: Drupal\ai_whatsapp_automation\Application\Client\ClientConsistencyChecker
+
+  ai_whatsapp_automation.lead_contact_extractor:
+    class: Drupal\ai_whatsapp_automation\Application\Lead\LeadContactExtractor
+
+  ai_whatsapp_automation.lead_handoff:
+    class: Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@ai_whatsapp_automation.provider_message_sender'
+      - '@logger.factory'
+      - '@ai_whatsapp_automation.lead_contact_extractor'
+
+  ai_whatsapp_automation.dashboard_metrics:
+    class: Drupal\ai_whatsapp_automation\Application\Dashboard\DashboardMetricsService
+    arguments:
+      - '@database'
+      - '@date.formatter'
+
+  ai_whatsapp_automation.document_parser:
+    class: Drupal\ai_whatsapp_automation\Application\RAG\DocumentParserService
+    arguments:
+      - '@file_system'
+
+  ai_whatsapp_automation.knowledge_file_storage:
+    class: Drupal\ai_whatsapp_automation\Application\RAG\KnowledgeFileStorage
+    arguments:
+      - '@entity_type.manager'
+      - '@stream_wrapper_manager'
+      - '@file.repository'
+      - '@file_system'
+
+  ai_whatsapp_automation.embedding:
+    class: Drupal\ai_whatsapp_automation\Application\RAG\EmbeddingService
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.vector_search:
+    class: Drupal\ai_whatsapp_automation\Application\RAG\VectorSearchService
+    arguments:
+      - '@entity_type.manager'
+
+  ai_whatsapp_automation.knowledge_base:
+    class: Drupal\ai_whatsapp_automation\Application\RAG\KnowledgeBaseService
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_whatsapp_automation.document_parser'
+      - '@ai_whatsapp_automation.embedding'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.rag:
+    class: Drupal\ai_whatsapp_automation\Application\RAG\RAGService
+    arguments:
+      - '@ai_whatsapp_automation.embedding'
+      - '@ai_whatsapp_automation.vector_search'
+
+  ai_whatsapp_automation.evolution.client:
+    class: Drupal\ai_whatsapp_automation\Application\Evolution\EvolutionApiClient
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.evolution.qr_provider:
+    class: Drupal\ai_whatsapp_automation\Application\Evolution\QRProvider
+    arguments:
+      - '@ai_whatsapp_automation.evolution.client'
+
+  ai_whatsapp_automation.evolution.instance_manager:
+    class: Drupal\ai_whatsapp_automation\Application\Evolution\InstanceManagerService
+    arguments:
+      - '@ai_whatsapp_automation.evolution.client'
+      - '@ai_whatsapp_automation.evolution.qr_provider'
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@logger.factory'
+
+  ai_whatsapp_automation.client_agent_mail:
+    class: Drupal\ai_whatsapp_automation\Mail\ClientAgentMail
+    arguments:
+      - '@Drupal\user\OneTimeAuthentication'
+      - '@renderer'
+      - '@config.factory'
+      - '@file_url_generator'
+      - '@entity_type.manager'

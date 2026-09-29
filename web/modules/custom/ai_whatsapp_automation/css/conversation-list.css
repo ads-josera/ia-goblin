@@ -1,0 +1,150 @@
+.aiwa-conversation-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid #d7deea;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.aiwa-conversation-filters .form-item {
+  flex: 1 1 150px;
+  min-width: 150px;
+  margin: 0;
+}
+
+.aiwa-conversation-filters .form-item-q {
+  flex: 1 1 300px;
+}
+
+.aiwa-conversation-filters .form-actions {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.aiwa-conversation-list {
+  font-size: 0.9rem;
+  table-layout: fixed;
+}
+
+.aiwa-conversation-list th {
+  font-size: 0.88rem;
+}
+
+.aiwa-conversation-list td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.aiwa-conversation-list__contact a {
+  font-size: 0.94rem;
+}
+
+.aiwa-conversation-list__phone {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.aiwa-conversation-list__status {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.aiwa-conversation-list__routing {
+  min-width: 0;
+}
+
+.aiwa-conversation-list__bot {
+  color: #344054;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+.aiwa-conversation-list__channel {
+  color: #667085;
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin-top: 3px;
+  overflow-wrap: break-word;
+}
+
+.aiwa-conversation-list__status--ai-active {
+  color: #1d4ed8;
+  background: #e7efff;
+}
+
+.aiwa-conversation-list__status--human-assigned {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.aiwa-conversation-list__status--closed {
+  color: #475467;
+  background: #edf1f5;
+}
+
+.aiwa-conversation-list__date {
+  color: #475467;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.aiwa-conversation-list .dropbutton__item > a {
+  font-size: 0.84rem;
+}
+
+.aiwa-conversation-list th:nth-child(1) {
+  width: 24%;
+}
+
+.aiwa-conversation-list th:nth-child(2) {
+  width: 27%;
+}
+
+.aiwa-conversation-list th:nth-child(3) {
+  width: 16%;
+}
+
+.aiwa-conversation-list th:nth-child(4) {
+  width: 19%;
+}
+
+.aiwa-conversation-list th:nth-child(5) {
+  width: 14%;
+}
+
+@media (max-width: 700px) {
+  .aiwa-conversation-filters {
+    display: block;
+  }
+
+  .aiwa-conversation-filters .form-item,
+  .aiwa-conversation-filters .form-actions {
+    margin: 0 0 12px;
+  }
+}
+
+
+
+/* A phone number is one unit: split over two lines it stops being read. */
+.aiwa-conversation-list__contact a {
+  white-space: nowrap;
+}
+
+/* A date and a status badge are single units: they never wrap or clip. */
+.aiwa-conversation-list__date,
+.aiwa-conversation-list__status {
+  white-space: nowrap;
+}

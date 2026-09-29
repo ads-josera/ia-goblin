@@ -1,0 +1,159 @@
+ai_whatsapp_automation.settings:
+  type: config_object
+  label: 'AI WhatsApp Automation settings'
+  mapping:
+    openai:
+      type: mapping
+      label: 'OpenAI settings'
+      mapping:
+        api_key:
+          type: string
+          label: 'API key'
+        default_model:
+          type: string
+          label: 'Default model'
+        timeout:
+          type: integer
+          label: 'Timeout'
+        cost_rates:
+          type: sequence
+          label: 'Estimated cost rates by model'
+          sequence:
+            type: mapping
+            mapping:
+              model:
+                type: string
+                label: 'OpenAI model ID'
+              input:
+                type: float
+                label: 'Input USD per 1 million tokens'
+              output:
+                type: float
+                label: 'Output USD per 1 million tokens'
+    twilio:
+      type: mapping
+      label: 'Twilio settings'
+      mapping:
+        account_sid:
+          type: string
+          label: 'Account SID'
+        auth_token:
+          type: string
+          label: 'Auth token'
+        whatsapp_number:
+          type: string
+          label: 'WhatsApp number'
+        content_template_sid:
+          type: string
+          label: 'Content template SID'
+        messaging_service_sid:
+          type: string
+          label: 'Messaging Service SID'
+    whatsapp_cloud:
+      type: mapping
+      label: 'WhatsApp Cloud API settings'
+      mapping:
+        access_token:
+          type: string
+          label: 'Access token'
+        phone_number_id:
+          type: string
+          label: 'Phone number ID'
+        business_account_id:
+          type: string
+          label: 'Business account ID'
+        verify_token:
+          type: string
+          label: 'Verify token'
+        app_secret:
+          type: string
+          label: 'App Secret'
+    evolution:
+      type: mapping
+      label: 'Evolution API settings'
+      mapping:
+        server_url:
+          type: string
+          label: 'Server URL'
+        api_key:
+          type: string
+          label: 'API key'
+        instance_name:
+          type: string
+          label: 'Instance name'
+    options:
+      type: mapping
+      label: 'Automation options'
+      mapping:
+        enable_ai:
+          type: boolean
+          label: 'Enable AI'
+        enable_logs:
+          type: boolean
+          label: 'Enable logs'
+        enable_storage:
+          type: boolean
+          label: 'Enable storage'
+        enable_metrics:
+          type: boolean
+          label: 'Enable metrics'
+        enable_immediate_webhook_processing:
+          type: boolean
+          label: 'Enable immediate webhook processing'
+        auto_close_ai_hours:
+          type: integer
+          label: 'Auto-close inactive AI conversations after hours'
+        enable_lead_notifications:
+          type: boolean
+          label: 'Enable lead handoff notifications'
+        lead_notification_numbers:
+          type: string
+          label: 'Lead notification WhatsApp numbers'
+        notification_recipient_reply_text:
+          type: string
+          label: 'Notification recipient auto-reply text'
+        unintelligible_reply_text:
+          type: string
+          label: 'First reply to an unreadable message'
+        unintelligible_second_reply_text:
+          type: string
+          label: 'Second reply to an unreadable message'
+        media_reply_text:
+          type: string
+          label: 'Reply to a voice note or an attachment'
+
+ai_whatsapp_automation.client_mail:
+  type: config_object
+  label: 'Account e-mails sent to client users'
+  mapping:
+    logo_url:
+      type: string
+      label: 'Logo URL shown in the e-mail header'
+    footer:
+      type: string
+      label: 'Footer line'
+    messages:
+      type: sequence
+      label: 'Copy per e-mail'
+      sequence:
+        type: mapping
+        label: 'E-mail copy'
+        mapping:
+          subject:
+            type: string
+            label: 'Subject'
+          heading:
+            type: string
+            label: 'Heading'
+          intro:
+            type: string
+            label: 'Intro paragraph'
+          items:
+            type: string
+            label: 'Bullet list, one per line'
+          action:
+            type: string
+            label: 'Button label'
+          note:
+            type: string
+            label: 'Small print'

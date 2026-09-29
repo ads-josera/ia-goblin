@@ -1,0 +1,31 @@
+administer ai whatsapp automation:
+  title: 'Administer AI WhatsApp Automation'
+  description: 'Configure providers, AI options, storage, logs, and metrics for AI WhatsApp Automation.'
+  restrict access: true
+
+administer ai whatsapp automation entities:
+  title: 'Administer AI WhatsApp Automation entities'
+  description: 'Create, edit, view, and delete AI WhatsApp Automation records.'
+  restrict access: true
+
+view ai whatsapp automation dashboard:
+  title: 'View AI WhatsApp Automation dashboard'
+  description: 'View conversation, message, lead, token, and cost metrics.'
+
+administer ai whatsapp automation rag:
+  title: 'Administer AI WhatsApp Automation RAG'
+  description: 'Manage knowledge bases, documents, chunks, and embeddings.'
+  restrict access: true
+
+administer ai whatsapp automation evolution:
+  title: 'Administer AI WhatsApp Automation Evolution QR'
+  description: 'Create Evolution API instances, generate QR codes, and manage QR connection status.'
+  restrict access: true
+
+access own client ai whatsapp records:
+  title: 'View own client conversations, messages, leads and dashboard'
+  description: 'For client users: only records of the client set on their user account. Costs are never shown.'
+
+operate own client ai whatsapp conversations:
+  title: 'Operate own client conversations and leads'
+  description: 'For client users: reply, pause or reactivate the AI, close and assign conversations, and change lead status, only for their own client.'

@@ -1,0 +1,34 @@
+openai:
+  api_key: ''
+  default_model: gpt-5-mini
+  timeout: 30
+  cost_rates: []
+twilio:
+  account_sid: ''
+  auth_token: ''
+  whatsapp_number: ''
+  content_template_sid: ''
+  messaging_service_sid: ''
+whatsapp_cloud:
+  access_token: ''
+  phone_number_id: ''
+  business_account_id: ''
+  verify_token: ''
+  app_secret: ''
+evolution:
+  server_url: ''
+  api_key: ''
+  instance_name: ''
+options:
+  enable_ai: true
+  enable_logs: true
+  enable_storage: true
+  enable_metrics: true
+  enable_immediate_webhook_processing: false
+  auto_close_ai_hours: 24
+  enable_lead_notifications: false
+  lead_notification_numbers: ''
+  notification_recipient_reply_text: 'Este número es exclusivo para notificaciones del sistema. No responde mensajes ni solicitudes.'
+  unintelligible_reply_text: 'No logré entender tu mensaje 🤔 ¿Me lo escribes de nuevo, por favor?'
+  unintelligible_second_reply_text: 'Sigo sin poder leer tu mensaje. Puedes escribirme qué producto o servicio te interesa, o pedirme que te contacte una persona.'
+  media_reply_text: 'Por ahora solo puedo leer mensajes de texto 🙏 ¿Me escribes lo que necesitas y con gusto te ayudo?'

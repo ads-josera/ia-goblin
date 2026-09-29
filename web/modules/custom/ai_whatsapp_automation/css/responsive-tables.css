@@ -1,0 +1,122 @@
+/**
+ * Admin tables scroll inside their container instead of widening the page.
+ */
+.aiwa-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /*
+   * A shadow on whichever edge has more table behind it. Nothing else says
+   * the table scrolls, so on a phone a column can sit just out of sight
+   * with no hint that it is there. The "local" layers cover the shadow when
+   * that side is fully scrolled, so it only shows while there is more.
+   */
+  background:
+    linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0%)) left center,
+    linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0%)) right center,
+    radial-gradient(farthest-side at 0 50%, rgb(20 13 46 / 14%), transparent) left center,
+    radial-gradient(farthest-side at 100% 50%, rgb(20 13 46 / 14%), transparent) right center;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+  background-size: 42px 100%, 42px 100%, 14px 100%, 14px 100%;
+}
+
+.aiwa-table-scroll > table {
+  margin-block: 0;
+}
+
+.aiwa-table-scroll th {
+  white-space: nowrap;
+}
+
+/*
+ * On a phone the columns would otherwise squeeze until words break and
+ * badges spill out of their cell. A floor width keeps every column legible
+ * and lets the container scroll instead, which is what it is for.
+ */
+/*
+ * Fixed column widths hand every column a share of the table whether its
+ * content fits or not: a phone number then spilled over the next column,
+ * and a heading clipped its own text. The content decides instead, the
+ * percentages below stay as a preference, and the container scrolls when
+ * the total will not fit.
+ */
+.aiwa-table-scroll > table {
+  table-layout: auto;
+}
+
+/*
+ * Words never break, so a column is at least as wide as its longest word
+ * and "Chat widget" wraps onto two lines instead of becoming "wid-get".
+ * Identifiers that must stay on one line say so where they are defined.
+ */
+.aiwa-table-scroll td,
+.aiwa-table-scroll td * {
+  overflow-wrap: normal;
+}
+
+@media (max-width: 48em) {
+  .aiwa-table-scroll > table {
+    min-width: 34rem;
+  }
+}
+
+/* Row actions -----------------------------------------------------------
+ * Plain buttons, the same shape as the "Cerrar sesión" button of the top
+ * bar. Drupal's dropbutton drew an arrow even with a single action, and the
+ * arrow opened nothing. */
+.aiwa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/*
+ * Wide enough to hold them, the actions belong on one line: wrapped, two
+ * buttons turned a 40px row into a 95px one down the whole list. The column
+ * sizes itself to fit them, and on a phone they wrap as before.
+ */
+@media (min-width: 48em) {
+  .aiwa-actions {
+    flex-wrap: nowrap;
+  }
+}
+
+.aiwa-actions__button {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--josera-border, #d7deea);
+  border-radius: 8px;
+  background: var(--josera-surface, #fff);
+  color: var(--josera-indigo-600, #2e1f63);
+  font-size: 0.83rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aiwa-actions__button:hover,
+.aiwa-actions__button:focus {
+  background: #f4f1fb;
+  border-color: #cfc9e4;
+  color: var(--josera-indigo-800, #1b1140);
+  text-decoration: none;
+}
+
+.aiwa-actions__button--primary {
+  border-color: #cfc9e4;
+}
+
+/* Deleting is destructive and one click away: it reads as a quiet link. */
+.aiwa-actions__button--danger {
+  border-color: transparent;
+  background: none;
+  color: #a33227;
+}
+
+.aiwa-actions__button--danger:hover,
+.aiwa-actions__button--danger:focus {
+  background: #fdeceb;
+  border-color: #f3cbc7;
+  color: #8f2b21;
+}

@@ -1,0 +1,73 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\ai_whatsapp_automation\Form;
+
+use Drupal\ai_whatsapp_automation\Ui\ClientFilter;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+
+/**
+ * Provides period filters for the automation dashboard.
+ */
+final class DashboardFilterForm extends FormBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'ai_whatsapp_automation_dashboard_filters';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $request = $this->getRequest();
+    $form['#method'] = 'get';
+    $form['#action'] = Url::fromRoute('ai_whatsapp_automation.dashboard')->toString();
+    $form['#attributes']['class'][] = 'ai-whatsapp-dashboard__filters';
+    $form['#attributes']['class'][] = 'aiwa-filters';
+
+    $form['client'] = ClientFilter::element($request);
+    $form['period'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Periodo'),
+      '#options' => [
+        'day' => $this->t('Día'),
+        'month' => $this->t('Mes'),
+        'year' => $this->t('Año'),
+        'all' => $this->t('Todo el histórico'),
+      ],
+      '#default_value' => (string) $request->query->get('period', 'month'),
+    ];
+    $form['date'] = [
+      '#type' => 'date',
+      '#title' => $this->t('Fecha de referencia'),
+      '#default_value' => (string) $request->query->get('date', date('Y-m-d')),
+    ];
+    $form['actions'] = ['#type' => 'actions'];
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Aplicar'),
+      '#button_type' => 'primary',
+    ];
+    $form['actions']['reset'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Mes actual'),
+      '#url' => Url::fromRoute('ai_whatsapp_automation.dashboard'),
+      '#attributes' => ['class' => ['button']],
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+  }
+
+}

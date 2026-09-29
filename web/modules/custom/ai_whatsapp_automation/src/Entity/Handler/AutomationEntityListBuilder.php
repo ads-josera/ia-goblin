@@ -1,0 +1,1101 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\ai_whatsapp_automation\Entity\Handler;
+
+use Drupal\ai_whatsapp_automation\Form\MessageListFilterForm;
+use Drupal\ai_whatsapp_automation\Form\ClientListFilterForm;
+use Drupal\ai_whatsapp_automation\Form\ConversationListFilterForm;
+use Drupal\ai_whatsapp_automation\Ui\ClientFilter;
+use Drupal\ai_whatsapp_automation\Ui\ResponsiveTable;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityListBuilder;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\file\FileInterface;
+
+/**
+ * Provides list tables for AI WhatsApp Automation content entities.
+ */
+final class AutomationEntityListBuilder extends EntityListBuilder {
+
+  /**
+   * Field path from each entity type to its client, for the list filter.
+   *
+   * Messages, audit records and knowledge files reach it through the record
+   * they belong to.
+   */
+  private const CLIENT_FIELD_PATHS = [
+    'ai_whatsapp_bot' => 'client',
+    'ai_whatsapp_account' => 'client',
+    'ai_whatsapp_knowledge_base' => 'client',
+    'ai_whatsapp_conversation' => 'client',
+    'ai_whatsapp_lead' => 'client',
+    'ai_whatsapp_message' => 'conversation.entity.client',
+    'ai_whatsapp_operator_action' => 'conversation.entity.client',
+    'ai_whatsapp_knowledge_document' => 'knowledge_base.entity.client',
+    'ai_whatsapp_knowledge_chunk' => 'knowledge_base.entity.client',
+  ];
+
+  /**
+   * Returns how a conversation's contact should read in a list.
+   *
+   * Web chat conversations are stored with the name "Web visitor", which is
+   * a placeholder and not something to show to the person using the panel.
+   */
+  private function contactLabel(string $name, string $phone, string $provider): string {
+    if ($name !== '' && $name !== 'Web visitor') {
+      return $name;
+    }
+
+    return $provider === 'web' ? (string) $this->t('Visitante web') : $phone;
+  }
+
+  /**
+   * Lists where a row only carries the actions of its own work.
+   *
+   * These are read all day long: editing or deleting the record is done from
+   * its page, not from a row.
+   */
+  private const OPERATIONAL_LISTS = [
+    'ai_whatsapp_conversation',
+    'ai_whatsapp_message',
+    'ai_whatsapp_lead',
+    'ai_whatsapp_operator_action',
+    'ai_whatsapp_knowledge_chunk',
+  ];
+
+  /**
+   * Puts Drupal's own row operations in Spanish and behind ours.
+   *
+   * They used to hide inside the dropbutton; now that every action is a
+   * visible button, "Edit" and "Delete" would be the first thing read on a
+   * screen that is otherwise entirely in Spanish.
+   *
+   * @param array<string, array<string, mixed>> $operations
+   *   Operations from the parent list builder.
+   *
+   * @return array<string, array<string, mixed>>
+   *   The same operations, renamed and re-weighted.
+   */
+  private function translateDefaultOperations(array $operations): array {
+    $titles = [
+      'view' => $this->t('Ver'),
+      'edit' => $this->t('Editar'),
+      'delete' => $this->t('Eliminar'),
+      'duplicate' => $this->t('Duplicar'),
+    ];
+    $weights = ['view' => 30, 'edit' => 40, 'delete' => 50, 'duplicate' => 45];
+    foreach ($operations as $key => $operation) {
+      if (isset($titles[$key])) {
+        $operations[$key]['title'] = $titles[$key];
+        $operations[$key]['weight'] = $weights[$key];
+      }
+    }
+
+    return $operations;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Rows show their actions as plain buttons instead of Drupal's dropbutton.
+   * With one action the dropbutton still drew an arrow that opened nothing,
+   * and with two it hid the second one behind a click for no reason: these
+   * lists never have more than three.
+   */
+  public function buildOperations(EntityInterface $entity): array {
+    $operations = $this->getOperations($entity);
+    if ($operations === []) {
+      return [];
+    }
+    uasort($operations, static fn (array $a, array $b): int => ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0));
+
+    $build = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['aiwa-actions']],
+      '#attached' => ['library' => ['ai_whatsapp_automation/responsive_tables']],
+    ];
+    $is_first = TRUE;
+    foreach ($operations as $key => $operation) {
+      if (!isset($operation['url'])) {
+        continue;
+      }
+      $classes = ['aiwa-actions__button'];
+      if ($key === 'delete') {
+        $classes[] = 'aiwa-actions__button--danger';
+      }
+      elseif ($is_first) {
+        $classes[] = 'aiwa-actions__button--primary';
+      }
+      $build[$key] = [
+        '#type' => 'link',
+        '#title' => $operation['title'],
+        '#url' => $operation['url'],
+        '#attributes' => ['class' => $classes],
+      ];
+      $is_first = FALSE;
+    }
+
+    return $build;
+  }
+
+  /**
+   * Returns the operations column with a Spanish label.
+   *
+   * @return array<string, mixed>
+   *   The header fragment added at the end of every list.
+   */
+  private function operationsHeader(): array {
+    $header = parent::buildHeader();
+    if (!isset($header['operations'])) {
+      return $header;
+    }
+    // Core writes a plain label here, but a header cell may also be an array.
+    if (is_array($header['operations'])) {
+      $header['operations']['data'] = $this->t('Acciones');
+    }
+    else {
+      $header['operations'] = $this->t('Acciones');
+    }
+
+    return $header;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildHeader(): array {
+    if ($this->entityTypeId === 'ai_whatsapp_message') {
+      return [
+        'conversation' => $this->t('Conversación'),
+        'routing' => $this->t('Bot y canal'),
+        'sender' => $this->t('Dirección'),
+        'content' => $this->t('Mensaje'),
+        'created' => $this->t('Fecha'),
+      ] + $this->operationsHeader();
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_conversation') {
+      return [
+        'contact' => $this->t('Contacto'),
+        'routing' => $this->t('Bot y canal'),
+        'status' => $this->t('Estado'),
+        'changed' => $this->t('Última actividad'),
+      ] + $this->operationsHeader();
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_lead') {
+      return [
+        'contact' => $this->t('Contacto'),
+        'routing' => $this->t('Bot y canal'),
+        'status' => $this->t('Estado'),
+        'created' => $this->t('Creado'),
+      ] + $this->operationsHeader();
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_operator_action') {
+      return [
+        'conversation' => $this->t('Contacto y contexto'),
+        'action' => $this->t('Evento'),
+        'user' => $this->t('Origen'),
+        'note' => $this->t('Resultado'),
+        'created' => $this->t('Fecha'),
+      ] + $this->operationsHeader();
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_knowledge_chunk') {
+      return [
+        'document' => $this->t('Documento'),
+        'chunk' => $this->t('Fragmento'),
+        'content' => $this->t('Vista previa'),
+        'model' => $this->t('Modelo'),
+        'created' => $this->t('Creado'),
+      ] + $this->operationsHeader();
+    }
+
+    $header['label'] = $this->t('Nombre');
+    if ((self::CLIENT_FIELD_PATHS[$this->entityTypeId] ?? '') === 'client') {
+      $header['client'] = $this->t('Cliente');
+    }
+    $header['status'] = $this->t('Estado');
+    $header['changed'] = $this->t('Actualizado');
+
+    return $header + $this->operationsHeader();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildRow(EntityInterface $entity): array {
+    if ($this->entityTypeId === 'ai_whatsapp_message') {
+      return $this->buildMessageRow($entity) + parent::buildRow($entity);
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_conversation') {
+      return $this->buildConversationRow($entity) + parent::buildRow($entity);
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_lead') {
+      return $this->buildLeadRow($entity) + parent::buildRow($entity);
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_operator_action') {
+      return $this->buildOperatorActionRow($entity) + parent::buildRow($entity);
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_knowledge_chunk') {
+      return $this->buildKnowledgeChunkRow($entity) + parent::buildRow($entity);
+    }
+
+    $row['label'] = $entity->toLink();
+    if ((self::CLIENT_FIELD_PATHS[$this->entityTypeId] ?? '') === 'client') {
+      $client = $entity->get('client')->entity;
+      $row['client'] = $client instanceof EntityInterface ? $client->label() : (string) $this->t('Sin cliente');
+    }
+    $row['status'] = $this->allowedValueLabel($entity, 'status');
+    $changed = (int) $this->getFieldValue($entity, 'changed');
+    $row['changed'] = $changed > 0 ? \Drupal::service('date.formatter')->format($changed, 'short') : '';
+
+    return $row + parent::buildRow($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(): array {
+    $build = parent::render();
+    $build['table'] = ResponsiveTable::wrap($build['table']);
+    if ($this->entityTypeId === 'ai_whatsapp_message') {
+      $build['table']['table']['#attributes']['class'][] = 'aiwa-message-list';
+      return [
+        '#attached' => [
+          'library' => ['ai_whatsapp_automation/message_list'],
+        ],
+        'filters' => \Drupal::formBuilder()->getForm(MessageListFilterForm::class),
+        'messages' => $build,
+      ];
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_conversation') {
+      $build['table']['table']['#attributes']['class'][] = 'aiwa-conversation-list';
+      return [
+        '#attached' => [
+          'library' => ['ai_whatsapp_automation/conversation_list'],
+        ],
+        'filters' => \Drupal::formBuilder()->getForm(ConversationListFilterForm::class),
+        'conversations' => $build,
+      ];
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_lead') {
+      $build['table']['table']['#attributes']['class'][] = 'aiwa-lead-list';
+      return [
+        '#attached' => [
+          'library' => ['ai_whatsapp_automation/lead_list'],
+        ],
+        'filters' => ClientFilter::isAvailable() ? \Drupal::formBuilder()->getForm(ClientListFilterForm::class) : [],
+        'leads' => $build,
+      ];
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_operator_action') {
+      $build['table']['table']['#attributes']['class'][] = 'aiwa-operator-action-list';
+      return [
+        '#attached' => [
+          'library' => ['ai_whatsapp_automation/operator_action_list'],
+        ],
+        'filters' => ClientFilter::isAvailable() ? \Drupal::formBuilder()->getForm(ClientListFilterForm::class) : [],
+        'actions' => $build,
+      ];
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_knowledge_chunk') {
+      $build['table']['table']['#attributes']['class'][] = 'aiwa-knowledge-chunk-list';
+      return [
+        '#attached' => [
+          'library' => ['ai_whatsapp_automation/knowledge_chunk_list'],
+        ],
+        'filters' => ClientFilter::isAvailable() ? \Drupal::formBuilder()->getForm(ClientListFilterForm::class) : [],
+        'chunks' => $build,
+      ];
+    }
+
+    if (isset(self::CLIENT_FIELD_PATHS[$this->entityTypeId])) {
+      return [
+        'filters' => ClientFilter::isAvailable() ? \Drupal::formBuilder()->getForm(ClientListFilterForm::class) : [],
+        'list' => $build,
+      ];
+    }
+
+    return $build;
+  }
+
+  /**
+   * Restricts a list query to the client selected in the request, if any.
+   */
+  private function applyClientFilter(QueryInterface $query): QueryInterface {
+    $client_id = ClientFilter::selectedId(\Drupal::request());
+    if ($client_id > 0 && isset(self::CLIENT_FIELD_PATHS[$this->entityTypeId])) {
+      $query->condition(self::CLIENT_FIELD_PATHS[$this->entityTypeId], $client_id);
+    }
+
+    return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntityListQuery(): QueryInterface {
+    return $this->applyClientFilter($this->buildEntityListQuery());
+  }
+
+  /**
+   * Builds the list query with the per-type sorting and filters.
+   */
+  private function buildEntityListQuery(): QueryInterface {
+    if ($this->entityTypeId === 'ai_whatsapp_lead') {
+      $query = $this->getStorage()->getQuery()
+        ->accessCheck(TRUE)
+        ->sort('created', 'DESC');
+      if ($this->limit) {
+        $query->pager($this->limit);
+      }
+
+      return $query;
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_operator_action') {
+      $query = $this->getStorage()->getQuery()
+        ->accessCheck(TRUE)
+        ->sort('created', 'DESC');
+      if ($this->limit) {
+        $query->pager($this->limit);
+      }
+
+      return $query;
+    }
+    if ($this->entityTypeId === 'ai_whatsapp_knowledge_chunk') {
+      $query = $this->getStorage()->getQuery()
+        ->accessCheck(TRUE)
+        ->sort('created', 'DESC');
+      if ($this->limit) {
+        $query->pager($this->limit);
+      }
+
+      return $query;
+    }
+    if ($this->entityTypeId !== 'ai_whatsapp_message') {
+      if ($this->entityTypeId !== 'ai_whatsapp_conversation') {
+        return parent::getEntityListQuery();
+      }
+
+      $query = $this->getStorage()->getQuery()
+        ->accessCheck(TRUE)
+        ->sort('changed', 'DESC');
+      $request = \Drupal::request();
+      $search = trim((string) $request->query->get('q', ''));
+      $provider = trim((string) $request->query->get('provider', ''));
+      $bot = (int) $request->query->get('bot', 0);
+      $status = trim((string) $request->query->get('status', ''));
+      if ($search !== '') {
+        $search_group = $query->orConditionGroup()
+          ->condition('name', '%' . $search . '%', 'LIKE')
+          ->condition('phone', '%' . $search . '%', 'LIKE');
+        $query->condition($search_group);
+      }
+      if (in_array($provider, ['twilio', 'cloud_api', 'evolution', 'web'], TRUE)) {
+        $query->condition('provider', $provider);
+      }
+      if ($bot > 0) {
+        $query->condition('bot', $bot);
+      }
+      if (in_array($status, ['AI_ACTIVE', 'HUMAN_ASSIGNED', 'CLOSED'], TRUE)) {
+        $query->condition('status', $status);
+      }
+      if ($this->limit) {
+        $query->pager($this->limit);
+      }
+
+      return $query;
+    }
+
+    $query = $this->getStorage()->getQuery()
+      ->accessCheck(TRUE)
+      ->sort('created', 'DESC');
+    $request = \Drupal::request();
+    $search = trim((string) $request->query->get('q', ''));
+    $sender = trim((string) $request->query->get('sender', ''));
+    $conversation = (int) $request->query->get('conversation', 0);
+
+    if ($search !== '') {
+      $search_group = $query->orConditionGroup()
+        ->condition('content', '%' . $search . '%', 'LIKE')
+        ->condition('provider_message_id', '%' . $search . '%', 'LIKE');
+      $query->condition($search_group);
+    }
+    if (in_array($sender, ['contact', 'ai', 'operator', 'system'], TRUE)) {
+      $query->condition('sender', $sender);
+    }
+    if ($conversation > 0) {
+      $query->condition('conversation', $conversation);
+    }
+    if ($this->limit) {
+      $query->pager($this->limit);
+    }
+
+    return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity): array {
+    // Client users only get the actions their access allows; the parent
+    // operations (edit, delete) are already filtered by entity access.
+    return array_filter(
+      $this->collectOperations($entity),
+      static fn (array $operation): bool => !isset($operation['url']) || $operation['url']->access(),
+    );
+  }
+
+  /**
+   * Builds every operation of a record before access filtering.
+   */
+  private function collectOperations(EntityInterface $entity): array {
+    $operations = $this->translateDefaultOperations(parent::getDefaultOperations($entity));
+    if (in_array($entity->getEntityTypeId(), self::OPERATIONAL_LISTS, TRUE)) {
+      unset($operations['view'], $operations['edit'], $operations['delete'], $operations['duplicate']);
+    }
+
+    if ($entity->getEntityTypeId() === 'ai_whatsapp_account' && $this->getFieldValue($entity, 'provider') === 'evolution') {
+      $operations['manage_qr'] = [
+        'title' => $this->t('Conectar por QR'),
+        'weight' => 20,
+        'url' => Url::fromRoute('ai_whatsapp_automation.evolution_account_qr', [
+          'ai_whatsapp_account' => $entity->id(),
+        ]),
+      ];
+    }
+
+    if ($entity->getEntityTypeId() === 'ai_whatsapp_knowledge_document') {
+      $download = self::documentDownloadUrl($entity);
+      if ($download instanceof Url) {
+        $operations['download'] = [
+          'title' => $this->t('Descargar'),
+          'weight' => -10,
+          'url' => $download,
+        ];
+      }
+    }
+
+    if ($entity->getEntityTypeId() === 'ai_whatsapp_bot') {
+      $operations['web_integration'] = [
+        'title' => $this->t('Integración web'),
+        'weight' => 20,
+        'url' => Url::fromRoute('ai_whatsapp_automation.bot_web_integration', [
+          'ai_whatsapp_bot' => $entity->id(),
+        ]),
+      ];
+    }
+
+    if ($entity->getEntityTypeId() === 'ai_whatsapp_message') {
+      // The message record page shows technical provider data: client users
+      // follow the conversation instead.
+      if (!\Drupal::service('ai_whatsapp_automation.client_access')->isAdmin(\Drupal::currentUser())) {
+        unset($operations['view']);
+      }
+      $conversation = $entity->hasField('conversation') ? $entity->get('conversation')->entity : NULL;
+      if ($conversation instanceof EntityInterface) {
+        $operations['conversation'] = [
+          'title' => $this->t('Ver conversación'),
+          'weight' => 5,
+          'url' => $conversation->toUrl('canonical'),
+        ];
+      }
+      return $operations;
+    }
+
+    if ($entity->getEntityTypeId() === 'ai_whatsapp_operator_action') {
+      $conversation = $entity->hasField('conversation') ? $entity->get('conversation')->entity : NULL;
+      if ($conversation instanceof EntityInterface) {
+        $operations['conversation'] = [
+          'title' => $this->t('Ver conversación'),
+          'weight' => 5,
+          'url' => $conversation->toUrl('canonical'),
+        ];
+      }
+      $lead = $this->getActionLead($entity);
+      if ($lead instanceof EntityInterface) {
+        $operations['lead'] = [
+          'title' => $this->t('Ver lead'),
+          'weight' => 6,
+          'url' => $lead->toUrl('canonical'),
+        ];
+      }
+
+      return $operations;
+    }
+
+    if ($entity->getEntityTypeId() === 'ai_whatsapp_lead') {
+      $operations['status'] = [
+        'title' => $this->t('Cambiar estado'),
+        'weight' => 4,
+        'url' => Url::fromRoute('ai_whatsapp_automation.lead_status', ['ai_whatsapp_lead' => $entity->id()]),
+      ];
+      $conversation = $this->getLeadConversation($entity);
+      if ($conversation instanceof EntityInterface) {
+        $operations['conversation'] = [
+          'title' => $this->t('Ver conversación'),
+          'weight' => 5,
+          'url' => $conversation->toUrl('canonical'),
+        ];
+      }
+
+      return $operations;
+    }
+
+    if ($entity->getEntityTypeId() !== 'ai_whatsapp_conversation') {
+      return $operations;
+    }
+
+    // Same actions and labels as the buttons on the conversation page: only
+    // the one that applies to the current status (pause or reactivate).
+    $route_params = ['ai_whatsapp_conversation' => $entity->id()];
+    if (\Drupal::service('ai_whatsapp_automation.human_operator')->supportsManualReply($entity)) {
+      $operations['manual_reply'] = [
+        'title' => $this->t('Responder'),
+        'weight' => 20,
+        'url' => Url::fromRoute('ai_whatsapp_automation.conversation_manual_reply', $route_params),
+      ];
+    }
+    if ($this->getFieldValue($entity, 'status') === 'AI_ACTIVE') {
+      $operations['stop_ai'] = [
+        'title' => $this->t('Pausar IA'),
+        'weight' => 22,
+        'url' => Url::fromRoute('ai_whatsapp_automation.conversation_stop_ai', $route_params),
+      ];
+    }
+    else {
+      $operations['reactivate_ai'] = [
+        'title' => $this->t('Reactivar IA'),
+        'weight' => 22,
+        'url' => Url::fromRoute('ai_whatsapp_automation.conversation_reactivate_ai', $route_params),
+      ];
+    }
+    $operations['open'] = [
+      'title' => $this->t('Abrir'),
+      'weight' => 30,
+      'url' => $entity->toUrl('canonical'),
+    ];
+
+    return $operations;
+  }
+
+  /**
+   * Returns the human label of a list field value, or the raw value.
+   */
+  private function allowedValueLabel(EntityInterface $entity, string $field_name): string {
+    $value = $this->getFieldValue($entity, $field_name);
+    $allowed = $entity->get($field_name)->getFieldDefinition()->getSetting('allowed_values');
+
+    return is_array($allowed) && isset($allowed[$value]) ? (string) $allowed[$value] : $value;
+  }
+
+  /**
+   * Returns the download URL of a knowledge document's file, if allowed.
+   *
+   * Files have no page of their own, so the document list and detail page
+   * link the file directly. Private files are served by /system/files, which
+   * only knowledge administrators may use (hook_file_download).
+   */
+  public static function documentDownloadUrl(EntityInterface $document): ?Url {
+    $file = $document->get('file')->entity;
+    if (!$file instanceof FileInterface || !\Drupal::currentUser()->hasPermission('administer ai whatsapp automation rag')) {
+      return NULL;
+    }
+
+    return \Drupal::service('file_url_generator')->generate($file->getFileUri());
+  }
+
+  /**
+   * Returns a scalar field value for list display.
+   */
+  private function getFieldValue(EntityInterface $entity, string $field_name): string {
+    if (!$entity->hasField($field_name) || $entity->get($field_name)->isEmpty()) {
+      return '';
+    }
+
+    $value = $entity->get($field_name)->value;
+
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * Builds a readable row for the message inbox.
+   */
+  private function buildMessageRow(EntityInterface $entity): array {
+    $conversation = $entity->hasField('conversation') ? $entity->get('conversation')->entity : NULL;
+    $contact = $conversation instanceof EntityInterface
+      ? $this->contactLabel(
+          $this->getFieldValue($conversation, 'name'),
+          $this->getFieldValue($conversation, 'phone'),
+          $this->getFieldValue($conversation, 'provider')
+        )
+      : $this->t('Conversación eliminada');
+    $conversation_id = $conversation instanceof EntityInterface ? $conversation->id() : NULL;
+    $bot = $conversation instanceof EntityInterface ? $this->getConversationBot($conversation) : NULL;
+    $account = $conversation instanceof EntityInterface && $conversation->hasField('whatsapp_account')
+      ? $conversation->get('whatsapp_account')->entity
+      : NULL;
+    $channel = $conversation instanceof EntityInterface ? $this->getFieldValue($conversation, 'channel') : '';
+    $provider = $conversation instanceof EntityInterface ? $this->getFieldValue($conversation, 'provider') : '';
+    // Previews are plain text: drop Markdown emphasis instead of showing it.
+    $preview = str_replace(['**', '__'], '', $this->getFieldValue($entity, 'content'));
+    $preview = preg_replace('/\s+/u', ' ', $preview) ?? '';
+    $preview = mb_strimwidth($preview, 0, 180, '...');
+    $sender = $this->getFieldValue($entity, 'sender');
+    $sender_labels = [
+      'contact' => $this->t('Contacto'),
+      'ai' => $this->t('IA'),
+      'operator' => $this->t('Operador'),
+      'system' => $this->t('Sistema'),
+    ];
+
+    $row['conversation'] = [
+      'data' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['aiwa-message-list__conversation']],
+        'link' => $conversation instanceof EntityInterface
+          ? Link::fromTextAndUrl($contact, $conversation->toUrl('canonical'))->toRenderable()
+          : ['#plain_text' => (string) $contact],
+      ],
+    ];
+    if ($conversation_id !== NULL) {
+      $row['conversation']['data']['id'] = [
+        '#markup' => '<div class="aiwa-message-list__conversation-id">#' . $conversation_id . '</div>',
+      ];
+    }
+    $row['routing'] = [
+      'data' => [
+        '#markup' => $this->routingMarkup($bot, $account, $channel, $provider, 'aiwa-message-list'),
+      ],
+    ];
+    $row['sender'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-message-list__sender aiwa-message-list__sender--' . Html::getClass($sender) . '">' . Html::escape((string) ($sender_labels[$sender] ?? $sender)) . '</span>',
+      ],
+    ];
+    $row['content'] = [
+      'data' => [
+        '#markup' => '<div class="aiwa-message-list__preview">' . Html::escape($preview) . '</div>',
+      ],
+    ];
+    $row['created'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-message-list__date">' . Html::escape(\Drupal::service('date.formatter')->format((int) $this->getFieldValue($entity, 'created'), 'short')) . '</span>',
+      ],
+    ];
+
+    return $row;
+  }
+
+  /**
+   * Builds an operational row for the conversation inbox.
+   */
+  private function buildConversationRow(EntityInterface $entity): array {
+    $provider = $this->getFieldValue($entity, 'provider');
+    $phone = $this->getFieldValue($entity, 'phone');
+    $name = $this->getFieldValue($entity, 'name');
+    $contact = $this->contactLabel($name, $phone, $provider);
+    $bot = $this->getConversationBot($entity);
+    $account = $entity->hasField('whatsapp_account')
+      ? $entity->get('whatsapp_account')->entity
+      : NULL;
+    $channel = $this->getFieldValue($entity, 'channel');
+    $status = $this->getFieldValue($entity, 'status');
+    $status_labels = [
+      'AI_ACTIVE' => $this->t('IA activa'),
+      'HUMAN_ASSIGNED' => $this->t('Atención humana'),
+      'CLOSED' => $this->t('Cerrada'),
+    ];
+
+    $row['contact'] = [
+      'data' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['aiwa-conversation-list__contact']],
+        'link' => Link::fromTextAndUrl($contact, $entity->toUrl('canonical'))->toRenderable(),
+      ],
+    ];
+    if ($provider !== 'web' && $name !== '' && $phone !== '') {
+      $row['contact']['data']['phone'] = [
+        '#markup' => '<div class="aiwa-conversation-list__phone">' . Html::escape($phone) . '</div>',
+      ];
+    }
+    if ($provider === 'web') {
+      $row['contact']['data']['id'] = [
+        '#markup' => '<div class="aiwa-conversation-list__phone">#' . $entity->id() . '</div>',
+      ];
+    }
+    $row['routing'] = [
+      'data' => [
+        '#markup' => $this->routingMarkup($bot, $account instanceof EntityInterface ? $account : NULL, $channel, $provider, 'aiwa-conversation-list'),
+      ],
+    ];
+    $row['status'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-conversation-list__status aiwa-conversation-list__status--' . Html::getClass($status) . '">' . Html::escape((string) ($status_labels[$status] ?? $status)) . '</span>',
+      ],
+    ];
+    $row['changed'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-conversation-list__date">' . Html::escape(\Drupal::service('date.formatter')->format((int) $this->getFieldValue($entity, 'changed'), 'short')) . '</span>',
+      ],
+    ];
+
+    return $row;
+  }
+
+  /**
+   * Builds a concise and useful row for the lead inbox.
+   */
+  private function buildLeadRow(EntityInterface $entity): array {
+    $phone = $this->getFieldValue($entity, 'phone');
+    $email = $this->getFieldValue($entity, 'email');
+    $name = $this->leadContactName($this->getFieldValue($entity, 'name'), $email, $phone);
+    $source = $this->getFieldValue($entity, 'source');
+    $conversation = $this->getLeadConversation($entity);
+    $bot = $entity->hasField('bot') && $entity->get('bot')->entity instanceof EntityInterface
+      ? $entity->get('bot')->entity
+      : ($conversation instanceof EntityInterface ? $this->getConversationBot($conversation) : NULL);
+    $account = $conversation instanceof EntityInterface && $conversation->hasField('whatsapp_account')
+      ? $conversation->get('whatsapp_account')->entity
+      : NULL;
+    $channel = $conversation instanceof EntityInterface ? $this->getFieldValue($conversation, 'channel') : $source;
+    $provider = $conversation instanceof EntityInterface ? $this->getFieldValue($conversation, 'provider') : $source;
+    $status = $this->getFieldValue($entity, 'status');
+    $source_labels = [
+      'whatsapp' => $this->t('WhatsApp'),
+      'web' => $this->t('Chat web'),
+    ];
+    $status_labels = [
+      'new' => $this->t('Nuevo'),
+      'contacted' => $this->t('Contactado'),
+      'qualified' => $this->t('Calificado'),
+      'disqualified' => $this->t('Descartado'),
+      'converted' => $this->t('Convertido'),
+    ];
+
+    $row['contact'] = [
+      'data' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['aiwa-lead-list__contact']],
+        'link' => Link::fromTextAndUrl($name, $entity->toUrl('canonical'))->toRenderable(),
+      ],
+    ];
+    if ($phone !== '') {
+      $row['contact']['data']['phone'] = [
+        '#markup' => '<div class="aiwa-lead-list__meta">' . Html::escape($phone) . '</div>',
+      ];
+    }
+    if ($email !== '') {
+      $row['contact']['data']['email'] = [
+        '#markup' => '<div class="aiwa-lead-list__meta">' . Html::escape($email) . '</div>',
+      ];
+    }
+    $row['routing'] = [
+      'data' => [
+        '#markup' => $this->routingMarkup($bot, $account, $channel, $provider, 'aiwa-lead-list', $source_labels),
+      ],
+    ];
+    $row['status'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-lead-list__status aiwa-lead-list__status--' . Html::getClass($status) . '">' . Html::escape((string) ($status_labels[$status] ?? $status)) . '</span>',
+      ],
+    ];
+    $row['created'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-lead-list__date">' . Html::escape(\Drupal::service('date.formatter')->format((int) $this->getFieldValue($entity, 'created'), 'short')) . '</span>',
+      ],
+    ];
+
+    return $row;
+  }
+
+  /**
+   * Returns the conversation that generated a lead when it is available.
+   */
+  private function getLeadConversation(EntityInterface $lead): ?EntityInterface {
+    if ($lead->hasField('conversation') && !$lead->get('conversation')->isEmpty()) {
+      $conversation = $lead->get('conversation')->entity;
+      if ($conversation instanceof EntityInterface) {
+        return $conversation;
+      }
+    }
+
+    // Leads created before update 11029 may only be linked by their audit
+    // record. There is deliberately no phone-number fallback: the same phone
+    // can talk to several bots, so it attributed leads to the wrong one.
+    $action_ids = \Drupal::entityTypeManager()
+      ->getStorage('ai_whatsapp_operator_action')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('action', 'LEAD_HANDOFF')
+      ->condition('note', 'Lead ID: ' . $lead->id())
+      ->sort('created', 'DESC')
+      ->range(0, 1)
+      ->execute();
+
+    if ($action_ids !== []) {
+      $action = \Drupal::entityTypeManager()
+        ->getStorage('ai_whatsapp_operator_action')
+        ->load(reset($action_ids));
+      $conversation = $action instanceof EntityInterface && $action->hasField('conversation')
+        ? $action->get('conversation')->entity
+        : NULL;
+      if ($conversation instanceof EntityInterface) {
+        return $conversation;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Resolves the bot that handled a conversation.
+   */
+  private function getConversationBot(EntityInterface $conversation): ?EntityInterface {
+    if ($conversation->hasField('bot') && !$conversation->get('bot')->isEmpty()) {
+      $bot = $conversation->get('bot')->entity;
+      if ($bot instanceof EntityInterface) {
+        return $bot;
+      }
+    }
+
+    $account = $conversation->hasField('whatsapp_account')
+      ? $conversation->get('whatsapp_account')->entity
+      : NULL;
+    $bot = $account instanceof EntityInterface && $account->hasField('bot')
+      ? $account->get('bot')->entity
+      : NULL;
+
+    return $bot instanceof EntityInterface ? $bot : NULL;
+  }
+
+  /**
+   * Builds the bot and channel summary used in operational lists.
+   *
+   * @param array<string, \Drupal\Core\StringTranslation\TranslatableMarkup> $fallback_labels
+   *   Optional labels used when a conversation cannot be resolved.
+   */
+  private function routingMarkup(?EntityInterface $bot, ?EntityInterface $account, string $channel, string $provider, string $prefix, array $fallback_labels = []): string {
+    $channel_labels = [
+      'whatsapp' => $this->t('WhatsApp'),
+      'web' => $this->t('Chat web'),
+    ];
+    $provider_labels = [
+      'twilio' => $this->t('Twilio'),
+      'cloud_api' => $this->t('Cloud API'),
+      'evolution' => $this->t('Evolution API'),
+      'web' => $this->t('Web widget'),
+    ];
+    $channel_label = (string) ($channel_labels[$channel] ?? $fallback_labels[$channel] ?? $channel ?: $this->t('No definido'));
+    $details = $account instanceof EntityInterface
+      ? $account->label()
+      : (string) ($provider_labels[$provider] ?? '');
+    $bot_label = $bot instanceof EntityInterface ? $bot->label() : (string) $this->t('Bot no asociado');
+
+    $markup = '<div class="' . Html::getClass($prefix . '__routing') . '">';
+    $markup .= '<div class="' . Html::getClass($prefix . '__bot') . '">' . Html::escape($bot_label) . '</div>';
+    $markup .= '<span class="' . Html::getClass($prefix . '__channel') . '">' . Html::escape($channel_label);
+    if ($details !== '') {
+      $markup .= ' · ' . Html::escape($details);
+    }
+    $markup .= '</span></div>';
+
+    return $markup;
+  }
+
+  /**
+   * Returns a contact name suitable for an operational lead list.
+   */
+  private function leadContactName(string $name, string $email, string $phone): string {
+    $name = trim(preg_replace('/[*_`]+/u', '', $name) ?? '');
+    $normalized = mb_strtolower($name);
+    $generic_values = [
+      'correo electrónico',
+      'correo electronico',
+      'email',
+      'e-mail',
+      'correo',
+      'teléfono',
+      'telefono',
+      'contacto',
+      'nombre',
+    ];
+
+    if ($name === '' || !preg_match('/[\\p{L}\\p{N}]/u', $name) || in_array($normalized, $generic_values, TRUE) || filter_var($name, FILTER_VALIDATE_EMAIL)) {
+      return (string) $this->t('Nombre no capturado');
+    }
+
+    return $name;
+  }
+
+  /**
+   * Builds a readable audit row for an operator action.
+   */
+  private function buildOperatorActionRow(EntityInterface $entity): array {
+    $conversation = $entity->hasField('conversation') ? $entity->get('conversation')->entity : NULL;
+    $provider = $conversation instanceof EntityInterface ? $this->getFieldValue($conversation, 'provider') : '';
+    $contact = $conversation instanceof EntityInterface
+      ? $this->contactLabel(
+          $this->getFieldValue($conversation, 'name'),
+          $this->getFieldValue($conversation, 'phone'),
+          $provider
+        )
+      : $this->t('Conversación eliminada');
+    $operator = $entity->hasField('user') ? $entity->get('user')->entity : NULL;
+    $action = $this->getFieldValue($entity, 'action');
+    $note = preg_replace('/\s+/u', ' ', $this->getFieldValue($entity, 'note')) ?? '';
+    $lead = $this->getActionLead($entity);
+    $bot = $conversation instanceof EntityInterface ? $this->getConversationBot($conversation) : NULL;
+    $account = $conversation instanceof EntityInterface && $conversation->hasField('whatsapp_account')
+      ? $conversation->get('whatsapp_account')->entity
+      : NULL;
+    $channel = $conversation instanceof EntityInterface ? $this->getFieldValue($conversation, 'channel') : '';
+    $action_labels = [
+      'AI_STOPPED' => $this->t('IA pausada'),
+      'OPERATOR_ASSIGNED' => $this->t('Operador asignado'),
+      'MANUAL_REPLY_SENT' => $this->t('Respuesta manual enviada'),
+      'AI_REACTIVATED' => $this->t('IA reactivada'),
+      'CONVERSATION_CLOSED' => $this->t('Conversación cerrada'),
+      'LEAD_HANDOFF' => $this->t('Lead enviado a atención humana'),
+    ];
+
+    $row['conversation'] = [
+      'data' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['aiwa-operator-action-list__conversation']],
+        'link' => $conversation instanceof EntityInterface
+          ? Link::fromTextAndUrl($contact, $conversation->toUrl('canonical'))->toRenderable()
+          : ['#plain_text' => (string) $contact],
+      ],
+    ];
+    if ($conversation instanceof EntityInterface) {
+      $row['conversation']['data']['id'] = [
+        '#markup' => $this->routingMarkup($bot, $account, $channel, $provider, 'aiwa-operator-action-list'),
+      ];
+    }
+    $row['action'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-operator-action-list__action aiwa-operator-action-list__action--' . Html::getClass($action) . '">' . Html::escape((string) ($action_labels[$action] ?? $action)) . '</span>',
+      ],
+    ];
+    $row['user'] = [
+      'data' => [
+        '#markup' => $this->actionOriginMarkup($action, $operator),
+      ],
+    ];
+    $row['note'] = [
+      'data' => [
+        '#markup' => $this->actionResultMarkup($lead, $note),
+      ],
+    ];
+    $row['created'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-operator-action-list__date">' . Html::escape(\Drupal::service('date.formatter')->format((int) $this->getFieldValue($entity, 'created'), 'short')) . '</span>',
+      ],
+    ];
+
+    return $row;
+  }
+
+  /**
+   * Returns the lead associated with an audit record when one was created.
+   */
+  private function getActionLead(EntityInterface $entity): ?EntityInterface {
+    $note = $this->getFieldValue($entity, 'note');
+    if (!preg_match('/\bLead ID:\s*(\d+)\b/i', $note, $matches)) {
+      return NULL;
+    }
+
+    $lead = \Drupal::entityTypeManager()
+      ->getStorage('ai_whatsapp_lead')
+      ->load((int) $matches[1]);
+
+    return $lead instanceof EntityInterface ? $lead : NULL;
+  }
+
+  /**
+   * Builds the source label for an action row.
+   */
+  private function actionOriginMarkup(string $action, ?EntityInterface $operator): string {
+    if ($action === 'LEAD_HANDOFF') {
+      return '<span class="aiwa-operator-action-list__origin aiwa-operator-action-list__origin--automation">' . Html::escape((string) $this->t('Automatización')) . '</span>';
+    }
+
+    $label = $operator instanceof EntityInterface ? $operator->label() : (string) $this->t('Sistema');
+
+    return '<span class="aiwa-operator-action-list__origin">' . Html::escape($label) . '</span>';
+  }
+
+  /**
+   * Builds a readable outcome for an action row.
+   */
+  private function actionResultMarkup(?EntityInterface $lead, string $note): string {
+    if ($lead instanceof EntityInterface) {
+      $label = $this->leadContactName(
+        $this->getFieldValue($lead, 'name'),
+        $this->getFieldValue($lead, 'email'),
+        $this->getFieldValue($lead, 'phone'),
+      );
+      $link = Link::fromTextAndUrl($this->t('Ver lead #@id', ['@id' => $lead->id()]), $lead->toUrl('canonical'))->toString();
+
+      return '<div class="aiwa-operator-action-list__result">' . $link . '<span>' . Html::escape($label) . '</span></div>';
+    }
+
+    $note = $note !== '' ? mb_strimwidth($note, 0, 140, '...') : (string) $this->t('Sin detalle adicional');
+
+    return '<div class="aiwa-operator-action-list__note">' . Html::escape($note) . '</div>';
+  }
+
+  /**
+   * Builds a readable row for an indexed knowledge fragment.
+   */
+  private function buildKnowledgeChunkRow(EntityInterface $entity): array {
+    $document = $entity->hasField('document') ? $entity->get('document')->entity : NULL;
+    $knowledge_base = $entity->hasField('knowledge_base') ? $entity->get('knowledge_base')->entity : NULL;
+    $content = preg_replace('/\s+/u', ' ', $this->getFieldValue($entity, 'content')) ?? '';
+    $content = mb_strimwidth($content, 0, 230, '...');
+    $chunk_index = $this->getFieldValue($entity, 'chunk_index');
+    $document_label = $document instanceof EntityInterface ? $document->label() : $this->t('Documento no disponible');
+
+    $row['document'] = [
+      'data' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['aiwa-knowledge-chunk-list__document']],
+        'link' => $document instanceof EntityInterface
+          ? Link::fromTextAndUrl($document_label, $document->toUrl('canonical'))->toRenderable()
+          : ['#plain_text' => (string) $document_label],
+      ],
+    ];
+    if ($knowledge_base instanceof EntityInterface) {
+      $row['document']['data']['base'] = [
+        '#markup' => '<div class="aiwa-knowledge-chunk-list__meta">' . Html::escape($knowledge_base->label()) . '</div>',
+      ];
+    }
+    $row['chunk'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-knowledge-chunk-list__index">#' . Html::escape($chunk_index) . '</span>',
+      ],
+    ];
+    $row['content'] = [
+      'data' => [
+        '#markup' => '<div class="aiwa-knowledge-chunk-list__preview">' . Html::escape($content) . '</div>',
+      ],
+    ];
+    $row['model'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-knowledge-chunk-list__model">' . Html::escape($this->getFieldValue($entity, 'embedding_model') ?: (string) $this->t('No definido')) . '</span>',
+      ],
+    ];
+    $row['created'] = [
+      'data' => [
+        '#markup' => '<span class="aiwa-knowledge-chunk-list__date">' . Html::escape(\Drupal::service('date.formatter')->format((int) $this->getFieldValue($entity, 'created'), 'short')) . '</span>',
+      ],
+    ];
+
+    return $row;
+  }
+
+}

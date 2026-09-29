@@ -1,0 +1,188 @@
+ai_whatsapp_automation.settings:
+  path: '/admin/config/services/ai-whatsapp-automation'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\SettingsForm'
+    _title: 'AI WhatsApp Automation'
+  requirements:
+    _permission: 'administer ai whatsapp automation'
+
+ai_whatsapp_automation.webhook:
+  path: '/ai-whatsapp-automation/webhook/{provider}'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\WebhookController::handle'
+  requirements:
+    _access: 'TRUE'
+    provider: 'twilio|cloud_api|evolution'
+  methods: [GET, POST]
+
+ai_whatsapp_automation.web_chat_page:
+  path: '/ai-whatsapp-automation/chat/{token}'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\WebChatController::page'
+    _title: 'Chat'
+  requirements:
+    _access: 'TRUE'
+    token: '[A-Za-z0-9_-]+'
+  methods: [GET]
+
+ai_whatsapp_automation.web_chat_embed:
+  path: '/ai-whatsapp-automation/embed/{token}'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\WebChatController::embed'
+  requirements:
+    _access: 'TRUE'
+    token: '[A-Za-z0-9_-]+'
+  methods: [GET]
+
+ai_whatsapp_automation.web_chat_api:
+  path: '/ai-whatsapp-automation/api/web-chat/{token}'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\WebChatController::message'
+  requirements:
+    _access: 'TRUE'
+    token: '[A-Za-z0-9_-]+'
+  methods: [POST, OPTIONS]
+
+ai_whatsapp_automation.dashboard:
+  path: '/admin/reports/ai-whatsapp-automation'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\DashboardController::dashboard'
+    _title: 'Panel AI WhatsApp'
+  requirements:
+    _permission: 'view ai whatsapp automation dashboard'
+
+ai_whatsapp_automation.rag_upload:
+  path: '/admin/content/ai-whatsapp/knowledge/upload'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\RAG\KnowledgeDocumentUploadForm'
+    _title: 'Upload knowledge document'
+  requirements:
+    _permission: 'administer ai whatsapp automation rag'
+
+ai_whatsapp_automation.evolution_connections:
+  path: '/admin/content/ai-whatsapp/evolution'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\Evolution\EvolutionConnectionController::overview'
+    _title: 'Evolution QR connections'
+  requirements:
+    _permission: 'administer ai whatsapp automation evolution'
+
+ai_whatsapp_automation.evolution_account_qr:
+  path: '/admin/content/ai-whatsapp/accounts/{ai_whatsapp_account}/evolution-qr'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\Evolution\EvolutionQrForm'
+    _title: 'Evolution QR connection'
+  requirements:
+    _permission: 'administer ai whatsapp automation evolution'
+  options:
+    parameters:
+      ai_whatsapp_account:
+        type: entity:ai_whatsapp_account
+
+ai_whatsapp_automation.multibot_routing:
+  path: '/admin/content/ai-whatsapp/routing'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\MultiBotRoutingController::overview'
+    _title: 'Enrutamiento de bots'
+  requirements:
+    _permission: 'administer ai whatsapp automation entities'
+
+ai_whatsapp_automation.bot_web_integration:
+  path: '/admin/content/ai-whatsapp/bots/{ai_whatsapp_bot}/web-integration'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\WebIntegrationController::overview'
+    _title: 'Web integration'
+  requirements:
+    _permission: 'administer ai whatsapp automation entities'
+  options:
+    parameters:
+      ai_whatsapp_bot:
+        type: entity:ai_whatsapp_bot
+
+ai_whatsapp_automation.conversation_stop_ai:
+  path: '/admin/content/ai-whatsapp/conversations/{ai_whatsapp_conversation}/stop-ai'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\StopAiForm'
+    _title: 'Pausar IA'
+  requirements:
+    _custom_access: 'ai_whatsapp_automation.client_access:operateConversation'
+  options:
+    parameters:
+      ai_whatsapp_conversation:
+        type: entity:ai_whatsapp_conversation
+
+ai_whatsapp_automation.conversation_assign_operator:
+  path: '/admin/content/ai-whatsapp/conversations/{ai_whatsapp_conversation}/assign-operator'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\AssignOperatorForm'
+    _title: 'Asignar operador'
+  requirements:
+    _custom_access: 'ai_whatsapp_automation.client_access:operateConversation'
+  options:
+    parameters:
+      ai_whatsapp_conversation:
+        type: entity:ai_whatsapp_conversation
+
+ai_whatsapp_automation.conversation_manual_reply:
+  path: '/admin/content/ai-whatsapp/conversations/{ai_whatsapp_conversation}/manual-reply'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\ManualReplyForm'
+    _title: 'Responder por WhatsApp'
+  requirements:
+    _custom_access: 'ai_whatsapp_automation.client_access:manualReply'
+  options:
+    parameters:
+      ai_whatsapp_conversation:
+        type: entity:ai_whatsapp_conversation
+
+ai_whatsapp_automation.conversation_reactivate_ai:
+  path: '/admin/content/ai-whatsapp/conversations/{ai_whatsapp_conversation}/reactivate-ai'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\ReactivateAiForm'
+    _title: 'Reactivar IA'
+  requirements:
+    _custom_access: 'ai_whatsapp_automation.client_access:operateConversation'
+  options:
+    parameters:
+      ai_whatsapp_conversation:
+        type: entity:ai_whatsapp_conversation
+
+ai_whatsapp_automation.conversation_close:
+  path: '/admin/content/ai-whatsapp/conversations/{ai_whatsapp_conversation}/close'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\CloseConversationForm'
+    _title: 'Cerrar conversación'
+  requirements:
+    _custom_access: 'ai_whatsapp_automation.client_access:operateConversation'
+  options:
+    parameters:
+      ai_whatsapp_conversation:
+        type: entity:ai_whatsapp_conversation
+
+ai_whatsapp_automation.lead_status:
+  path: '/admin/content/ai-whatsapp/leads/{ai_whatsapp_lead}/status'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\LeadStatusForm'
+    _title: 'Cambiar estado del lead'
+  requirements:
+    _custom_access: 'ai_whatsapp_automation.client_access:operateLead'
+  options:
+    parameters:
+      ai_whatsapp_lead:
+        type: entity:ai_whatsapp_lead
+
+ai_whatsapp_automation.client_mail:
+  path: '/admin/config/services/ai-whatsapp-automation/correos'
+  defaults:
+    _form: '\Drupal\ai_whatsapp_automation\Form\ClientMailForm'
+    _title: 'Correos a usuarios de clientes'
+  requirements:
+    _permission: 'administer ai whatsapp automation'
+
+ai_whatsapp_automation.client_mail_preview:
+  path: '/admin/config/services/ai-whatsapp-automation/correos/vista-previa/{key}'
+  defaults:
+    _controller: '\Drupal\ai_whatsapp_automation\Controller\ClientMailPreviewController::preview'
+    _title: 'Vista previa'
+  requirements:
+    _permission: 'administer ai whatsapp automation'

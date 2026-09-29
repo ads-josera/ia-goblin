@@ -1,0 +1,30 @@
+# Dependencies managed by Composer: rebuilt with `composer install`.
+/vendor/
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/web/libraries/
+/recipes/
+
+# User uploads and generated files. Never versioned: they are environment
+# data, not code. Back them up with the database instead.
+/web/sites/*/files/
+/private/*
+!/private/.gitkeep
+
+# Secrets and environment-specific settings.
+/web/sites/*/settings.local.php
+/web/sites/*/services.local.yml
+.env
+
+# Database dumps.
+*.sql
+*.sql.gz
+
+# Tooling and OS noise.
+.DS_Store
+.idea/
+.vscode/
+*.log
+.phpunit.result.cache

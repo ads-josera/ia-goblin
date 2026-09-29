@@ -1,0 +1,83 @@
+dashboard:
+  css:
+    theme:
+      css/dashboard.css: {}
+
+settings:
+  css:
+    theme:
+      css/settings.css: {}
+
+integration_admin:
+  css:
+    theme:
+      css/integration-admin.css: {}
+  js:
+    js/integration-admin.js: {}
+  dependencies:
+    - core/drupal
+
+bot_form:
+  css:
+    theme:
+      css/bot-form.css: {}
+
+multibot_routing:
+  css:
+    theme:
+      css/multibot-routing.css: {}
+
+message_list:
+  css:
+    theme:
+      css/message-list.css: {}
+
+conversation_list:
+  css:
+    theme:
+      css/conversation-list.css: {}
+
+conversation_detail:
+  css:
+    theme:
+      css/conversation-detail.css: {}
+
+lead_list:
+  css:
+    theme:
+      css/lead-list.css: {}
+
+operator_action_list:
+  css:
+    theme:
+      css/operator-action-list.css: {}
+
+knowledge_chunk_list:
+  css:
+    theme:
+      css/knowledge-chunk-list.css: {}
+
+tfa_setup:
+  css:
+    theme:
+      css/tfa-setup.css: {}
+
+web_chat:
+  css:
+    theme:
+      css/web-chat.css: {}
+  js:
+    js/web-chat.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+
+responsive_tables:
+  css:
+    theme:
+      css/responsive-tables.css: {}
+
+list_filters:
+  css:
+    theme:
+      css/list-filters.css: {}

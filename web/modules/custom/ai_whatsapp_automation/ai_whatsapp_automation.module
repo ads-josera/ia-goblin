@@ -1,0 +1,410 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\ai_whatsapp_automation\Access\ClientAccess;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\ai_whatsapp_automation\Application\RAG\KnowledgeFileStorage;
+use Drupal\ai_whatsapp_automation\Entity\Handler\AutomationEntityListBuilder;
+use Drupal\ai_whatsapp_automation\Mail\ClientAgentMail;
+use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\file\FileInterface;
+
+/**
+ * Implements hook_cron().
+ */
+function ai_whatsapp_automation_cron(): void {
+  \Drupal::service('ai_whatsapp_automation.evolution.instance_manager')->monitorAccounts();
+  ai_whatsapp_automation_close_stale_conversations();
+}
+
+/**
+ * Closes AI conversations that have been inactive longer than configured.
+ */
+function ai_whatsapp_automation_close_stale_conversations(): void {
+  $config = \Drupal::config('ai_whatsapp_automation.settings');
+  $ttl_hours = (int) ($config->get('options.auto_close_ai_hours') ?? 24);
+  if ($ttl_hours <= 0) {
+    return;
+  }
+
+  $cutoff = \Drupal::time()->getRequestTime() - ($ttl_hours * 3600);
+  $storage = \Drupal::entityTypeManager()->getStorage('ai_whatsapp_conversation');
+  $ids = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('status', 'AI_ACTIVE')
+    ->condition('changed', $cutoff, '<')
+    ->range(0, 100)
+    ->execute();
+
+  if ($ids === []) {
+    return;
+  }
+
+  foreach ($storage->loadMultiple($ids) as $conversation) {
+    $conversation->set('status', 'CLOSED');
+    $conversation->save();
+  }
+
+  \Drupal::logger('ai_whatsapp_automation')->notice('Closed @count inactive AI conversations after @hours hours.', [
+    '@count' => (string) count($ids),
+    '@hours' => (string) $ttl_hours,
+  ]);
+}
+
+/**
+ * Styles the TFA enrollment form when the access theme is active.
+ */
+function ai_whatsapp_automation_form_tfa_setup_alter(array &$form): void {
+  ai_whatsapp_automation_attach_tfa_styles($form);
+}
+
+/**
+ * Attaches the shared visual treatment for TFA forms.
+ */
+function ai_whatsapp_automation_attach_tfa_styles(array &$form): void {
+  $form['#attached']['library'][] = 'ai_whatsapp_automation/tfa_setup';
+  $form['#attributes']['class'][] = 'ai-whatsapp-tfa-setup';
+}
+
+/**
+ * Uses the administration theme for the multi-step TFA enrollment flow.
+ */
+function ai_whatsapp_automation_custom_theme(): ?string {
+  return match (\Drupal::routeMatch()->getRouteName()) {
+    'tfa.validation.setup' => 'claro',
+    'tfa.entry' => 'josera_access',
+    default => NULL,
+  };
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for ai_whatsapp_account.
+ */
+function ai_whatsapp_automation_ai_whatsapp_account_presave(EntityInterface $entity): void {
+  \Drupal::service('ai_whatsapp_automation.client_assignment')->assign($entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for ai_whatsapp_conversation.
+ */
+function ai_whatsapp_automation_ai_whatsapp_conversation_presave(EntityInterface $entity): void {
+  \Drupal::service('ai_whatsapp_automation.client_assignment')->assign($entity);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for ai_whatsapp_lead.
+ */
+function ai_whatsapp_automation_ai_whatsapp_lead_presave(EntityInterface $entity): void {
+  \Drupal::service('ai_whatsapp_automation.client_assignment')->assign($entity);
+}
+
+/**
+ * Implements hook_file_download().
+ *
+ * Knowledge documents are client files: only knowledge administrators may
+ * download them. Denying here also covers private files that no other module
+ * claims.
+ */
+function ai_whatsapp_automation_file_download(string $uri): array|int|null {
+  if (!str_starts_with($uri, 'private://' . KnowledgeFileStorage::DIRECTORY . '/')) {
+    return NULL;
+  }
+  if (!\Drupal::currentUser()->hasPermission('administer ai whatsapp automation rag')) {
+    return -1;
+  }
+  $files = \Drupal::entityTypeManager()->getStorage('file')->loadByProperties(['uri' => $uri]);
+  $file = reset($files);
+  if (!$file instanceof FileInterface) {
+    return -1;
+  }
+
+  return [
+    'Content-Type' => $file->getMimeType(),
+    'Content-Length' => (string) $file->getSize(),
+    'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $file->getFilename()) . '"',
+    'Cache-Control' => 'private',
+  ];
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for ai_whatsapp_knowledge_document.
+ *
+ * Adds a download button: the file field alone shows the file name as plain
+ * text because files have no page of their own.
+ */
+function ai_whatsapp_automation_ai_whatsapp_knowledge_document_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  $url = AutomationEntityListBuilder::documentDownloadUrl($entity);
+  if ($url === NULL) {
+    return;
+  }
+  $build['download'] = [
+    '#type' => 'link',
+    '#title' => t('Descargar documento'),
+    '#url' => $url,
+    '#attributes' => ['class' => ['button', 'button--primary']],
+    '#weight' => -100,
+    '#cache' => ['contexts' => ['user.permissions']],
+  ];
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ *
+ * The client a user belongs to. Client users only reach that client's
+ * records (see ClientAccess).
+ */
+function ai_whatsapp_automation_entity_base_field_info(EntityTypeInterface $entity_type): array {
+  if ($entity_type->id() !== 'user') {
+    return [];
+  }
+
+  return [
+    'ai_whatsapp_client' => BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Cliente de AI WhatsApp'))
+      ->setDescription(t('Solo para usuarios de un cliente: verán únicamente sus conversaciones, mensajes, leads y dashboard. Déjalo vacío para el personal interno.'))
+      ->setSetting('target_type', 'ai_whatsapp_client')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('form', ['type' => 'options_select', 'weight' => 20])
+      ->setDisplayConfigurable('form', TRUE),
+  ];
+}
+
+/**
+ * Implements hook_entity_field_access().
+ *
+ * Only administrators may see or change which client a user belongs to:
+ * a client user editing their own profile must not switch clients.
+ */
+function ai_whatsapp_automation_entity_field_access(string $operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResultInterface {
+  if ($field_definition->getName() !== 'ai_whatsapp_client' || $field_definition->getTargetEntityTypeId() !== 'user') {
+    return AccessResult::neutral();
+  }
+
+  return AccessResult::forbiddenIf(!$account->hasPermission('administer users') || !$account->hasPermission(ClientAccess::ADMIN_PERMISSION))
+    ->cachePerPermissions();
+}
+
+/**
+ * Implements hook_query_TAG_alter() for ai_whatsapp_conversation_access.
+ */
+function ai_whatsapp_automation_query_ai_whatsapp_conversation_access_alter(AlterableInterface $query): void {
+  _ai_whatsapp_automation_restrict_to_client($query, 'base_table.client');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for ai_whatsapp_lead_access.
+ */
+function ai_whatsapp_automation_query_ai_whatsapp_lead_access_alter(AlterableInterface $query): void {
+  _ai_whatsapp_automation_restrict_to_client($query, 'base_table.client');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for ai_whatsapp_bot_access.
+ */
+function ai_whatsapp_automation_query_ai_whatsapp_bot_access_alter(AlterableInterface $query): void {
+  _ai_whatsapp_automation_restrict_to_client($query, 'base_table.client');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for ai_whatsapp_message_access.
+ */
+function ai_whatsapp_automation_query_ai_whatsapp_message_access_alter(AlterableInterface $query): void {
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_client_conversation.client', 'conversation');
+}
+
+/**
+ * Implements hook_query_TAG_alter() for ai_whatsapp_operator_action_access.
+ */
+function ai_whatsapp_automation_query_ai_whatsapp_operator_action_access_alter(AlterableInterface $query): void {
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_client_conversation.client', 'conversation');
+}
+
+/**
+ * Restricts an access-checked entity query to the current user's client.
+ *
+ * Administrators are not restricted. A user without the client permission or
+ * without a client gets no rows. Queries run with accessCheck(FALSE) (webhooks,
+ * services) carry no access tag and are never restricted.
+ *
+ * @param \Drupal\Core\Database\Query\AlterableInterface $query
+ *   The entity query being built.
+ * @param string $client_column
+ *   Qualified client column to compare.
+ * @param string|null $conversation_column
+ *   For records that reach their client through a conversation, the column
+ *   of the base table referencing it.
+ */
+function _ai_whatsapp_automation_restrict_to_client(AlterableInterface $query, string $client_column, ?string $conversation_column = NULL): void {
+  if (!$query instanceof SelectInterface) {
+    return;
+  }
+  $account = \Drupal::currentUser();
+  $client_access = \Drupal::service('ai_whatsapp_automation.client_access');
+  if ($client_access->isAdmin($account)) {
+    return;
+  }
+  $client_id = $account->hasPermission(ClientAccess::VIEW_PERMISSION) ? $client_access->clientId($account) : NULL;
+  if ($client_id === NULL) {
+    $query->alwaysFalse();
+    return;
+  }
+  if ($conversation_column !== NULL) {
+    $query->join('ai_whatsapp_conversation', 'ai_whatsapp_client_conversation', 'ai_whatsapp_client_conversation.id = base_table.' . $conversation_column);
+  }
+  $query->condition($client_column, $client_id);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for ai_whatsapp_lead.
+ *
+ * Follow-up happens by changing the status; the button leads to the small
+ * status form that client users are allowed to use.
+ */
+function ai_whatsapp_automation_ai_whatsapp_lead_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  $url = Url::fromRoute('ai_whatsapp_automation.lead_status', ['ai_whatsapp_lead' => $entity->id()]);
+  $build['status_action'] = [
+    '#type' => 'link',
+    '#title' => t('Cambiar estado'),
+    '#url' => $url,
+    '#access' => $url->access(),
+    '#attributes' => ['class' => ['button', 'button--primary']],
+    '#weight' => -100,
+    '#cache' => ['contexts' => ['user']],
+  ];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_form.
+ */
+function ai_whatsapp_automation_form_user_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (isset($form['ai_whatsapp_client'])) {
+    $form['#validate'][] = '_ai_whatsapp_automation_user_client_validate';
+  }
+  // Entity forms keep their handlers on the button, not on the form.
+  if (isset($form['actions']['submit']['#submit'])) {
+    $form['actions']['submit']['#submit'][] = '_ai_whatsapp_automation_account_saved_redirect';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_register_form.
+ */
+function ai_whatsapp_automation_form_user_register_form_alter(array &$form, FormStateInterface $form_state): void {
+  ai_whatsapp_automation_form_user_form_alter($form, $form_state);
+}
+
+/**
+ * Requires a client for users with the client agent role.
+ *
+ * Without it the user logs in and sees nothing, with no hint why.
+ */
+function _ai_whatsapp_automation_user_client_validate(array &$form, FormStateInterface $form_state): void {
+  $roles = array_filter((array) $form_state->getValue('roles'));
+  $client = $form_state->getValue(['ai_whatsapp_client', 0, 'target_id']);
+  if (in_array('ai_whatsapp_client_agent', $roles, TRUE) && empty($client)) {
+    $form_state->setErrorByName('ai_whatsapp_client', t('Elige el cliente de AI WhatsApp de este usuario: con el rol «Atención a clientes» y sin cliente no vería ninguna conversación.'));
+  }
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function ai_whatsapp_automation_theme(): array {
+  return [
+    'ai_whatsapp_client_agent_mail' => [
+      'variables' => [
+        'heading' => NULL,
+        'intro' => NULL,
+        'items' => [],
+        'action' => NULL,
+        'url' => '',
+        'note' => NULL,
+        'client' => '',
+        'logo_url' => '',
+        'footer' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_mail_alter().
+ *
+ * Rewrites the account e-mails of a client's users: Drupal's English text
+ * about "a site administrator" says nothing to somebody who was only given a
+ * panel for their own chatbot.
+ */
+function ai_whatsapp_automation_mail_alter(array &$message): void {
+  \Drupal::service('ai_whatsapp_automation.client_agent_mail')->alter($message);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_login_form.
+ */
+function ai_whatsapp_automation_form_user_login_form_alter(array &$form, FormStateInterface $form_state): void {
+  $form['#submit'][] = '_ai_whatsapp_automation_login_redirect';
+}
+
+/**
+ * Sends a client's user straight to their dashboard after logging in.
+ *
+ * Runs after the login submit handler, so the account is already logged in by
+ * then. When a second factor is still pending (TFA) nobody is logged in yet
+ * and the redirect TFA set is left untouched.
+ */
+function _ai_whatsapp_automation_login_redirect(array &$form, FormStateInterface $form_state): void {
+  $uid = (int) $form_state->get('uid');
+  if ($uid === 0 || (int) \Drupal::currentUser()->id() !== $uid) {
+    return;
+  }
+  _ai_whatsapp_automation_redirect_to_dashboard($form_state, $uid);
+}
+
+/**
+ * Sends a client's user to the dashboard after saving their own account.
+ *
+ * This is where the first login ends: the one-time link from the welcome
+ * e-mail opens the account form to set a password.
+ */
+function _ai_whatsapp_automation_account_saved_redirect(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof EntityFormInterface) {
+    return;
+  }
+  $account = $form_object->getEntity();
+  if ((int) $account->id() !== (int) \Drupal::currentUser()->id()) {
+    return;
+  }
+  _ai_whatsapp_automation_redirect_to_dashboard($form_state, (int) $account->id());
+}
+
+/**
+ * Redirects to the dashboard when the account is a client's user.
+ *
+ * Anybody else keeps the landing Drupal chose. The dashboard is only offered
+ * when the account may actually open it, to never land on an access denied.
+ */
+function _ai_whatsapp_automation_redirect_to_dashboard(FormStateInterface $form_state, int $uid): void {
+  $account = \Drupal::entityTypeManager()->getStorage('user')->load($uid);
+  if ($account === NULL || !in_array(ClientAgentMail::ROLE, $account->getRoles(), TRUE)) {
+    return;
+  }
+  $dashboard = Url::fromRoute('ai_whatsapp_automation.dashboard');
+  if ($dashboard->access($account)) {
+    $form_state->setRedirect('ai_whatsapp_automation.dashboard');
+  }
+}

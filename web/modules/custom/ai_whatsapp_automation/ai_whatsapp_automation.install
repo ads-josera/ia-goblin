@@ -1,0 +1,1150 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\ai_whatsapp_automation\Application\Lead\LeadContactExtractor;
+use Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService;
+
+/**
+ * Role given to users of a client.
+ */
+const AI_WHATSAPP_AUTOMATION_CLIENT_AGENT_ROLE = 'ai_whatsapp_client_agent';
+
+/**
+ * Implements hook_requirements().
+ */
+function ai_whatsapp_automation_requirements(string $phase): array {
+  if ($phase !== 'runtime') {
+    return [];
+  }
+
+  $requirements = [];
+  $requirements['ai_whatsapp_automation_pdftotext'] = [
+    'title' => t('AI WhatsApp Automation PDF extraction'),
+    'value' => t('pdftotext available'),
+    'severity' => REQUIREMENT_OK,
+  ];
+
+  $process = new \Symfony\Component\Process\Process(['sh', '-lc', 'command -v pdftotext']);
+  $process->run();
+
+  if (!$process->isSuccessful() || trim($process->getOutput()) === '') {
+    $requirements['ai_whatsapp_automation_pdftotext']['value'] = t('pdftotext missing');
+    $requirements['ai_whatsapp_automation_pdftotext']['severity'] = REQUIREMENT_WARNING;
+    $requirements['ai_whatsapp_automation_pdftotext']['description'] = t('PDF extraction for RAG requires the poppler-utils package. TXT and DOCX indexing will still work.');
+  }
+
+  $knowledge_files = \Drupal::service('ai_whatsapp_automation.knowledge_file_storage');
+  $public_documents = $knowledge_files->countPublicDocuments();
+  $requirements['ai_whatsapp_automation_private_files'] = [
+    'title' => t('AI WhatsApp Automation knowledge documents'),
+    'value' => t('Private'),
+    'severity' => REQUIREMENT_OK,
+  ];
+  if (!$knowledge_files->isPrivateAvailable() || $public_documents > 0) {
+    $requirements['ai_whatsapp_automation_private_files']['value'] = t('@count documents are public', ['@count' => $public_documents]);
+    $requirements['ai_whatsapp_automation_private_files']['severity'] = REQUIREMENT_ERROR;
+    $requirements['ai_whatsapp_automation_private_files']['description'] = $knowledge_files->isPrivateAvailable()
+      ? t('Move them with: drush php:eval "\\Drupal::service(\'ai_whatsapp_automation.knowledge_file_storage\')->moveDocumentsToPrivate();". A document whose file is missing on disk cannot be moved: upload it again.')
+      : t('Client documents can be downloaded by anyone with their URL. Set $settings[\'file_private_path\'] in settings.php to a directory outside the web root and run the database updates.');
+  }
+
+  return $requirements;
+}
+
+/**
+ * Installs the AI WhatsApp Automation content entity schemas.
+ */
+function ai_whatsapp_automation_update_11001(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  foreach (ai_whatsapp_automation_entity_type_ids() as $entity_type_id) {
+    if ($definition_update_manager->getEntityType($entity_type_id) !== NULL) {
+      continue;
+    }
+
+    $definition_update_manager->installEntityType(
+      $entity_type_manager->getDefinition($entity_type_id)
+    );
+  }
+}
+
+/**
+ * Installs the Bot entity schema and links WhatsApp accounts to bots.
+ */
+function ai_whatsapp_automation_update_11002(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if ($definition_update_manager->getEntityType('ai_whatsapp_bot') === NULL) {
+    $definition_update_manager->installEntityType(
+      $entity_type_manager->getDefinition('ai_whatsapp_bot')
+    );
+  }
+
+  $installed_bot_field = $definition_update_manager->getFieldStorageDefinition('bot', 'ai_whatsapp_account');
+  $current_bot_field = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_account')['bot'];
+
+  if ($installed_bot_field !== NULL && $installed_bot_field->getType() !== 'entity_reference') {
+    $definition_update_manager->uninstallFieldStorageDefinition($installed_bot_field);
+    $definition_update_manager->installFieldStorageDefinition(
+      'bot',
+      'ai_whatsapp_account',
+      'ai_whatsapp_automation',
+      $current_bot_field
+    );
+  }
+}
+
+/**
+ * Installs operator audit and migrates conversation states.
+ */
+function ai_whatsapp_automation_update_11003(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if ($definition_update_manager->getEntityType('ai_whatsapp_operator_action') === NULL) {
+    $definition_update_manager->installEntityType(
+      $entity_type_manager->getDefinition('ai_whatsapp_operator_action')
+    );
+  }
+
+  $database = \Drupal::database();
+  if ($database->schema()->tableExists('ai_whatsapp_conversation')) {
+    $status_map = [
+      'open' => 'AI_ACTIVE',
+      'assigned' => 'HUMAN_ASSIGNED',
+      'closed' => 'CLOSED',
+    ];
+
+    foreach ($status_map as $old_status => $new_status) {
+      $database->update('ai_whatsapp_conversation')
+        ->fields(['status' => $new_status])
+        ->condition('status', $old_status)
+        ->execute();
+    }
+  }
+
+  $current_status_field = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_conversation')['status'];
+  $definition_update_manager->updateFieldStorageDefinition($current_status_field);
+}
+
+/**
+ * Installs RAG knowledge base entity schemas.
+ */
+function ai_whatsapp_automation_update_11004(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  foreach ([
+    'ai_whatsapp_knowledge_base',
+    'ai_whatsapp_knowledge_document',
+    'ai_whatsapp_knowledge_chunk',
+  ] as $entity_type_id) {
+    if ($definition_update_manager->getEntityType($entity_type_id) !== NULL) {
+      continue;
+    }
+
+    $definition_update_manager->installEntityType(
+      $entity_type_manager->getDefinition($entity_type_id)
+    );
+  }
+}
+
+/**
+ * Installs Evolution QR connection fields on WhatsApp accounts.
+ */
+function ai_whatsapp_automation_update_11005(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_definitions = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_account');
+
+  foreach ([
+    'evolution_instance_name',
+    'connection_status',
+    'connected_phone_number',
+    'connected_at',
+    'last_qr',
+    'last_qr_generated',
+    'last_status_check',
+    'last_error',
+  ] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_account') !== NULL) {
+      continue;
+    }
+
+    $definition_update_manager->installFieldStorageDefinition(
+      $field_name,
+      'ai_whatsapp_account',
+      'ai_whatsapp_automation',
+      $field_definitions[$field_name]
+    );
+  }
+}
+
+/**
+ * Installs MultiBot routing override fields.
+ */
+function ai_whatsapp_automation_update_11006(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+
+  $fields_by_entity = [
+    'ai_whatsapp_bot' => [
+      'knowledge_base',
+    ],
+    'ai_whatsapp_account' => [
+      'prompt_override',
+      'model_override',
+      'knowledge_base',
+    ],
+  ];
+
+  foreach ($fields_by_entity as $entity_type_id => $field_names) {
+    $field_definitions = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    foreach ($field_names as $field_name) {
+      if ($definition_update_manager->getFieldStorageDefinition($field_name, $entity_type_id) !== NULL) {
+        continue;
+      }
+
+      $definition_update_manager->installFieldStorageDefinition(
+        $field_name,
+        $entity_type_id,
+        'ai_whatsapp_automation',
+        $field_definitions[$field_name]
+      );
+    }
+  }
+}
+
+/**
+ * Replaces retired OpenAI model IDs with current model IDs.
+ */
+function ai_whatsapp_automation_update_11007(): void {
+  $model_map = [
+    'gpt-5.5-mini' => 'gpt-5-mini',
+    'gpt-5.5' => 'gpt-5.1',
+  ];
+
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  $default_model = (string) $config->get('openai.default_model');
+  if (isset($model_map[$default_model])) {
+    $config->set('openai.default_model', $model_map[$default_model])->save();
+  }
+
+  $database = \Drupal::database();
+  foreach ($model_map as $old_model => $new_model) {
+    if ($database->schema()->tableExists('ai_whatsapp_bot')) {
+      $database->update('ai_whatsapp_bot')
+        ->fields(['model' => $new_model])
+        ->condition('model', $old_model)
+        ->execute();
+    }
+
+    if ($database->schema()->tableExists('ai_whatsapp_account')) {
+      $database->update('ai_whatsapp_account')
+        ->fields(['model_override' => $new_model])
+        ->condition('model_override', $old_model)
+        ->execute();
+    }
+  }
+
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+
+  foreach ([
+    'ai_whatsapp_bot' => 'model',
+    'ai_whatsapp_account' => 'model_override',
+  ] as $entity_type_id => $field_name) {
+    $field_definitions = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    if (isset($field_definitions[$field_name])) {
+      $definition_update_manager->updateFieldStorageDefinition($field_definitions[$field_name]);
+    }
+  }
+}
+
+/**
+ * Adds a default inactivity timeout for AI conversations.
+ */
+function ai_whatsapp_automation_update_11008(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('options.auto_close_ai_hours') === NULL) {
+    $config->set('options.auto_close_ai_hours', 24)->save();
+  }
+}
+
+/**
+ * Adds pending status support for asynchronous knowledge indexing.
+ */
+function ai_whatsapp_automation_update_11009(): void {
+  $field_definitions = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_knowledge_document');
+  if (isset($field_definitions['status'])) {
+    \Drupal::entityDefinitionUpdateManager()
+      ->updateFieldStorageDefinition($field_definitions['status']);
+  }
+}
+
+/**
+ * Adds lead handoff notification settings and action value.
+ */
+function ai_whatsapp_automation_update_11010(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('options.enable_lead_notifications') === NULL) {
+    $config->set('options.enable_lead_notifications', FALSE);
+  }
+  if ($config->get('options.lead_notification_numbers') === NULL) {
+    $config->set('options.lead_notification_numbers', '');
+  }
+  $config->save();
+
+  $field_definitions = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_operator_action');
+  if (isset($field_definitions['action'])) {
+    \Drupal::entityDefinitionUpdateManager()
+      ->updateFieldStorageDefinition($field_definitions['action']);
+  }
+}
+
+/**
+ * Adds account-specific lead notification numbers.
+ */
+function ai_whatsapp_automation_update_11011(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('lead_notification_numbers', 'ai_whatsapp_account') !== NULL) {
+    return;
+  }
+
+  $field_definitions = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_account');
+  if (isset($field_definitions['lead_notification_numbers'])) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'lead_notification_numbers',
+      'ai_whatsapp_account',
+      'ai_whatsapp_automation',
+      $field_definitions['lead_notification_numbers']
+    );
+  }
+}
+
+/**
+ * Adds bot-specific lead handoff criteria.
+ */
+function ai_whatsapp_automation_update_11012(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_definitions = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_bot');
+
+  foreach ([
+    'handoff_enabled',
+    'handoff_required_fields',
+    'handoff_minimum_fields',
+    'handoff_trigger_phrases',
+    'handoff_prompt_rules',
+  ] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_bot') !== NULL) {
+      continue;
+    }
+
+    if (isset($field_definitions[$field_name])) {
+      $definition_update_manager->installFieldStorageDefinition(
+        $field_name,
+        'ai_whatsapp_bot',
+        'ai_whatsapp_automation',
+        $field_definitions[$field_name]
+      );
+    }
+  }
+
+  $database = \Drupal::database();
+  if ($database->schema()->tableExists('ai_whatsapp_bot')) {
+    $database->update('ai_whatsapp_bot')
+      ->fields([
+        'handoff_enabled' => 1,
+        'handoff_minimum_fields' => 5,
+      ])
+      ->isNull('handoff_enabled')
+      ->execute();
+  }
+}
+
+/**
+ * Adds web widget integration fields and web conversation support.
+ */
+function ai_whatsapp_automation_update_11013(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+
+  $bot_field_definitions = $field_manager->getFieldStorageDefinitions('ai_whatsapp_bot');
+  foreach ([
+    'web_widget_enabled',
+    'web_widget_token',
+    'web_widget_primary_color',
+    'web_widget_secondary_color',
+    'web_widget_logo_url',
+    'web_widget_assistant_name',
+    'web_widget_welcome_message',
+    'web_widget_position',
+    'web_widget_icon',
+    'web_widget_size',
+    'web_widget_language',
+    'web_widget_allowed_domains',
+    'web_widget_api_key',
+  ] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_bot') !== NULL) {
+      continue;
+    }
+
+    if (isset($bot_field_definitions[$field_name])) {
+      $definition_update_manager->installFieldStorageDefinition(
+        $field_name,
+        'ai_whatsapp_bot',
+        'ai_whatsapp_automation',
+        $bot_field_definitions[$field_name]
+      );
+    }
+  }
+
+  $conversation_field_definitions = $field_manager->getFieldStorageDefinitions('ai_whatsapp_conversation');
+  foreach (['channel', 'provider'] as $field_name) {
+    if (isset($conversation_field_definitions[$field_name])) {
+      $definition_update_manager->updateFieldStorageDefinition($conversation_field_definitions[$field_name]);
+    }
+  }
+
+  if (
+    $definition_update_manager->getFieldStorageDefinition('bot', 'ai_whatsapp_conversation') === NULL
+    && isset($conversation_field_definitions['bot'])
+  ) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'bot',
+      'ai_whatsapp_conversation',
+      'ai_whatsapp_automation',
+      $conversation_field_definitions['bot']
+    );
+  }
+
+  $database = \Drupal::database();
+  if ($database->schema()->tableExists('ai_whatsapp_bot')) {
+    $fields = [
+      'web_widget_enabled' => 0,
+      'web_widget_primary_color' => '#155EEF',
+      'web_widget_secondary_color' => '#111827',
+      'web_widget_welcome_message' => 'Hola, ¿en qué puedo ayudarte?',
+      'web_widget_position' => 'right',
+      'web_widget_icon' => 'chat',
+      'web_widget_size' => 'medium',
+      'web_widget_language' => 'es',
+    ];
+
+    foreach ($fields as $field_name => $value) {
+      $database->update('ai_whatsapp_bot')
+        ->fields([$field_name => $value])
+        ->isNull($field_name)
+        ->execute();
+    }
+  }
+
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+
+  $bot_storage = \Drupal::entityTypeManager()->getStorage('ai_whatsapp_bot');
+  foreach ($bot_storage->loadMultiple() as $bot) {
+    if (!$bot instanceof \Drupal\Core\Entity\ContentEntityInterface) {
+      continue;
+    }
+    $changed = FALSE;
+    if ($bot->hasField('web_widget_token') && $bot->get('web_widget_token')->isEmpty()) {
+      $bot->set('web_widget_token', (string) $bot->uuid());
+      $changed = TRUE;
+    }
+    if ($bot->hasField('web_widget_assistant_name') && $bot->get('web_widget_assistant_name')->isEmpty()) {
+      $bot->set('web_widget_assistant_name', (string) $bot->label());
+      $changed = TRUE;
+    }
+    if ($changed) {
+      $bot->save();
+    }
+  }
+}
+
+/**
+ * Adds lead notification template overrides for bots and WhatsApp accounts.
+ */
+function ai_whatsapp_automation_update_11014(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+
+  foreach ([
+    'ai_whatsapp_bot',
+    'ai_whatsapp_account',
+  ] as $entity_type_id) {
+    if ($definition_update_manager->getFieldStorageDefinition('lead_notification_template_sid', $entity_type_id) !== NULL) {
+      continue;
+    }
+
+    $fields = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    if (isset($fields['lead_notification_template_sid'])) {
+      $definition_update_manager->installFieldStorageDefinition(
+        'lead_notification_template_sid',
+        $entity_type_id,
+        'ai_whatsapp_automation',
+        $fields['lead_notification_template_sid']
+      );
+    }
+  }
+}
+
+/**
+ * Adds account-specific Twilio credentials for multi-account routing.
+ */
+function ai_whatsapp_automation_update_11015(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $fields = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_account');
+
+  foreach (['twilio_account_sid', 'twilio_auth_token'] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_account') !== NULL) {
+      continue;
+    }
+
+    if (isset($fields[$field_name])) {
+      $definition_update_manager->installFieldStorageDefinition(
+        $field_name,
+        'ai_whatsapp_account',
+        'ai_whatsapp_automation',
+        $fields[$field_name]
+      );
+    }
+  }
+}
+
+/**
+ * Adds an explicit notification delivery account to each bot.
+ */
+function ai_whatsapp_automation_update_11016(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('lead_notification_account', 'ai_whatsapp_bot') !== NULL) {
+    return;
+  }
+
+  $fields = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_bot');
+  if (isset($fields['lead_notification_account'])) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'lead_notification_account',
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      $fields['lead_notification_account']
+    );
+  }
+}
+
+/**
+ * Adds upload support for web widget logos.
+ */
+function ai_whatsapp_automation_update_11017(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('web_widget_logo_file', 'ai_whatsapp_bot') !== NULL) {
+    return;
+  }
+
+  $fields = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_bot');
+  if (isset($fields['web_widget_logo_file'])) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'web_widget_logo_file',
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      $fields['web_widget_logo_file']
+    );
+  }
+}
+
+/**
+ * Initializes configurable OpenAI cost rates.
+ */
+function ai_whatsapp_automation_update_11018(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('openai.cost_rates') === NULL) {
+    $config->set('openai.cost_rates', [])->save();
+  }
+}
+
+/**
+ * Converts OpenAI cost rates to a configuration-safe list.
+ */
+function ai_whatsapp_automation_update_11019(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  $stored_rates = $config->get('openai.cost_rates');
+  if (!is_array($stored_rates)) {
+    return;
+  }
+
+  $rates = [];
+  foreach ($stored_rates as $model => $rate) {
+    if (!is_array($rate)) {
+      continue;
+    }
+    $model = trim((string) ($rate['model'] ?? $model));
+    if ($model === '') {
+      continue;
+    }
+    $rates[] = [
+      'model' => $model,
+      'input' => (float) ($rate['input'] ?? 0),
+      'output' => (float) ($rate['output'] ?? 0),
+    ];
+  }
+
+  $config->set('openai.cost_rates', $rates)->save();
+}
+
+/**
+ * Makes the branded login page the public entry point of the site.
+ */
+function ai_whatsapp_automation_update_11020(): void {
+  \Drupal::configFactory()
+    ->getEditable('system.site')
+    ->set('page.front', '/user/login')
+    ->save();
+}
+
+/**
+ * Enables the favicon upload control for the branded access theme.
+ */
+function ai_whatsapp_automation_update_11021(): void {
+  $config = \Drupal::configFactory()->getEditable('josera_access.settings');
+  $features = (array) $config->get('features');
+  $features['favicon'] = TRUE;
+  $config
+    ->set('features', $features)
+    ->set('favicon.use_default', FALSE)
+    ->save();
+}
+
+/**
+ * Adds template variable mappings for lead notification templates.
+ */
+function ai_whatsapp_automation_update_11022(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+
+  foreach (['ai_whatsapp_bot', 'ai_whatsapp_account'] as $entity_type_id) {
+    if ($definition_update_manager->getFieldStorageDefinition('lead_notification_template_variables', $entity_type_id) !== NULL) {
+      continue;
+    }
+    $fields = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    if (isset($fields['lead_notification_template_variables'])) {
+      $definition_update_manager->installFieldStorageDefinition(
+        'lead_notification_template_variables',
+        $entity_type_id,
+        'ai_whatsapp_automation',
+        $fields['lead_notification_template_variables']
+      );
+    }
+  }
+}
+
+/**
+ * Initializes the automatic reply for lead notification recipients.
+ */
+function ai_whatsapp_automation_update_11023(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('options.notification_recipient_reply_text') === NULL) {
+    $config->set('options.notification_recipient_reply_text', 'Este número es exclusivo para notificaciones del sistema. No responde mensajes ni solicitudes.')->save();
+  }
+}
+
+/**
+ * Adds per-bot public web chat usage limits.
+ */
+function ai_whatsapp_automation_update_11024(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+  $fields = $field_manager->getFieldStorageDefinitions('ai_whatsapp_bot');
+
+  foreach ([
+    'web_widget_message_limit',
+    'web_widget_message_window_minutes',
+    'web_widget_daily_conversation_limit',
+    'web_widget_daily_budget',
+  ] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_bot') !== NULL || !isset($fields[$field_name])) {
+      continue;
+    }
+    $definition_update_manager->installFieldStorageDefinition(
+      $field_name,
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      $fields[$field_name]
+    );
+  }
+}
+
+/**
+ * Adds per-bot WhatsApp usage limits.
+ */
+function ai_whatsapp_automation_update_11025(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+  $fields = $field_manager->getFieldStorageDefinitions('ai_whatsapp_bot');
+
+  foreach ([
+    'whatsapp_message_limit',
+    'whatsapp_message_window_minutes',
+    'whatsapp_daily_conversation_limit',
+    'whatsapp_daily_budget',
+  ] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_bot') !== NULL || !isset($fields[$field_name])) {
+      continue;
+    }
+    $definition_update_manager->installFieldStorageDefinition(
+      $field_name,
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      $fields[$field_name]
+    );
+  }
+}
+
+/**
+ * Initializes the Meta App Secret setting used to verify Cloud API webhooks.
+ */
+function ai_whatsapp_automation_update_11026(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('whatsapp_cloud.app_secret') === NULL) {
+    $config->set('whatsapp_cloud.app_secret', '')->save();
+  }
+}
+
+/**
+ * Adds a bot-specific reply for lead-notification recipients.
+ */
+function ai_whatsapp_automation_update_11027(): void {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('notification_recipient_reply_text', 'ai_whatsapp_bot') !== NULL) {
+    return;
+  }
+
+  $fields = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_bot');
+  if (isset($fields['notification_recipient_reply_text'])) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'notification_recipient_reply_text',
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      $fields['notification_recipient_reply_text']
+    );
+  }
+}
+
+/**
+ * Adds the immediate webhook processing switch, disabled by default.
+ */
+function ai_whatsapp_automation_update_11028(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('options.enable_immediate_webhook_processing') === NULL) {
+    $config->set('options.enable_immediate_webhook_processing', FALSE)->save();
+  }
+}
+
+/**
+ * Stores the source conversation and bot on each lead.
+ *
+ * Existing leads are linked through their LEAD_HANDOFF audit record. Leads
+ * without one are left unlinked on purpose: guessing by phone number used to
+ * attribute leads to the wrong bot when a contact talked to several.
+ */
+function ai_whatsapp_automation_update_11029(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $fields = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_lead');
+  foreach (['conversation', 'bot'] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_lead') === NULL && isset($fields[$field_name])) {
+      $definition_update_manager->installFieldStorageDefinition($field_name, 'ai_whatsapp_lead', 'ai_whatsapp_automation', $fields[$field_name]);
+    }
+  }
+
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $lead_storage = $entity_type_manager->getStorage('ai_whatsapp_lead');
+  $action_storage = $entity_type_manager->getStorage('ai_whatsapp_operator_action');
+  $action_ids = $action_storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('action', 'LEAD_HANDOFF')
+    ->sort('created', 'ASC')
+    ->execute();
+
+  $linked = 0;
+  foreach ($action_storage->loadMultiple($action_ids) as $action) {
+    if (!preg_match('/\bLead ID:\s*(\d+)\b/i', (string) $action->get('note')->value, $matches)) {
+      continue;
+    }
+    $lead = $lead_storage->load((int) $matches[1]);
+    $conversation = $action->get('conversation')->entity;
+    if ($lead === NULL || $conversation === NULL || !$lead->get('conversation')->isEmpty()) {
+      continue;
+    }
+
+    $bot_id = $conversation->get('bot')->target_id;
+    if ($bot_id === NULL && ($account = $conversation->get('whatsapp_account')->entity) !== NULL) {
+      $bot_id = $account->get('bot')->target_id;
+    }
+    $lead->set('conversation', $conversation->id());
+    $lead->set('bot', $bot_id);
+    $lead->save();
+    $linked++;
+  }
+
+  $total = (int) $lead_storage->getQuery()->accessCheck(FALSE)->count()->execute();
+
+  return (string) t('Linked @linked of @total leads to their conversation and bot.', [
+    '@linked' => $linked,
+    '@total' => $total,
+  ]);
+}
+
+/**
+ * Repairs lead names and phones stored by the legacy extractor.
+ *
+ * Only values with the legacy bug signature are touched: a field label stored
+ * as the name (e.g. "📧 Correo electrónico") or a local ten-digit number
+ * stored with a bare "+" (e.g. "+5512309140", which reads as Brazil). Values
+ * are re-extracted from the linked conversation; anything else is left as is.
+ */
+function ai_whatsapp_automation_update_11030(): string {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $extractor = new LeadContactExtractor();
+  $label_words = ['nombre', 'contacto', 'correo', 'correo electrónico', 'correo electronico', 'email', 'e-mail', 'teléfono', 'telefono', 'celular', 'whatsapp'];
+  $repaired = 0;
+
+  foreach ($entity_type_manager->getStorage('ai_whatsapp_lead')->loadMultiple() as $lead) {
+    $conversation = $lead->get('conversation')->entity;
+    if ($conversation === NULL) {
+      continue;
+    }
+
+    $name = (string) $lead->get('name')->value;
+    $normalized_name = mb_strtolower(trim(preg_replace('/^[^\p{L}\p{N}]+/u', '', $name) ?? ''));
+    $bad_name = in_array($normalized_name, $label_words, TRUE);
+    $phone = (string) $lead->get('phone')->value;
+    $bad_phone = (bool) preg_match('/^\+\d{10}$/', $phone);
+    if (!$bad_name && !$bad_phone) {
+      continue;
+    }
+
+    $message_ids = $entity_type_manager->getStorage('ai_whatsapp_message')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('conversation', $conversation->id())
+      ->condition('created', (int) $lead->get('created')->value, '<=')
+      ->sort('id', 'ASC')
+      ->execute();
+    $lines = [];
+    foreach ($entity_type_manager->getStorage('ai_whatsapp_message')->loadMultiple($message_ids) as $message) {
+      $lines[] = $message->get('sender')->value . ': ' . $message->get('content')->value;
+    }
+    $transcript = implode("\n", $lines);
+
+    if ($bad_name) {
+      $lead->set('name', $extractor->extractName($transcript) ?: LeadHandoffService::UNKNOWN_CONTACT_NAME);
+    }
+    if ($bad_phone) {
+      $lead->set('phone', $extractor->extractPhone(substr($phone, 1)) ?: $phone);
+    }
+    $lead->save();
+    $repaired++;
+  }
+
+  return (string) t('Repaired @count leads stored by the legacy extractor.', ['@count' => $repaired]);
+}
+
+/**
+ * Adds a per-bot reasoning effort and sets existing bots to "low".
+ *
+ * Without it GPT-5 models used their default (medium) effort: 18.3 s per
+ * reply in production versus 3.8 s with "low".
+ */
+function ai_whatsapp_automation_update_11031(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $fields = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_bot');
+  if ($definition_update_manager->getFieldStorageDefinition('reasoning_effort', 'ai_whatsapp_bot') === NULL && isset($fields['reasoning_effort'])) {
+    $definition_update_manager->installFieldStorageDefinition('reasoning_effort', 'ai_whatsapp_bot', 'ai_whatsapp_automation', $fields['reasoning_effort']);
+  }
+
+  $updated = 0;
+  foreach (\Drupal::entityTypeManager()->getStorage('ai_whatsapp_bot')->loadMultiple() as $bot) {
+    if ($bot->get('reasoning_effort')->isEmpty()) {
+      $bot->set('reasoning_effort', 'low');
+      $bot->save();
+      $updated++;
+    }
+  }
+
+  return (string) t('Set reasoning effort "low" on @count bots.', ['@count' => $updated]);
+}
+
+/**
+ * Creates clients from the existing bots and assigns every record to one.
+ *
+ * One client per bot, named after the bot. Accounts, knowledge bases,
+ * conversations and leads get the client of the bot or account they belong
+ * to. A knowledge base used by several clients, or by none, is left
+ * unassigned and reported: it is never guessed.
+ *
+ * Values are written with SQL on purpose: saving the entities would bump
+ * their "changed" dates, which order the inbox and drive the automatic
+ * closing of inactive conversations. Safe to run more than once.
+ */
+function ai_whatsapp_automation_update_11032(): string {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $database = \Drupal::database();
+
+  if ($definition_update_manager->getEntityType('ai_whatsapp_client') === NULL) {
+    $definition_update_manager->installEntityType($entity_type_manager->getDefinition('ai_whatsapp_client'));
+  }
+  $owned_types = [
+    'ai_whatsapp_bot',
+    'ai_whatsapp_account',
+    'ai_whatsapp_knowledge_base',
+    'ai_whatsapp_conversation',
+    'ai_whatsapp_lead',
+  ];
+  foreach ($owned_types as $entity_type_id) {
+    if ($definition_update_manager->getFieldStorageDefinition('client', $entity_type_id) === NULL) {
+      $field = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions($entity_type_id)['client'];
+      $definition_update_manager->installFieldStorageDefinition('client', $entity_type_id, 'ai_whatsapp_automation', $field);
+    }
+  }
+
+  // One client per bot without one.
+  $created = 0;
+  $client_storage = $entity_type_manager->getStorage('ai_whatsapp_client');
+  $bots = $database->select('ai_whatsapp_bot', 'b')
+    ->fields('b', ['id', 'name'])
+    ->isNull('b.client')
+    ->orderBy('b.id')
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($bots as $bot_id => $bot_name) {
+    $client = $client_storage->create(['name' => $bot_name, 'status' => 'active']);
+    $client->save();
+    $database->update('ai_whatsapp_bot')->fields(['client' => $client->id()])->condition('id', $bot_id)->execute();
+    $created++;
+  }
+
+  // Accounts, then conversations and leads, from the record they belong to.
+  $database->query('UPDATE {ai_whatsapp_account} SET client = (SELECT {ai_whatsapp_bot}.client FROM {ai_whatsapp_bot} WHERE {ai_whatsapp_bot}.id = {ai_whatsapp_account}.bot) WHERE client IS NULL AND bot IS NOT NULL');
+  $database->query('UPDATE {ai_whatsapp_conversation} SET client = (SELECT {ai_whatsapp_bot}.client FROM {ai_whatsapp_bot} WHERE {ai_whatsapp_bot}.id = {ai_whatsapp_conversation}.bot) WHERE client IS NULL AND bot IS NOT NULL');
+  $database->query('UPDATE {ai_whatsapp_conversation} SET client = (SELECT {ai_whatsapp_account}.client FROM {ai_whatsapp_account} WHERE {ai_whatsapp_account}.id = {ai_whatsapp_conversation}.whatsapp_account) WHERE client IS NULL AND whatsapp_account IS NOT NULL');
+  $database->query('UPDATE {ai_whatsapp_lead} SET client = (SELECT {ai_whatsapp_conversation}.client FROM {ai_whatsapp_conversation} WHERE {ai_whatsapp_conversation}.id = {ai_whatsapp_lead}.conversation) WHERE client IS NULL AND conversation IS NOT NULL');
+  $database->query('UPDATE {ai_whatsapp_lead} SET client = (SELECT {ai_whatsapp_bot}.client FROM {ai_whatsapp_bot} WHERE {ai_whatsapp_bot}.id = {ai_whatsapp_lead}.bot) WHERE client IS NULL AND bot IS NOT NULL');
+
+  // Knowledge bases: only when every bot and account using it agree.
+  $unassigned = [];
+  $knowledge_bases = $database->select('ai_whatsapp_knowledge_base', 'k')
+    ->fields('k', ['id', 'name'])
+    ->isNull('k.client')
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($knowledge_bases as $kb_id => $kb_name) {
+    $clients = array_merge(
+      $database->select('ai_whatsapp_bot', 'b')->fields('b', ['client'])->condition('b.knowledge_base', $kb_id)->isNotNull('b.client')->execute()->fetchCol(),
+      $database->select('ai_whatsapp_account', 'a')->fields('a', ['client'])->condition('a.knowledge_base', $kb_id)->isNotNull('a.client')->execute()->fetchCol(),
+    );
+    $clients = array_values(array_unique($clients));
+    if (count($clients) === 1) {
+      $database->update('ai_whatsapp_knowledge_base')->fields(['client' => $clients[0]])->condition('id', $kb_id)->execute();
+      continue;
+    }
+    $unassigned[] = $kb_name . ' (' . (count($clients) === 0 ? 'sin uso' : 'usada por ' . count($clients) . ' clientes') . ')';
+  }
+
+  foreach ($owned_types as $entity_type_id) {
+    $entity_type_manager->getStorage($entity_type_id)->resetCache();
+    $remaining = (int) $database->select($entity_type_id === 'ai_whatsapp_knowledge_base' ? 'ai_whatsapp_knowledge_base' : $entity_type_id, 't')->isNull('t.client')->countQuery()->execute()->fetchField();
+    if ($remaining > 0 && $entity_type_id !== 'ai_whatsapp_knowledge_base') {
+      $unassigned[] = $remaining . ' × ' . $entity_type_id;
+    }
+  }
+
+  return (string) t('Created @created clients. Unassigned, review manually: @unassigned.', [
+    '@created' => $created,
+    '@unassigned' => $unassigned === [] ? 'none' : implode('; ', $unassigned),
+  ]);
+}
+
+/**
+ * Moves knowledge documents from public to private file storage.
+ *
+ * Requires $settings['file_private_path']. Without it nothing is moved and
+ * the status report keeps flagging the public documents; the move can then be
+ * run later with the knowledge_file_storage service.
+ */
+function ai_whatsapp_automation_update_11033(): string {
+  $knowledge_files = \Drupal::service('ai_whatsapp_automation.knowledge_file_storage');
+  if (!$knowledge_files->isPrivateAvailable()) {
+    return (string) t('Private file storage is not configured: @count knowledge documents stay public. Set file_private_path in settings.php.', [
+      '@count' => $knowledge_files->countPublicDocuments(),
+    ]);
+  }
+  $result = $knowledge_files->moveDocumentsToPrivate();
+
+  return (string) t('Moved @moved knowledge documents to private storage. Failed: @failed.', [
+    '@moved' => $result['moved'],
+    '@failed' => $result['failed'] === [] ? 'none' : implode(', ', $result['failed']),
+  ]);
+}
+
+/**
+ * Adds the user's client field and the "client agent" role.
+ *
+ * Client users get this role and a client on their account; they only see
+ * that client's conversations, messages, leads and dashboard, without costs.
+ * The toolbar and administration theme permissions give them navigation and
+ * a way to log out on the admin pages they use.
+ */
+function ai_whatsapp_automation_update_11034(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('ai_whatsapp_client', 'user') === NULL) {
+    $field = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('user')['ai_whatsapp_client'];
+    $definition_update_manager->installFieldStorageDefinition('ai_whatsapp_client', 'user', 'ai_whatsapp_automation', $field);
+  }
+
+  $role_storage = \Drupal::entityTypeManager()->getStorage('user_role');
+  $role = $role_storage->load(AI_WHATSAPP_AUTOMATION_CLIENT_AGENT_ROLE) ?? $role_storage->create([
+    'id' => AI_WHATSAPP_AUTOMATION_CLIENT_AGENT_ROLE,
+    'label' => 'Atención a clientes (AI WhatsApp)',
+  ]);
+  foreach (ai_whatsapp_automation_client_agent_permissions() as $permission) {
+    $role->grantPermission($permission);
+  }
+  $role->save();
+
+  return (string) t('Client user field installed; role "@role" ready.', ['@role' => $role->label()]);
+}
+
+/**
+ * Creates the editable configuration of the client account e-mails.
+ */
+function ai_whatsapp_automation_update_11035(): string {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.client_mail');
+  if ($config->get('messages') === NULL) {
+    $config->set('logo_url', '')->set('footer', '')->set('messages', [])->save();
+  }
+
+  return (string) t('Client account e-mails can now be edited at /admin/config/services/ai-whatsapp-automation/correos.');
+}
+
+/**
+ * Takes Drupal's toolbar away from the client users.
+ *
+ * The panel now has its own side navigation and its own account box, so the
+ * administration bar only showed them Drupal itself.
+ */
+function ai_whatsapp_automation_update_11036(): string {
+  $role = \Drupal::entityTypeManager()->getStorage('user_role')->load(AI_WHATSAPP_AUTOMATION_CLIENT_AGENT_ROLE);
+  if ($role === NULL) {
+    return (string) t('The client agent role does not exist: nothing to do.');
+  }
+  $role->revokePermission('access toolbar');
+  $role->save();
+
+  return (string) t('Client users now navigate with the panel menu instead of the Drupal toolbar.');
+}
+
+/**
+ * Adds the replies sent to messages that carry no readable request.
+ */
+function ai_whatsapp_automation_update_11037(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_definitions = \Drupal::service('entity_field.manager')
+    ->getFieldStorageDefinitions('ai_whatsapp_bot');
+
+  foreach (['unintelligible_reply_text', 'unintelligible_second_reply_text'] as $field_name) {
+    if ($definition_update_manager->getFieldStorageDefinition($field_name, 'ai_whatsapp_bot') !== NULL) {
+      continue;
+    }
+
+    $definition_update_manager->installFieldStorageDefinition(
+      $field_name,
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      $field_definitions[$field_name]
+    );
+  }
+
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  $defaults = [
+    'options.unintelligible_reply_text' => 'No logré entender tu mensaje 🤔 ¿Me lo escribes de nuevo, por favor?',
+    'options.unintelligible_second_reply_text' => 'Sigo sin poder leer tu mensaje. Puedes escribirme qué producto o servicio te interesa, o pedirme que te contacte una persona.',
+  ];
+  foreach ($defaults as $key => $value) {
+    if ($config->get($key) === NULL) {
+      $config->set($key, $value);
+    }
+  }
+  $config->save();
+
+  return (string) t('Unreadable messages are now answered without calling the AI.');
+}
+
+/**
+ * Adds the reply sent when a voice note or an attachment arrives.
+ */
+function ai_whatsapp_automation_update_11038(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('media_reply_text', 'ai_whatsapp_bot') === NULL) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'media_reply_text',
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_bot')['media_reply_text']
+    );
+  }
+
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('options.media_reply_text') === NULL) {
+    $config->set('options.media_reply_text', 'Por ahora solo puedo leer mensajes de texto 🙏 ¿Me escribes lo que necesitas y con gusto te ayudo?')->save();
+  }
+
+  return (string) t('Voice notes and attachments are now recorded and answered instead of ignored.');
+}
+
+/**
+ * Returns the permissions of the client agent role.
+ *
+ * @return string[]
+ *   Permission machine names.
+ */
+function ai_whatsapp_automation_client_agent_permissions(): array {
+  return [
+    'access own client ai whatsapp records',
+    'operate own client ai whatsapp conversations',
+    'view ai whatsapp automation dashboard',
+    'view the administration theme',
+  ];
+}
+
+/**
+ * Returns the entity type IDs provided by this module.
+ *
+ * @return string[]
+ *   The entity type IDs.
+ */
+function ai_whatsapp_automation_entity_type_ids(): array {
+  return [
+    'ai_whatsapp_client',
+    'ai_whatsapp_bot',
+    'ai_whatsapp_account',
+    'ai_whatsapp_conversation',
+    'ai_whatsapp_message',
+    'ai_whatsapp_lead',
+    'ai_whatsapp_operator_action',
+    'ai_whatsapp_knowledge_base',
+    'ai_whatsapp_knowledge_document',
+    'ai_whatsapp_knowledge_chunk',
+  ];
+}
