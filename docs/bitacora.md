@@ -8,14 +8,16 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- Roles listos (Atención a clientes y Gestor), cada uno con su menú y salida:
-  [roles-y-permisos.md](roles-y-permisos.md).
-- **El bot es la única fuente** de prompt, modelo y base de conocimiento; las
-  cuentas de WhatsApp solo eligen su bot.
-- En local hay datos de demostración («Cliente Demo») y dos cuentas de
-  prueba: `demo-cliente` y `demo-gestor`. Solo en la base de datos local.
+- **Bot «Goblin»** creado para el cliente Goblin con el prompt maestro del
+  equipo ([docs/bots/goblin](bots/goblin/README.md)). Leads configurados y
+  probados en simulación. **Falta para usarlo en vivo:** clave de OpenAI,
+  activar leads con los números de notificación, y una cuenta de WhatsApp de
+  Goblin con este bot.
+- Roles listos (Atención a clientes y Gestor): [roles-y-permisos.md](roles-y-permisos.md).
+- El bot es la única fuente de prompt, modelo y base de conocimiento.
+- En local: datos de demostración («Cliente Demo»), cuentas `demo-cliente` y
+  `demo-gestor`.
 - Repositorio en `main` en GitHub, al día.
-- **Siguiente paso:** a decidir por el equipo (ver pendientes).
 
 ## Pendientes
 
@@ -23,13 +25,51 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
 | 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
+| 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git). **Necesario para probar el bot Goblin en vivo** | Alta |
+| 3b | Activar leads (`enable_lead_notifications`) y definir los números de WhatsApp del equipo que reciben los avisos | Alta |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
 | 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-30 — Bot «Goblin»
+
+**Qué se hizo**
+
+- Prompt maestro del equipo guardado en `docs/bots/goblin/prompt.md` (texto
+  sin cambios; solo se normalizaron viñetas a Markdown).
+- `scripts/bots/goblin.php`: crea o actualiza el bot desde ese archivo (los
+  bots son contenido y no viajan con config/sync). Ejecutado: bot id 3,
+  cliente Goblin; una segunda ejecución actualiza sin duplicar.
+- Leads del bot configurados para Goblin: las señales por defecto del módulo
+  eran de otro negocio (origen, destino, transporte…) y nunca se habrían
+  cumplido. Señales: nombre, contacto, categoría, descripción (mínimo 3) y
+  una regla que hace al bot cerrar cada escalamiento con «Datos capturados:».
+
+**Comprobado**
+
+- Prompt guardado en el bot idéntico al archivo.
+- 5 conversaciones simuladas contra `LeadHandoffService` (sobre copia de la
+  base, restaurada después): lead solo cuando el bot resume con los datos;
+  nunca mientras los pide ni en preguntas informativas. Con las señales por
+  defecto, el mismo caso no generaba lead.
+
+**Encontrado**
+
+- Los leads están **desactivados** globalmente: sin activarlos ningún bot
+  crea leads.
+- Al crearse un lead la conversación pasa a atención humana y la IA deja de
+  responder en ella (comportamiento del módulo).
+- El teléfono del lead es el número de WhatsApp de la conversación, no el que
+  el cliente escribe en el chat si fuera otro.
+
+**No comprobado**
+
+- Respuestas reales de OpenAI (sin clave en local).
 
 ---
 
