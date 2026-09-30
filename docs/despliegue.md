@@ -98,10 +98,28 @@ Instalación limpia desde la configuración, como en el servidor:
 
 - **Fase 0** (hecha): reconocimiento.
 - **Fase 1** (hecha): PHP 8.4.25 con las extensiones de Drupal, Composer en `~/bin`, deploy key de GitHub.
-- **Fase 2**: base de datos (cPanel), clonar en `~/ia-goblin`, `composer
-  install`, `settings.local.php`, raíz del subdominio → `~/ia-goblin/web`.
-- **Fase 3**: instalar (`si --existing-config` + `cim`), traducciones, bot,
-  cron, pruebas.
+- **Fase 2** (hecha): base de datos `goblincr_iagoblin`; código clonado en
+  `~/ia-goblin` (deploy key); `composer install --no-dev -o`; carpeta
+  `private/`; `settings.local.php` (permisos 600, fuera de git) con base de
+  datos, `hash_salt`, `trusted_host_patterns` y errores ocultos.
+  Contraseña de la base: la generó el servidor y se asignó con
+  `uapi Mysql set_password`; solo existe en `settings.local.php`.
+- **Fase 3A** (hecha): `drush si --existing-config` + `drush cim` (0
+  diferencias), traducciones, `scripts/bots/goblin.php` (cliente y bot
+  creados), `settings.php` en 444 y `sites/default` en 555. `drush
+  core:requirements --severity=2`: sin errores.
+- **Fase 3B**: raíz del subdominio → `ia-goblin/web`; MultiPHP INI (256M,
+  32M, 32M, 120 s). Crea `web/.user.ini` (ignorado en git).
+- **Fase 3C**: verificación externa, acceso admin, cron.
+
+### Lecciones del primer despliegue
+
+- Con la Terminal web de cPanel, pegar dentro de `read -s` no funciona y
+  pegar varias líneas hace que `read` se trague las siguientes. Para
+  secretos: generarlos en el servidor (como la contraseña de la base) o
+  escribirlos en un archivo con marcador y reemplazarlo con una sola línea.
+- El subdominio se apunta a Drupal **después** de instalar desde la terminal:
+  si no, el instalador web queda expuesto.
 
 ## Historial de despliegues
 

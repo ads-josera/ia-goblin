@@ -14,6 +14,9 @@
 !/private/.gitkeep
 
 # Secrets and environment-specific settings.
+# cPanel's MultiPHP INI Editor writes these into the document root (web/).
+/web/.user.ini
+/web/php.ini
 /web/sites/*/settings.local.php
 /web/sites/*/services.local.yml
 .env
