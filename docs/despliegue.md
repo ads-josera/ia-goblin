@@ -25,8 +25,11 @@
 | Sistema | CloudLinux 8.10, usuario `goblincr` |
 | PHP | Web del subdominio: **8.4** (MultiPHP). Terminal: 8.1 por defecto → usar siempre `/opt/cpanel/ea-php84/root/usr/bin/php` |
 | Base de datos | MySQL 8.0.46 |
-| Herramientas | git, pdftotext, convert, crontab ✅ · **Composer: no** (se instala en `~/bin`) |
-| GitHub | Sin acceso: se crea una llave de solo lectura (deploy key) |
+| Herramientas | git, pdftotext, convert, crontab ✅ · Composer 2.10.3 en `~/bin/composer.phar` (verificado por SHA-256) |
+| GitHub | Deploy key de solo lectura `~/.ssh/ia_goblin_deploy`, alias SSH `github-ia-goblin` ✅ |
+| `allow_url_fopen` | **off** (PHP no descarga archivos: instalar herramientas con `curl`) |
+| Entorno de terminal | `source ~/.ia-goblin.env` (PHP 8.4 primero en el PATH, función `composer`) |
+| Base de datos | `goblincr_iagoblin`, usuario `goblincr_iagoblin` (todos los privilegios). Contraseña: solo en `settings.local.php` del servidor |
 | Límites PHP (8.1) | memory_limit 128M, upload_max 2M → subir para el subdominio (256M / 32M) |
 
 ## Requisitos que el servidor debe cumplir
@@ -94,7 +97,7 @@ Instalación limpia desde la configuración, como en el servidor:
 ### Fases en el servidor
 
 - **Fase 0** (hecha): reconocimiento.
-- **Fase 1**: PHP 8.4, Composer en `~/bin`, deploy key de GitHub.
+- **Fase 1** (hecha): PHP 8.4.25 con las extensiones de Drupal, Composer en `~/bin`, deploy key de GitHub.
 - **Fase 2**: base de datos (cPanel), clonar en `~/ia-goblin`, `composer
   install`, `settings.local.php`, raíz del subdominio → `~/ia-goblin/web`.
 - **Fase 3**: instalar (`si --existing-config` + `cim`), traducciones, bot,
