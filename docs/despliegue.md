@@ -14,14 +14,15 @@
 
 | Dato | Valor |
 |------|-------|
-| Proveedor / tipo | _pendiente_ |
-| Sistema operativo | _pendiente_ |
-| PHP | 8.4 (requerido) |
-| Base de datos | _pendiente_ |
-| Acceso SSH | _pendiente_ |
-| Composer en servidor | _pendiente_ |
-| Dominio | _pendiente_ |
-| Ruta del proyecto | _pendiente_ |
+| Dominio | `ia.goblincreative.com` (también `www.ia.`) |
+| IP | 107.161.187.186 (el mismo servidor que goblincreative.com) |
+| Panel | cPanel (Apache con `mod_bwlimited`) |
+| HTTPS | Let's Encrypt válido para `ia.` y `www.ia.`, vence 2026-12-28 (renovación automática de cPanel: confirmar) |
+| Acceso | SSH (confirmado por el equipo) |
+| Estado inicial | Subdominio vacío (solo `cgi-bin`), con listado de directorios visible |
+| Ruta del proyecto (propuesta) | `~/ia-goblin` (fuera de la carpeta pública) |
+| Raíz del subdominio (propuesta) | `~/ia-goblin/web` |
+| PHP, extensiones, Composer, base de datos | _pendiente: salida de la Fase 0_ |
 
 ## Requisitos que el servidor debe cumplir
 
