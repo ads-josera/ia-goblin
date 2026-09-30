@@ -1,0 +1,19 @@
+uuid: 19965638-b8d5-456c-9cb2-81ada4ae1630
+langcode: es
+status: true
+dependencies:
+  module:
+    - ai_whatsapp_automation
+    - system
+id: ai_whatsapp_manager
+label: 'Gestor (AI WhatsApp)'
+weight: 5
+is_admin: false
+permissions:
+  - 'administer ai whatsapp automation accounts'
+  - 'administer ai whatsapp automation bots'
+  - 'administer ai whatsapp automation evolution'
+  - 'administer ai whatsapp automation rag'
+  - 'administer ai whatsapp automation routing'
+  - 'view ai whatsapp automation operator log'
+  - 'view the administration theme'

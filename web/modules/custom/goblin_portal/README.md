@@ -14,8 +14,11 @@ Entrada al producto IA Goblin. Tres reglas y un ajuste de idioma:
 `StartPage::urlFor()` es el único sitio donde se decide:
 
 - Anónimo → `/user/login`.
-- Con permiso `view ai whatsapp automation dashboard` → `/admin/reports/ai-whatsapp-automation`.
-- Sin ese permiso → su página de cuenta (nunca a un «acceso denegado»).
+- Con sesión → la **primera sección del panel que puede abrir**, en el orden
+  del menú del panel (`PanelNavigation::firstSection()` del módulo
+  ai_whatsapp_automation): el Panel para administradores y Atención a
+  clientes, Bots para el Gestor.
+- Sin ninguna sección → su página de cuenta (nunca a un «acceso denegado»).
 
 ## Acceso con correo
 

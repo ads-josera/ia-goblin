@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Drupal\ai_whatsapp_automation\Access\ClientAccess;
+use Drupal\ai_whatsapp_automation\Access\SectionAccess;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Query\AlterableInterface;
@@ -201,59 +202,62 @@ function ai_whatsapp_automation_entity_field_access(string $operation, FieldDefi
  * Implements hook_query_TAG_alter() for ai_whatsapp_conversation_access.
  */
 function ai_whatsapp_automation_query_ai_whatsapp_conversation_access_alter(AlterableInterface $query): void {
-  _ai_whatsapp_automation_restrict_to_client($query, 'base_table.client');
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_conversation', 'base_table.client');
 }
 
 /**
  * Implements hook_query_TAG_alter() for ai_whatsapp_lead_access.
  */
 function ai_whatsapp_automation_query_ai_whatsapp_lead_access_alter(AlterableInterface $query): void {
-  _ai_whatsapp_automation_restrict_to_client($query, 'base_table.client');
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_lead', 'base_table.client');
 }
 
 /**
  * Implements hook_query_TAG_alter() for ai_whatsapp_bot_access.
  */
 function ai_whatsapp_automation_query_ai_whatsapp_bot_access_alter(AlterableInterface $query): void {
-  _ai_whatsapp_automation_restrict_to_client($query, 'base_table.client');
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_bot', 'base_table.client');
 }
 
 /**
  * Implements hook_query_TAG_alter() for ai_whatsapp_message_access.
  */
 function ai_whatsapp_automation_query_ai_whatsapp_message_access_alter(AlterableInterface $query): void {
-  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_client_conversation.client', 'conversation');
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_message', 'ai_whatsapp_client_conversation.client', 'conversation');
 }
 
 /**
  * Implements hook_query_TAG_alter() for ai_whatsapp_operator_action_access.
  */
 function ai_whatsapp_automation_query_ai_whatsapp_operator_action_access_alter(AlterableInterface $query): void {
-  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_client_conversation.client', 'conversation');
+  _ai_whatsapp_automation_restrict_to_client($query, 'ai_whatsapp_operator_action', 'ai_whatsapp_client_conversation.client', 'conversation');
 }
 
 /**
  * Restricts an access-checked entity query to the current user's client.
  *
- * Administrators are not restricted. A user without the client permission or
- * without a client gets no rows. Queries run with accessCheck(FALSE) (webhooks,
+ * Administrators and holders of the section permission of this entity type
+ * (SectionAccess) are not restricted: they work across all clients. A user
+ * without the client permission or without a client gets no rows. Queries run with accessCheck(FALSE) (webhooks,
  * services) carry no access tag and are never restricted.
  *
  * @param \Drupal\Core\Database\Query\AlterableInterface $query
  *   The entity query being built.
+ * @param string $entity_type_id
+ *   The entity type being listed.
  * @param string $client_column
  *   Qualified client column to compare.
  * @param string|null $conversation_column
  *   For records that reach their client through a conversation, the column
  *   of the base table referencing it.
  */
-function _ai_whatsapp_automation_restrict_to_client(AlterableInterface $query, string $client_column, ?string $conversation_column = NULL): void {
+function _ai_whatsapp_automation_restrict_to_client(AlterableInterface $query, string $entity_type_id, string $client_column, ?string $conversation_column = NULL): void {
   if (!$query instanceof SelectInterface) {
     return;
   }
   $account = \Drupal::currentUser();
   $client_access = \Drupal::service('ai_whatsapp_automation.client_access');
-  if ($client_access->isAdmin($account)) {
+  if (SectionAccess::isGlobal($account, $entity_type_id)) {
     return;
   }
   $client_id = $account->hasPermission(ClientAccess::VIEW_PERMISSION) ? $client_access->clientId($account) : NULL;
@@ -321,10 +325,31 @@ function _ai_whatsapp_automation_user_client_validate(array &$form, FormStateInt
 
 
 /**
+ * Implements hook_page_top().
+ *
+ * The panel menu for users without Drupal's navigation (client agents and
+ * managers). Empty for everyone else.
+ */
+function ai_whatsapp_automation_page_top(array &$page_top): void {
+  $page_top['ai_whatsapp_panel_navigation'] = \Drupal::service('ai_whatsapp_automation.panel_navigation')->build();
+}
+
+/**
  * Implements hook_theme().
  */
 function ai_whatsapp_automation_theme(): array {
   return [
+    'ai_whatsapp_panel_navigation' => [
+      'variables' => [
+        'links' => [],
+        'site_name' => '',
+        'logo_url' => '',
+        'home_url' => NULL,
+        'account_name' => '',
+        'account_url' => NULL,
+        'logout_url' => NULL,
+      ],
+    ],
     'ai_whatsapp_client_agent_mail' => [
       'variables' => [
         'heading' => NULL,

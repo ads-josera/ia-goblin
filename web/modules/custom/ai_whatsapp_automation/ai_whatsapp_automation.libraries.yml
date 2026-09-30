@@ -81,3 +81,7 @@ list_filters:
   css:
     theme:
       css/list-filters.css: {}
+panel_navigation:
+  css:
+    theme:
+      css/panel-navigation.css: {}

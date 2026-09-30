@@ -1,0 +1,146 @@
+/**
+ * @file
+ * The panel's own menu for client agents and managers.
+ *
+ * Self-contained: it renders inside Claro and inside the frontend theme, so
+ * it relies on neither. Values are local tokens with no external variables.
+ */
+
+.aiwa-panel-nav {
+  --aiwa-nav-bg: #ffffff;
+  --aiwa-nav-border: #dcdfe6;
+  --aiwa-nav-text: #1d1d1f;
+  --aiwa-nav-muted: #55565b;
+  --aiwa-nav-active: #0e5a87;
+  --aiwa-nav-focus: #0e5a87;
+
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1.5rem;
+  padding: 0 1.5rem;
+  color: var(--aiwa-nav-text);
+  border-bottom: 1px solid var(--aiwa-nav-border);
+  background: var(--aiwa-nav-bg);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  hyphens: manual;
+}
+
+.aiwa-panel-nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.aiwa-panel-nav a:focus-visible {
+  outline: 3px solid var(--aiwa-nav-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.aiwa-panel-nav__brand {
+  display: inline-flex;
+  padding-block: 0.625rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.aiwa-panel-nav__logo {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+/* Two rows, whatever the role: brand and account on top, sections below as
+ * tabs. A role with many sections (managers) never pushes the account box
+ * onto a line of its own, and narrow screens scroll the tabs sideways inside
+ * their own row instead of widening the page. */
+.aiwa-panel-nav__sections {
+  flex: 0 0 100%;
+  min-width: 0;
+  order: 3;
+  margin-inline: -0.75rem;
+}
+
+.aiwa-panel-nav__list {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.aiwa-panel-nav__list li {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.aiwa-panel-nav__link {
+  display: block;
+  padding: 0.625rem 0.75rem;
+  white-space: nowrap;
+  color: var(--aiwa-nav-muted);
+  border-bottom: 3px solid transparent;
+}
+
+.aiwa-panel-nav__link:hover {
+  color: var(--aiwa-nav-text);
+  border-bottom-color: var(--aiwa-nav-border);
+}
+
+/* Active: weight, color and a bar, never color alone. */
+.aiwa-panel-nav__link.is-active {
+  color: var(--aiwa-nav-active);
+  border-bottom-color: var(--aiwa-nav-active);
+  font-weight: 600;
+}
+
+.aiwa-panel-nav__account {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1rem;
+  order: 2;
+  margin-left: auto;
+}
+
+.aiwa-panel-nav__user {
+  max-width: 14rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--aiwa-nav-muted);
+}
+
+.aiwa-panel-nav__user:hover {
+  color: var(--aiwa-nav-text);
+  text-decoration: underline;
+}
+
+.aiwa-panel-nav__logout {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--aiwa-nav-border);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.aiwa-panel-nav__logout:hover {
+  border-color: var(--aiwa-nav-text);
+}
+
+/* Narrow screens: tighter gutters and a shorter name. */
+@media (max-width: 60rem) {
+  .aiwa-panel-nav {
+    padding-inline: 1rem;
+  }
+
+  .aiwa-panel-nav__user {
+    max-width: 8rem;
+  }
+}

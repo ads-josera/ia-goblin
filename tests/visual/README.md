@@ -32,6 +32,11 @@ node run.mjs webkit
 
 # Safari y Firefox reales (la pantalla de acceso):
 npm run qa:real
+
+# Recorrido con la cuenta de cada rol (cliente y gestor): entrar, abrir
+# cada sección de su menú y un detalle, comprobar los 403, móvil y salir.
+ROLE_CLIENT_ID=... ROLE_CLIENT_PASS=... ROLE_MANAGER_ID=... ROLE_MANAGER_PASS=... \
+  node roles-walk.mjs [chromium|webkit|firefox]
 ```
 
 Las capturas quedan en `screenshots/` (fuera de git). Sale con código 1 si
@@ -44,6 +49,7 @@ hay algún problema.
 | `goblin-qa.mjs` | Las comprobaciones. También lo ejecuta la skill browser-automation |
 | `run.mjs` | Lo corre en Chromium, WebKit y Firefox (Playwright) |
 | `run-real.mjs` | Pantalla de acceso en Safari y Firefox reales (WebDriver) |
+| `roles-walk.mjs` | Recorrido completo con la cuenta de cada rol |
 
 WebKit es el motor de Safari, pero no es Safari: antes de entregar, pasar
 también `run-real.mjs`.

@@ -85,6 +85,19 @@ final class PortalEntryTest extends BrowserTestBase {
   }
 
   /**
+   * A manager, who may not see the dashboard, starts on their first section.
+   */
+  public function testManagerStartsOnFirstSection(): void {
+    $account = $this->drupalCreateUser();
+    $account->addRole('ai_whatsapp_manager');
+    $account->save();
+    $this->signIn($account->getAccountName(), $account->passRaw);
+
+    $this->assertSession()->addressEquals('/admin/content/ai-whatsapp/bots');
+    $this->assertSession()->statusCodeEquals(200);
+  }
+
+  /**
    * An explicit destination wins over the dashboard.
    */
   public function testDestinationIsRespected(): void {

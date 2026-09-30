@@ -1,0 +1,16 @@
+uuid: ae3b9b15-3218-4ded-b821-db2176b4e9e4
+langcode: es
+status: true
+dependencies:
+  module:
+    - ai_whatsapp_automation
+    - system
+id: ai_whatsapp_client_agent
+label: 'Atención a clientes (AI WhatsApp)'
+weight: 4
+is_admin: false
+permissions:
+  - 'access own client ai whatsapp records'
+  - 'operate own client ai whatsapp conversations'
+  - 'view ai whatsapp automation dashboard'
+  - 'view the administration theme'

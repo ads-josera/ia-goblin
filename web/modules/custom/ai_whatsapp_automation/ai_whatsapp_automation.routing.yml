@@ -51,13 +51,15 @@ ai_whatsapp_automation.dashboard:
   requirements:
     _permission: 'view ai whatsapp automation dashboard'
 
+# Section routes: their own permission (SectionAccess) or the umbrella
+# "administer ai whatsapp automation entities". "+" means OR.
 ai_whatsapp_automation.rag_upload:
   path: '/admin/content/ai-whatsapp/knowledge/upload'
   defaults:
     _form: '\Drupal\ai_whatsapp_automation\Form\RAG\KnowledgeDocumentUploadForm'
     _title: 'Upload knowledge document'
   requirements:
-    _permission: 'administer ai whatsapp automation rag'
+    _permission: 'administer ai whatsapp automation rag+administer ai whatsapp automation entities'
 
 ai_whatsapp_automation.evolution_connections:
   path: '/admin/content/ai-whatsapp/evolution'
@@ -65,7 +67,7 @@ ai_whatsapp_automation.evolution_connections:
     _controller: '\Drupal\ai_whatsapp_automation\Controller\Evolution\EvolutionConnectionController::overview'
     _title: 'Evolution QR connections'
   requirements:
-    _permission: 'administer ai whatsapp automation evolution'
+    _permission: 'administer ai whatsapp automation evolution+administer ai whatsapp automation entities'
 
 ai_whatsapp_automation.evolution_account_qr:
   path: '/admin/content/ai-whatsapp/accounts/{ai_whatsapp_account}/evolution-qr'
@@ -73,7 +75,7 @@ ai_whatsapp_automation.evolution_account_qr:
     _form: '\Drupal\ai_whatsapp_automation\Form\Evolution\EvolutionQrForm'
     _title: 'Evolution QR connection'
   requirements:
-    _permission: 'administer ai whatsapp automation evolution'
+    _permission: 'administer ai whatsapp automation evolution+administer ai whatsapp automation entities'
   options:
     parameters:
       ai_whatsapp_account:
@@ -85,7 +87,7 @@ ai_whatsapp_automation.multibot_routing:
     _controller: '\Drupal\ai_whatsapp_automation\Controller\MultiBotRoutingController::overview'
     _title: 'Enrutamiento de bots'
   requirements:
-    _permission: 'administer ai whatsapp automation entities'
+    _permission: 'administer ai whatsapp automation routing+administer ai whatsapp automation entities'
 
 ai_whatsapp_automation.bot_web_integration:
   path: '/admin/content/ai-whatsapp/bots/{ai_whatsapp_bot}/web-integration'
@@ -93,7 +95,7 @@ ai_whatsapp_automation.bot_web_integration:
     _controller: '\Drupal\ai_whatsapp_automation\Controller\WebIntegrationController::overview'
     _title: 'Web integration'
   requirements:
-    _permission: 'administer ai whatsapp automation entities'
+    _permission: 'administer ai whatsapp automation bots+administer ai whatsapp automation entities'
   options:
     parameters:
       ai_whatsapp_bot:

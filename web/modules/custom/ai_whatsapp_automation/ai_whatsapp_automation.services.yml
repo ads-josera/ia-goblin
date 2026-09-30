@@ -99,6 +99,13 @@ services:
       - '@current_user'
       - '@logger.factory'
 
+  ai_whatsapp_automation.panel_navigation:
+    class: Drupal\ai_whatsapp_automation\Ui\PanelNavigation
+    arguments:
+      - '@current_user'
+      - '@path.current'
+      - '@config.factory'
+      - '@file_url_generator'
   ai_whatsapp_automation.client_access:
     class: Drupal\ai_whatsapp_automation\Access\ClientAccess
     arguments:

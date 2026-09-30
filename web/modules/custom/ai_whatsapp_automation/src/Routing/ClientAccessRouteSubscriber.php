@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_whatsapp_automation\Routing;
 
 use Drupal\ai_whatsapp_automation\Access\ClientAccess;
+use Drupal\ai_whatsapp_automation\Access\SectionAccess;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -26,6 +27,15 @@ final class ClientAccessRouteSubscriber extends RouteSubscriberBase {
       if ($route !== NULL) {
         // "+" means OR in Drupal permission requirements.
         $route->setRequirement('_permission', ClientAccess::ADMIN_PERMISSION . '+' . ClientAccess::VIEW_PERMISSION);
+      }
+    }
+
+    // Section lists open with their own permission or the umbrella one. The
+    // generated collection route only knows the entity's admin_permission.
+    foreach (SectionAccess::ENTITY_TYPES as $entity_type_id => $permission) {
+      $route = $collection->get('entity.' . $entity_type_id . '.collection');
+      if ($route !== NULL) {
+        $route->setRequirement('_permission', SectionAccess::requirement($permission));
       }
     }
   }

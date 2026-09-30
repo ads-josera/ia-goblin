@@ -2,13 +2,29 @@
 
 declare(strict_types=1);
 
+use Drupal\ai_whatsapp_automation\Access\PanelRoles;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadContactExtractor;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService;
 
 /**
  * Role given to users of a client.
  */
-const AI_WHATSAPP_AUTOMATION_CLIENT_AGENT_ROLE = 'ai_whatsapp_client_agent';
+const AI_WHATSAPP_AUTOMATION_CLIENT_AGENT_ROLE = PanelRoles::CLIENT_AGENT;
+
+/**
+ * Implements hook_install().
+ *
+ * Creates the client agent and manager roles. Before this, only
+ * update_11034 created the client role, and update hooks never run on a new
+ * install: fresh sites had no client role at all.
+ */
+function ai_whatsapp_automation_install(bool $is_syncing): void {
+  if ($is_syncing) {
+    // The roles arrive with the rest of the configuration.
+    return;
+  }
+  PanelRoles::ensure(\Drupal::entityTypeManager());
+}
 
 /**
  * Implements hook_requirements().
@@ -1114,18 +1130,29 @@ function ai_whatsapp_automation_update_11038(): string {
 }
 
 /**
+ * Adds section permissions and the client agent and manager roles.
+ *
+ * Creates the client agent role where it was never created (sites installed
+ * fresh, where update_11034 did not run) and the new manager role. Existing
+ * roles keep their permissions; "administer ai whatsapp automation entities"
+ * still grants every section.
+ */
+function ai_whatsapp_automation_update_11039(): string {
+  $created = PanelRoles::ensure(\Drupal::entityTypeManager());
+
+  return $created
+    ? (string) t('Roles created: @roles.', ['@roles' => implode(', ', $created)])
+    : (string) t('Client agent and manager roles already existed; their permissions are up to date.');
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]
  *   Permission machine names.
  */
 function ai_whatsapp_automation_client_agent_permissions(): array {
-  return [
-    'access own client ai whatsapp records',
-    'operate own client ai whatsapp conversations',
-    'view ai whatsapp automation dashboard',
-    'view the administration theme',
-  ];
+  return PanelRoles::definitions()[PanelRoles::CLIENT_AGENT]['permissions'];
 }
 
 /**

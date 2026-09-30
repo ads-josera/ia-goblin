@@ -1,0 +1,38 @@
+{#
+/**
+ * @file
+ * The panel's own menu (see \Drupal\ai_whatsapp_automation\Ui\PanelNavigation).
+ *
+ * Available variables:
+ * - links: Sections the user may open. Each: title, url, active.
+ * - site_name: Site name, next to the logo.
+ * - logo_url: Admin logo (Navigation settings), or empty.
+ * - home_url: Where the logo leads.
+ * - account_name: The signed-in user's display name.
+ * - account_url: Their account form (change password, e-mail).
+ * - logout_url: Sign-out link, CSRF-protected by core.
+ */
+#}
+<header class="aiwa-panel-nav" role="banner">
+  <a class="aiwa-panel-nav__brand" href="{{ home_url }}">
+    {% if logo_url %}
+      <img class="aiwa-panel-nav__logo" src="{{ logo_url }}" alt="" width="32" height="32" />
+    {% endif %}
+    <span class="aiwa-panel-nav__site">{{ site_name }}</span>
+  </a>
+
+  <nav class="aiwa-panel-nav__sections" aria-label="{{ 'Secciones del panel'|t }}">
+    <ul class="aiwa-panel-nav__list">
+      {% for link in links %}
+        <li>
+          <a href="{{ link.url }}" class="aiwa-panel-nav__link{{ link.active ? ' is-active' }}"{% if link.active %} aria-current="page"{% endif %}>{{ link.title }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <div class="aiwa-panel-nav__account">
+    <a class="aiwa-panel-nav__user" href="{{ account_url }}" title="{{ 'Mi cuenta'|t }}">{{ account_name }}</a>
+    <a class="aiwa-panel-nav__logout" href="{{ logout_url }}">{{ 'Cerrar sesión'|t }}</a>
+  </div>
+</header>

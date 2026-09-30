@@ -1,0 +1,14 @@
+uuid: 0ee3bdee-0fa3-467b-a699-ad30be562a82
+langcode: es
+status: true
+dependencies:
+  config:
+    - user.role.ai_whatsapp_client_agent
+  module:
+    - user
+id: user_remove_role_action.ai_whatsapp_client_agent
+label: 'Elimina el rol Atención a clientes (AI WhatsApp) al(los) usuario(s) seleccionado(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: ai_whatsapp_client_agent

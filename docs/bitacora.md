@@ -8,27 +8,22 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-**Cierre del 2026-09-29.**
-
-- Funciona: `/` → inicio de sesión (diseño Goblin Creative) → panel del
-  módulo. Acceso con usuario o correo. Sitio en español. QA visual en
-  Chromium, WebKit, Firefox y Firefox real: sin problemas.
+- Roles listos: **Atención a clientes** (su empresa: panel, conversaciones,
+  mensajes, prospectos, operar) y **Gestor** (equipo interno: bots, bases de
+  conocimiento, WhatsApp/QR, enrutamiento, bitácora; todos los clientes).
+  Cada uno con su menú del panel y «Cerrar sesión». Detalle:
+  [roles-y-permisos.md](roles-y-permisos.md).
+- En local hay datos de demostración («Cliente Demo») y dos cuentas de
+  prueba: `demo-cliente` y `demo-gestor`. Solo en la base de datos local.
 - Repositorio en `main` en GitHub, al día.
-- **Mañana:** definir el **rol de cliente**. El equipo dirá a qué puede
-  entrar un cliente y a qué no; con eso se crea el rol (también en
-  instalaciones nuevas) y su navegación con salida (pendientes 1 y 2).
-- Los `.ai` (fuentes editables del logo) **no se versionan**, por decisión del
-  equipo: están en `.gitignore`. En git van los SVG/PNG exportados.
-- **Safari real:** lo revisa el equipo por su cuenta. Automatización ya
-  activada, pero la sesión no abría (Safari estaba abierto; posible diálogo
-  pendiente). Para reintentar: cerrar Safari (⌘Q) y `cd tests/visual && npm run qa:real`.
+- **Siguiente paso:** a decidir por el equipo (ver pendientes).
 
 ## Pendientes
 
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
-| 1 | **Clientes sin navegación ni salida.** `update_11036` les quitó la barra de Drupal contando con un menú propio del panel que no está en este código. Un cliente entra al panel y no puede ir a otra sección ni cerrar sesión. Propuesta: menú propio del panel (opción A). **Se ve mañana junto con el rol** | **Crítica** |
-| 2 | **Rol de cliente.** Hoy solo lo crea `update_11034`, que no corre al instalar; en este sitio no existe. Mañana el equipo define qué puede ver/hacer un cliente; después: crearlo en `hook_install` + un update para sitios ya instalados, y recorrerlo con su propia cuenta | **Alta — mañana** |
+| 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
+| 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
@@ -36,6 +31,53 @@ lo **no comprobado**.
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
 | 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-30 — Roles: Atención a clientes y Gestor
+
+**Qué se hizo**
+
+- Definición del equipo: el cliente ve y opera solo lo de su empresa
+  (panel, conversaciones, mensajes, prospectos). El **Gestor** es del equipo
+  interno y configura bots, bases de conocimiento, WhatsApp/QR, enrutamiento
+  y lee la bitácora, para todos los clientes. Tabla completa:
+  [roles-y-permisos.md](roles-y-permisos.md).
+- Módulo `ai_whatsapp_automation`:
+  - Un permiso por sección (`SectionAccess`); «administer … entities» sigue
+    abriendo todo (compatibilidad).
+  - Roles en `PanelRoles`, creados en `hook_install` (antes solo en un update,
+    así que las instalaciones nuevas no tenían rol de cliente) y en
+    `update_11039` para sitios existentes. Ejecutado aquí: creó ambos.
+  - Menú propio del panel (`PanelNavigation`) con cerrar sesión, para quien no
+    tiene la barra de Drupal. Resuelve el pendiente crítico de ayer.
+  - Corregido: el control de acceso ignoraba el permiso propio de las bases
+    de conocimiento; el filtro de listas habría dejado vacía la lista de bots
+    de cualquier no-administrador; «ver el nombre» de un registro se
+    convertía en «ver» (core), así que el gestor no veía el cliente de un bot.
+- `goblin_portal`: cada persona aterriza en su primera sección (Gestor → Bots).
+
+**Comprobado**
+
+- 118 pruebas del módulo (111 previas + 7 nuevas de roles) y 38 de portal y
+  tema, en verde. Linter limpio en lo tocado.
+- Sabotaje: sin la excepción del filtro, sin `viewLabelOperation`: las
+  pruebas se ponen en rojo. Una prueba que al principio NO detectaba su
+  sabotaje (el listado imprime el cliente sin control de acceso) se cambió a
+  la ficha del bot, donde sí depende del arreglo.
+- Recorrido real con `demo-cliente` (entrando con su correo) y `demo-gestor`
+  en Chromium, WebKit y Firefox: aterrizaje, menú exacto, cada sección, un
+  detalle, 403 en lo ajeno, móvil y cerrar sesión: 0 problemas. QA general:
+  28 pantallas × 3 motores, 0 problemas.
+- Capturas revisadas. Encontrado mirándolas (no lo detectó ninguna prueba):
+  con 7 secciones la cuenta del gestor caía sola a una segunda fila. El menú
+  pasó a dos filas fijas (marca y cuenta; debajo, pestañas).
+
+**No comprobado**
+
+- Safari real (lo revisa el equipo).
+- Envío real de mensajes desde «Operar conversaciones» (no hay proveedor
+  de WhatsApp configurado en local).
 
 ---
 

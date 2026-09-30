@@ -29,3 +29,24 @@ access own client ai whatsapp records:
 operate own client ai whatsapp conversations:
   title: 'Operate own client conversations and leads'
   description: 'For client users: reply, pause or reactivate the AI, close and assign conversations, and change lead status, only for their own client.'
+
+# Section permissions. Each opens one area of the panel for every client.
+# "administer ai whatsapp automation entities" keeps granting all of them.
+administer ai whatsapp automation bots:
+  title: 'Administer AI WhatsApp Automation bots'
+  description: 'Create and edit bots (prompt, model, knowledge base) and their web chat integration, for every client.'
+  restrict access: true
+
+administer ai whatsapp automation accounts:
+  title: 'Administer AI WhatsApp Automation WhatsApp accounts'
+  description: 'Create and edit WhatsApp accounts (numbers and provider credentials), for every client.'
+  restrict access: true
+
+administer ai whatsapp automation routing:
+  title: 'Administer AI WhatsApp Automation bot routing'
+  description: 'Decide which bot answers on each WhatsApp account.'
+  restrict access: true
+
+view ai whatsapp automation operator log:
+  title: 'View AI WhatsApp Automation operator log'
+  description: 'See what human operators did on conversations (the operator log), without opening the conversations.'
