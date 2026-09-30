@@ -79,12 +79,13 @@ final class ClientConsistencyTest extends KernelTestBase {
     $wrong_account = $conflicts('ai_whatsapp_bot', ['client' => $a_id, 'lead_notification_account' => $account_b->id()]);
     $this->assertSame(['lead_notification_account'], array_keys($wrong_account));
 
-    // Accounts: their client is their own, or their bot's when empty.
-    $this->assertSame([], $conflicts('ai_whatsapp_account', ['bot' => $bot_a->id(), 'knowledge_base' => $kb_a->id()]));
+    // Accounts: their client is their own, or their bot's when empty. Their
+    // only client-owned reference is the bot (knowledge bases belong to bots
+    // since update_11040).
+    $this->assertSame([], $conflicts('ai_whatsapp_account', ['bot' => $bot_a->id()]));
+    $this->assertSame([], $conflicts('ai_whatsapp_account', ['client' => $a_id, 'bot' => $bot_a->id()]));
     $wrong_bot = $conflicts('ai_whatsapp_account', ['client' => $a_id, 'bot' => $bot_b->id()]);
     $this->assertSame(['bot'], array_keys($wrong_bot));
-    $inherited = $conflicts('ai_whatsapp_account', ['bot' => $bot_a->id(), 'knowledge_base' => $kb_b->id()]);
-    $this->assertSame(['knowledge_base'], array_keys($inherited), 'Inherited client is enforced too');
   }
 
   /**

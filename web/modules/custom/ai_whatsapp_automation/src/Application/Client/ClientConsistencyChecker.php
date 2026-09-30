@@ -28,7 +28,6 @@ final class ClientConsistencyChecker {
     ],
     'ai_whatsapp_account' => [
       'bot' => 'El bot',
-      'knowledge_base' => 'La base de conocimiento',
     ],
   ];
 

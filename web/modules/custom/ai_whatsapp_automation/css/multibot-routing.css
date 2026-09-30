@@ -72,6 +72,13 @@
   margin-top: auto;
 }
 
+/* Replaces the button when the viewer cannot take that step. */
+.ai-whatsapp-routing-step__content > .ai-whatsapp-routing-step__note {
+  margin-top: auto;
+  color: #55565b;
+  font-style: italic;
+}
+
 .ai-whatsapp-routing-step h3 {
   color: #172b4d;
   font-size: 17px;

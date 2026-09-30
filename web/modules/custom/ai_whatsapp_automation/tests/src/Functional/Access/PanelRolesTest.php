@@ -151,6 +151,12 @@ final class PanelRolesTest extends BrowserTestBase {
       $this->assertSession()->statusCodeEquals(200);
     }
 
+    // The routing guide never offers a step the manager cannot take.
+    $this->drupalGet('admin/content/ai-whatsapp/routing');
+    $this->assertSession()->pageTextContains('Lo hace un administrador.');
+    $this->assertSession()->linkByHrefNotExists('/admin/content/ai-whatsapp/clients/add');
+    $this->assertSession()->elementTextEquals('css', '.ai-whatsapp-routing-step .button--primary', 'Agregar bot');
+
     foreach (['conversations', 'messages', 'leads', 'clients', 'conversations/' . $this->conversation->id()] as $section) {
       $this->drupalGet('admin/content/ai-whatsapp/' . $section);
       $this->assertSession()->statusCodeEquals(403);
@@ -192,6 +198,9 @@ final class PanelRolesTest extends BrowserTestBase {
    */
   public function testUmbrellaPermissionKeepsFullAccess(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer ai whatsapp automation entities']));
+    $this->drupalGet('admin/content/ai-whatsapp/routing');
+    $this->assertSession()->elementTextEquals('css', '.ai-whatsapp-routing-step .button--primary', 'Agregar cliente');
+    $this->assertSession()->pageTextNotContains('Lo hace un administrador.');
     $sections = [
       'bots',
       'accounts',

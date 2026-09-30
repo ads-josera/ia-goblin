@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Drupal\ai_whatsapp_automation\Access\PanelRoles;
+use Drupal\ai_whatsapp_automation\Application\AI\AccountOverrideMigration;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadContactExtractor;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService;
 
@@ -222,7 +223,9 @@ function ai_whatsapp_automation_update_11006(): void {
   foreach ($fields_by_entity as $entity_type_id => $field_names) {
     $field_definitions = $field_manager->getFieldStorageDefinitions($entity_type_id);
     foreach ($field_names as $field_name) {
-      if ($definition_update_manager->getFieldStorageDefinition($field_name, $entity_type_id) !== NULL) {
+      // Account overrides were removed in update_11040: on a site this old
+      // they never held data, so there is nothing to install.
+      if ($definition_update_manager->getFieldStorageDefinition($field_name, $entity_type_id) !== NULL || !isset($field_definitions[$field_name])) {
         continue;
       }
 
@@ -260,7 +263,8 @@ function ai_whatsapp_automation_update_11007(): void {
         ->execute();
     }
 
-    if ($database->schema()->tableExists('ai_whatsapp_account')) {
+    // model_override was removed in update_11040 and may never have existed.
+    if ($database->schema()->fieldExists('ai_whatsapp_account', 'model_override')) {
       $database->update('ai_whatsapp_account')
         ->fields(['model_override' => $new_model])
         ->condition('model_override', $old_model)
@@ -966,10 +970,11 @@ function ai_whatsapp_automation_update_11032(): string {
     ->execute()
     ->fetchAllKeyed();
   foreach ($knowledge_bases as $kb_id => $kb_name) {
-    $clients = array_merge(
-      $database->select('ai_whatsapp_bot', 'b')->fields('b', ['client'])->condition('b.knowledge_base', $kb_id)->isNotNull('b.client')->execute()->fetchCol(),
-      $database->select('ai_whatsapp_account', 'a')->fields('a', ['client'])->condition('a.knowledge_base', $kb_id)->isNotNull('a.client')->execute()->fetchCol(),
-    );
+    $clients = $database->select('ai_whatsapp_bot', 'b')->fields('b', ['client'])->condition('b.knowledge_base', $kb_id)->isNotNull('b.client')->execute()->fetchCol();
+    // Accounts had their own knowledge base until update_11040.
+    if ($database->schema()->fieldExists('ai_whatsapp_account', 'knowledge_base')) {
+      $clients = array_merge($clients, $database->select('ai_whatsapp_account', 'a')->fields('a', ['client'])->condition('a.knowledge_base', $kb_id)->isNotNull('a.client')->execute()->fetchCol());
+    }
     $clients = array_values(array_unique($clients));
     if (count($clients) === 1) {
       $database->update('ai_whatsapp_knowledge_base')->fields(['client' => $clients[0]])->condition('id', $kb_id)->execute();
@@ -1143,6 +1148,27 @@ function ai_whatsapp_automation_update_11039(): string {
   return $created
     ? (string) t('Roles created: @roles.', ['@roles' => implode(', ', $created)])
     : (string) t('Client agent and manager roles already existed; their permissions are up to date.');
+}
+
+/**
+ * Moves WhatsApp account overrides into bots and removes them.
+ *
+ * The bot is now the only place that defines prompt, model and knowledge
+ * base. Each account that overrode any of them gets its own copy of its bot
+ * with those values, so it answers exactly as before. See
+ * AccountOverrideMigration.
+ */
+function ai_whatsapp_automation_update_11040(): string {
+  $migration = new AccountOverrideMigration(
+    \Drupal::database(),
+    \Drupal::entityTypeManager(),
+    \Drupal::entityDefinitionUpdateManager(),
+  );
+  $report = $migration->run();
+
+  return $report === []
+    ? (string) t('Account overrides removed; no account was using them.')
+    : (string) t('Account overrides moved into bots: @report', ['@report' => implode(' ', $report)]);
 }
 
 /**

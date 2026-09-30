@@ -8,11 +8,10 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- Roles listos: **Atención a clientes** (su empresa: panel, conversaciones,
-  mensajes, prospectos, operar) y **Gestor** (equipo interno: bots, bases de
-  conocimiento, WhatsApp/QR, enrutamiento, bitácora; todos los clientes).
-  Cada uno con su menú del panel y «Cerrar sesión». Detalle:
+- Roles listos (Atención a clientes y Gestor), cada uno con su menú y salida:
   [roles-y-permisos.md](roles-y-permisos.md).
+- **El bot es la única fuente** de prompt, modelo y base de conocimiento; las
+  cuentas de WhatsApp solo eligen su bot.
 - En local hay datos de demostración («Cliente Demo») y dos cuentas de
   prueba: `demo-cliente` y `demo-gestor`. Solo en la base de datos local.
 - Repositorio en `main` en GitHub, al día.
@@ -24,6 +23,7 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
 | 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
+| 3 | Tabla de Enrutamiento más ancha que la pantalla a 1280 px: «Editar cuenta» queda cortada a la derecha (se desplaza dentro de su contenedor). Ya pasaba antes | Media |
 | 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
@@ -31,6 +31,52 @@ lo **no comprobado**.
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
 | 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-30 — Fuera los overrides de la cuenta de WhatsApp
+
+**Decisión del equipo:** «Prompt override» confundía (¿manda el del bot o el
+de la cuenta?). Manda el bot. Se quitaron los tres valores propios de la
+cuenta: prompt, modelo y base de conocimiento. Si un número necesita otro
+comportamiento, se le asigna otro bot.
+
+**Qué se hizo**
+
+- Campos eliminados de la cuenta; `BotManagerService` lee solo del bot; la
+  tabla de Enrutamiento ya no muestra «Instrucciones propias».
+- `update_11040` + `AccountOverrideMigration`: si un sitio tiene cuentas con
+  overrides, cada una recibe **una copia de su bot** con esos valores
+  («Bot — Cuenta») y sus conversaciones abiertas se mueven a ella, así que
+  todo responde igual que antes. La copia nace con el chat web apagado, token
+  nuevo y sin clave. Sin tocar fechas de actividad. Luego se borran las
+  columnas.
+- Actualizaciones antiguas (11006, 11007, 11032) blindadas para sitios que
+  nunca tuvieron esas columnas.
+- Asistente de Enrutamiento: ya no ofrece «Agregar cliente» a quien no puede
+  crear clientes (el Gestor veía un botón que acababa en «acceso denegado»);
+  muestra «Lo hace un administrador.».
+
+**Comprobado**
+
+- Prueba real en la base local con overrides puestos y copia de seguridad
+  (`ddev snapshot antes-de-quitar-overrides`): antes/después, prompt, modelo
+  y base **idénticos** en ambas conversaciones; el número sin overrides
+  intacto; columnas borradas, sin definiciones pendientes. Restaurada la copia
+  y repetido: mismo resultado; tercera ejecución sin cambios.
+- Descubierto al revisar el código: el bot se toma primero de la
+  conversación. Sin mover las conversaciones, las abiertas habrían seguido sin
+  el override. La migración las mueve y hay prueba de ello.
+- 159 pruebas en verde (módulo 121, portal 8, tema 30). Sabotaje: sin mover
+  conversaciones, sin reiniciar el chat web del bot copia, sin el blindaje de
+  11032: las pruebas se ponen en rojo.
+- Recorrido por roles y QA visual en Chromium, WebKit y Firefox: 0
+  problemas. Formulario de cuenta sin los campos y guardando bien.
+
+**No comprobado**
+
+- Una conversación real respondida por OpenAI (no hay clave en local): se
+  comprobó lo que se le enviaría (prompt, modelo, base), no la respuesta.
 
 ---
 

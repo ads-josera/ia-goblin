@@ -163,39 +163,31 @@ final class BotManagerService {
   }
 
   /**
-   * Returns the effective system prompt for a bot in an account.
+   * Returns the system prompt of a bot.
+   *
+   * The bot is the only place that defines behavior. A WhatsApp account only
+   * chooses which bot answers it; accounts used to carry prompt, model and
+   * knowledge base overrides, removed in update_11040 because "which one
+   * wins?" confused people (a number that needs different behavior gets its
+   * own bot). $account is kept so callers need not change.
    */
   public function getEffectivePrompt(ContentEntityInterface $bot, ?ContentEntityInterface $account = NULL): string {
-    $override = $account instanceof ContentEntityInterface ? $this->getFieldValue($account, 'prompt_override') : '';
-
-    return $override !== '' ? $override : $this->getFieldValue($bot, 'system_prompt');
+    return $this->getFieldValue($bot, 'system_prompt');
   }
 
   /**
-   * Returns the effective OpenAI model for a bot in an account.
+   * Returns the OpenAI model of a bot.
    */
   public function getEffectiveModel(ContentEntityInterface $bot, ?ContentEntityInterface $account = NULL): ?string {
-    $override = $account instanceof ContentEntityInterface ? $this->getFieldValue($account, 'model_override') : '';
-    if ($override !== '') {
-      return $this->normalizeModel($override);
-    }
-
     $model = $this->getFieldValue($bot, 'model');
 
     return $model !== '' ? $this->normalizeModel($model) : NULL;
   }
 
   /**
-   * Returns the effective knowledge base for a bot in an account.
+   * Returns the knowledge base of a bot, when it is active.
    */
   public function getEffectiveKnowledgeBase(ContentEntityInterface $bot, ?ContentEntityInterface $account = NULL): ?ContentEntityInterface {
-    if ($account instanceof ContentEntityInterface && $account->hasField('knowledge_base') && !$account->get('knowledge_base')->isEmpty()) {
-      $knowledge_base = $account->get('knowledge_base')->entity;
-      if ($knowledge_base instanceof ContentEntityInterface && $this->isActive($knowledge_base)) {
-        return $knowledge_base;
-      }
-    }
-
     if ($bot->hasField('knowledge_base') && !$bot->get('knowledge_base')->isEmpty()) {
       $knowledge_base = $bot->get('knowledge_base')->entity;
       if ($knowledge_base instanceof ContentEntityInterface && $this->isActive($knowledge_base)) {

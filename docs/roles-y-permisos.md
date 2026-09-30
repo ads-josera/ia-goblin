@@ -28,6 +28,14 @@ persona.
 - **Atención a clientes** es personal de la empresa cliente: solo ve lo de su
   empresa (el cliente asignado en su cuenta).
 
+## Quién define cómo responde un número
+
+**El bot.** Su prompt, su modelo y su base de conocimiento son lo que usa la
+IA. La cuenta de WhatsApp solo elige qué bot la atiende (en Enrutamiento).
+Si un número necesita comportarse distinto, se le crea **otro bot** y se le
+asigna. Las cuentas ya no tienen «Prompt override», modelo ni base propios
+(se quitaron el 2026-09-30 porque no quedaba claro cuál mandaba).
+
 ## Menú y salida
 
 Gestor y Atención a clientes no ven la barra de Drupal. Tienen el **menú del

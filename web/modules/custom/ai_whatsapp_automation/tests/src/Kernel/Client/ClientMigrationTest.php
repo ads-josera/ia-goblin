@@ -6,6 +6,7 @@ namespace Drupal\Tests\ai_whatsapp_automation\Kernel\Client;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\ai_whatsapp_automation\Traits\LegacyAccountOverridesTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -15,6 +16,8 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 #[Group('ai_whatsapp_automation')]
 #[RunTestsInSeparateProcesses]
 final class ClientMigrationTest extends KernelTestBase {
+
+  use LegacyAccountOverridesTrait;
 
   /**
    * {@inheritdoc}
@@ -53,12 +56,16 @@ final class ClientMigrationTest extends KernelTestBase {
    * Replays the production shape: two bots, their accounts and history.
    */
   public function testUpdateAssignsClientsFromBots(): void {
+    // Sites that ran this update still had account overrides (removed in
+    // update_11040), and an account's own knowledge base counted here.
+    $this->installLegacyAccountOverrides();
     $kb_jg = $this->create('ai_whatsapp_knowledge_base', ['name' => 'Brochure JG Mylard', 'status' => 'active']);
     $kb_shared = $this->create('ai_whatsapp_knowledge_base', ['name' => 'Shared', 'status' => 'active']);
     $kb_orphan = $this->create('ai_whatsapp_knowledge_base', ['name' => 'Unused', 'status' => 'active']);
     $jg = $this->create('ai_whatsapp_bot', ['name' => 'JG Mylard', 'status' => 'active', 'knowledge_base' => $kb_jg->id()]);
     $lab = $this->create('ai_whatsapp_bot', ['name' => 'Laboratorio JVC', 'status' => 'active', 'knowledge_base' => $kb_shared->id()]);
-    $account_jg = $this->create('ai_whatsapp_account', ['name' => 'JG WhatsApp', 'provider' => 'twilio', 'status' => 'active', 'bot' => $jg->id(), 'knowledge_base' => $kb_shared->id()]);
+    $account_jg = $this->create('ai_whatsapp_account', ['name' => 'JG WhatsApp', 'provider' => 'twilio', 'status' => 'active', 'bot' => $jg->id()]);
+    $this->setLegacyAccountOverrides($account_jg->id(), ['knowledge_base' => $kb_shared->id()]);
     $account_lab = $this->create('ai_whatsapp_account', ['name' => 'JVC WhatsApp', 'provider' => 'twilio', 'status' => 'active', 'bot' => $lab->id()]);
     $web = $this->create('ai_whatsapp_conversation', ['phone' => 'web:1:s', 'channel' => 'web', 'provider' => 'web', 'status' => 'CLOSED', 'bot' => $jg->id(), 'changed' => 1754000000]);
     $whatsapp = $this->create('ai_whatsapp_conversation', ['phone' => '+525512309140', 'channel' => 'whatsapp', 'provider' => 'twilio', 'status' => 'CLOSED', 'whatsapp_account' => $account_lab->id(), 'changed' => 1754000500]);
@@ -93,6 +100,24 @@ final class ClientMigrationTest extends KernelTestBase {
     // Running it again changes nothing and creates no duplicate clients.
     ai_whatsapp_automation_update_11032();
     $this->assertCount(2, $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_client')->loadMultiple());
+  }
+
+  /**
+   * On a site without the old account columns the update still works.
+   */
+  public function testUpdateWithoutAccountOverrideColumns(): void {
+    $kb = $this->create('ai_whatsapp_knowledge_base', ['name' => 'Solo del bot', 'status' => 'active']);
+    $bot = $this->create('ai_whatsapp_bot', ['name' => 'Bot', 'status' => 'active', 'knowledge_base' => $kb->id()]);
+    $this->create('ai_whatsapp_account', [
+      'name' => 'Cuenta',
+      'provider' => 'twilio',
+      'status' => 'active',
+      'bot' => $bot->id(),
+    ]);
+
+    ai_whatsapp_automation_update_11032();
+
+    $this->assertSame($this->reload($bot)->get('client')->target_id, $this->reload($kb)->get('client')->target_id);
   }
 
   /**

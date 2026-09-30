@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_whatsapp_automation\Controller;
 
 use Drupal\ai_whatsapp_automation\Application\AI\BotManagerService;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -79,7 +80,7 @@ final class MultiBotRoutingController extends ControllerBase {
         'connection' => $this->fieldValue($account, 'provider') === 'evolution'
           ? $this->connectionLabel($this->fieldValue($account, 'connection_status'))
           : $this->t('No aplica'),
-        'bot' => $this->botCell($bot, $this->fieldValue($account, 'prompt_override') !== ''),
+        'bot' => $bot instanceof ContentEntityInterface ? $bot->toLink() : $this->t('Sin bot activo'),
         'model' => $bot instanceof ContentEntityInterface ? ($this->botManager->getEffectiveModel($bot, $account) ?: $this->t('Predeterminado')) : '',
         'knowledge_base' => $knowledge_base instanceof ContentEntityInterface ? $knowledge_base->toLink() : $this->t('Ninguna'),
         'operations' => Link::fromTextAndUrl($this->t('Editar cuenta'), Url::fromRoute('entity.ai_whatsapp_account.edit_form', [
@@ -133,8 +134,29 @@ final class MultiBotRoutingController extends ControllerBase {
       ],
     ];
     $number = 0;
+    $primary_given = FALSE;
     foreach ($steps as $key => $step) {
       $number++;
+      // A step the viewer cannot do (a manager creating a client) names who
+      // does it instead of offering a button that ends in "access denied".
+      $url = Url::fromRoute($step['route']);
+      $access = $url->access(NULL, TRUE);
+      $action = $access->isAllowed()
+        ? [
+          '#type' => 'link',
+          '#title' => $step['label'],
+          '#url' => $url,
+          // Only the first step the viewer can take is the primary action.
+          '#attributes' => ['class' => $primary_given ? ['button'] : ['button', 'button--primary']],
+        ]
+        : [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $this->t('Lo hace un administrador.'),
+          '#attributes' => ['class' => ['ai-whatsapp-routing-step__note']],
+        ];
+      $primary_given = $primary_given || $access->isAllowed();
+      CacheableMetadata::createFromObject($access)->applyTo($action);
       $build['setup_guide']['steps'][$key] = [
         '#type' => 'container',
         '#attributes' => ['class' => ['ai-whatsapp-routing-step']],
@@ -149,13 +171,7 @@ final class MultiBotRoutingController extends ControllerBase {
           '#attributes' => ['class' => ['ai-whatsapp-routing-step__content']],
           'title' => ['#type' => 'html_tag', '#tag' => 'h3', '#value' => $step['title']],
           'description' => ['#type' => 'html_tag', '#tag' => 'p', '#value' => $step['description']],
-          'action' => [
-            '#type' => 'link',
-            '#title' => $step['label'],
-            '#url' => Url::fromRoute($step['route']),
-            // Only the first step is the primary action of the page.
-            '#attributes' => ['class' => $number === 1 ? ['button', 'button--primary'] : ['button']],
-          ],
+          'action' => $action,
         ],
       ];
     }
@@ -203,25 +219,6 @@ final class MultiBotRoutingController extends ControllerBase {
     $value = $entity->get($field_name)->value;
 
     return is_scalar($value) ? (string) $value : '';
-  }
-
-  /**
-   * Builds the bot cell, noting when the account overrides its instructions.
-   */
-  private function botCell(?ContentEntityInterface $bot, bool $overrides_prompt): Link|array|string|\Stringable {
-    if (!$bot instanceof ContentEntityInterface) {
-      return $this->t('Sin bot activo');
-    }
-    if (!$overrides_prompt) {
-      return $bot->toLink();
-    }
-
-    return [
-      'data' => [
-        'bot' => $bot->toLink()->toRenderable(),
-        'note' => ['#markup' => '<div class="ai-whatsapp-routing-table__note">' . $this->t('Instrucciones propias de esta cuenta') . '</div>'],
-      ],
-    ];
   }
 
   /**
