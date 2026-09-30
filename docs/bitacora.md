@@ -8,16 +8,29 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- **Bot «Goblin»** creado para el cliente Goblin con el prompt maestro del
-  equipo ([docs/bots/goblin](bots/goblin/README.md)). Leads configurados y
-  probados en simulación. **Falta para usarlo en vivo:** clave de OpenAI,
-  activar leads con los números de notificación, y una cuenta de WhatsApp de
-  Goblin con este bot.
+**Cierre del 2026-09-30.**
+
+- Bot «Goblin» creado para el cliente Goblin, leads configurados y probados en
+  simulación ([docs/bots/goblin](bots/goblin/README.md)).
 - Roles listos (Atención a clientes y Gestor): [roles-y-permisos.md](roles-y-permisos.md).
-- El bot es la única fuente de prompt, modelo y base de conocimiento.
-- En local: datos de demostración («Cliente Demo»), cuentas `demo-cliente` y
-  `demo-gestor`.
 - Repositorio en `main` en GitHub, al día.
+
+**Plan para mañana (en este orden):**
+
+1. **Clave de OpenAI de pruebas** (la pasa el equipo). Va en
+   `web/sites/default/settings.local.php` como sobrescritura de config,
+   **nunca** en el formulario del módulo (acabaría en git con `drush cex`).
+   Recomendado: clave con límite de gasto, y rotarla después de las pruebas.
+2. **Activar leads** (`options.enable_lead_notifications`) y definir los
+   números de WhatsApp del equipo que reciben los avisos (preguntar).
+3. **Probar el bot Goblin en vivo** a fondo: bienvenida, menú, facturación,
+   correo, cPanel, dominios, cliente molesto, datos sensibles (no debe pedir
+   contraseñas), creación de leads y paso a atención humana.
+4. **Primer despliegue en el servidor**: completar
+   [despliegue.md](despliegue.md) con los datos del servidor, comandos
+   agrupados por fase, el equipo los ejecuta y pega la salida para revisarla.
+   En el servidor: `config:import`, `updb` (incluye 11039 y 11040),
+   `locale:update`, `scripts/bots/goblin.php`, cron y archivos privados.
 
 ## Pendientes
 
