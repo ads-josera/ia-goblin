@@ -17,6 +17,9 @@
 # cPanel's MultiPHP INI Editor writes these into the document root (web/).
 /web/.user.ini
 /web/php.ini
+# cPanel PHP handler and limits live one level above web/ on the server,
+# where Composer's scaffolding never rewrites them (see docs/despliegue.md).
+/.htaccess
 /web/sites/*/settings.local.php
 /web/sites/*/services.local.yml
 .env
