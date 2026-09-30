@@ -38,6 +38,26 @@ lo **no comprobado**.
 
 ---
 
+## 2026-09-30 — Chat web: «ya no me deja interactuar»
+
+**Causa (comprobada):** 8 mensajes del visitante entre 12:12 y 12:17; el
+límite era 8 por conversación cada 15 minutos. El servidor respondía 429 con
+el motivo, pero el chat lo descartaba y mostraba «No pude responder en este
+momento», que parece una falla.
+
+**Qué se hizo**
+
+- El chat muestra el motivo que manda el servidor (límites); el mensaje
+  genérico queda solo para fallos sin explicación. Comprobado interceptando
+  la llamada (429 → mensaje del límite; 500 → genérico).
+- Límite subido a 20 mensajes / 15 min (decisión del equipo), en el script.
+
+**Por decidir:** en el chat web la IA sigue respondiendo después de crear un
+lead (en WhatsApp se detiene porque un operador contesta por ahí). En el chat
+web no hay canal para que una persona responda.
+
+---
+
 ## 2026-09-30 — Bot Goblin en vivo, chat web y vista previa de colores
 
 **Qué se hizo**

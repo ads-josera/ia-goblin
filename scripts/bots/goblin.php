@@ -11,7 +11,7 @@
  *   drush php:script scripts/bots/goblin.php
  *
  * Idempotent: finds the bot by name and client and updates only the fields
- * below; anything else edited in the UI (usage limits and budget, allowed
+ * below; anything else edited in the UI (daily limits and budget, allowed
  * domains, notifications) is left as it is.
  */
 
@@ -77,6 +77,9 @@ $web_widget = [
   'web_widget_assistant_name' => 'Goblin',
   'web_widget_language' => 'es',
   'web_widget_primary_color' => '#065885',
+  // A normal support case took 9 messages; the default 8 per 15 minutes cut
+  // customers off mid-problem. Daily conversations and budget still cap cost.
+  'web_widget_message_limit' => 20,
   'web_widget_welcome_message' => "👋 ¡Bienvenido a Goblin Creative!\n\nSi buscas información, una cotización, asesoría sobre nuestros servicios o necesitas soporte, estoy listo para ayudarte.\n\nCuéntame qué necesitas o selecciona una opción:\n\n1️⃣ Facturación y atención comercial\n2️⃣ Soporte técnico\n\nTambién puedes escribirme directamente qué problema tienes y yo te ayudaré a identificarlo.",
 ];
 

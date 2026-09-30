@@ -65,7 +65,12 @@
           .then(function (response) {
             return response.json().then(function (payload) {
               if (!response.ok) {
-                throw new Error(payload.error || 'Request failed');
+                var error = new Error(payload.error || 'Request failed');
+                // The server explains limits in words the visitor can act on
+                // ("intenta en unos minutos"); keep that instead of a generic
+                // failure that reads as the chat being broken.
+                error.visitorMessage = payload.error || '';
+                throw error;
               }
               return payload;
             });
@@ -78,9 +83,9 @@
               appendMessage(messages, payload.message, 'ai');
             }
           })
-          .catch(function () {
+          .catch(function (error) {
             removeElement(typing);
-            appendMessage(messages, isSpanish ? 'No pude responder en este momento. Intenta nuevamente.' : 'I could not respond right now. Please try again.', 'system');
+            appendMessage(messages, (error && error.visitorMessage) || (isSpanish ? 'No pude responder en este momento. Intenta nuevamente.' : 'I could not respond right now. Please try again.'), 'system');
           })
           .finally(function () {
             setLoading(button, false);

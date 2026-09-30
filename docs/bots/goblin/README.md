@@ -61,8 +61,14 @@ Salieron de la prueba en vivo:
 `https://<sitio>/ai-whatsapp-automation/chat/<token>` (token en el bot,
 sección avanzada del chat web). El script lo deja encendido, con el nombre
 «Goblin», la bienvenida del prompt, español y color `#065885` (las burbujas
-del visitante llevan texto blanco: el naranja no llega a 4.5:1). Límites por
-defecto: 8 mensajes por ventana, 50 conversaciones y 1.50 USD al día.
+del visitante llevan texto blanco: el naranja no llega a 4.5:1). Límites:
+**20 mensajes por conversación cada 15 minutos** (decisión del equipo: un caso
+de soporte normal necesitó 9 y el valor por defecto, 8, lo cortaba), 50
+conversaciones y 1.50 USD al día. Al llegar a un límite el chat muestra el
+motivo («Intenta nuevamente en unos minutos»).
+
+Para volver a probar desde cero: abrir el chat en una ventana privada (la
+sesión se guarda en el navegador).
 
 ## Prueba en vivo con OpenAI
 
