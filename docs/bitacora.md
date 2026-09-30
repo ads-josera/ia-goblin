@@ -23,7 +23,6 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
 | 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3 | Tabla de Enrutamiento más ancha que la pantalla a 1280 px: «Editar cuenta» queda cortada a la derecha (se desplaza dentro de su contenedor). Ya pasaba antes | Media |
 | 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git) | Alta |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
@@ -31,6 +30,33 @@ lo **no comprobado**.
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
 | 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-30 — Tabla de Enrutamiento que cabe
+
+**Qué se hizo**
+
+- Causa medida: Claro limita el contenido a **1080 px** (920 px a 1280 con la
+  barra lateral del admin); la tabla tenía 10 columnas y un ancho mínimo de
+  1080 px, así que «Editar cuenta» quedaba fuera.
+- De 10 a 7 columnas sin perder datos: el número va bajo la cuenta; el
+  proveedor y la conexión bajo el estado («Evolution · Desconectada»).
+- Nueva acción **«Editar bot»** junto a «Editar cuenta» (el bot define cómo
+  responde el número). Ambas solo si hay permiso.
+- La tabla usa el componente compartido del módulo (`ResponsiveTable`): se
+  desplaza dentro de su caja con sombra de aviso, como las demás listas, y
+  los botones de acción de siempre (`aiwa-actions`).
+- Reglas CSS por posición de columna (`nth-child`) cambiadas por clases: al
+  reordenar columnas habrían apuntado a otras.
+
+**Comprobado**
+
+- Medido ancho de caja vs. tabla: cabe entera para el admin a 1280 y 1440 px
+  y para el gestor a 1024, 1280 y 1440. Solo el admin a 1024 (con su barra
+  lateral) se desplaza dentro de la caja. Capturas revisadas.
+- 159 pruebas en verde (nuevas: 7 columnas y enlace «Editar bot» del gestor).
+  Recorrido por roles y QA en los 3 motores: 0 problemas.
 
 ---
 

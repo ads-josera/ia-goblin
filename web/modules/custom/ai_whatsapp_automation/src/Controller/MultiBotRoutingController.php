@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Drupal\ai_whatsapp_automation\Controller;
 
 use Drupal\ai_whatsapp_automation\Application\AI\BotManagerService;
+use Drupal\ai_whatsapp_automation\Ui\ResponsiveTable;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -65,27 +65,42 @@ final class MultiBotRoutingController extends ControllerBase {
         : NULL;
 
       $client = $account->get('client')->entity ?? ($bot instanceof ContentEntityInterface ? $bot->get('client')->entity : NULL);
+      $provider = $this->fieldValue($account, 'provider');
       // Incoming messages are only routed to active or connected accounts.
       $answers = $this->fieldValue($account, 'status') === 'active' || $this->fieldValue($account, 'connection_status') === 'CONNECTED';
       $rows[] = [
         'client' => $client instanceof ContentEntityInterface ? $client->label() : $this->t('Sin cliente'),
-        'account' => $account->toLink(),
-        'provider' => $this->providerLabel($this->fieldValue($account, 'provider')),
-        'number' => $this->fieldValue($account, 'phone_number'),
-        'status' => $answers
-          ? $this->statusLabel($this->fieldValue($account, 'status'))
-          : ['data' => ['#markup' => '<strong class="ai-whatsapp-routing-table__warning">' . $this->t('Inactiva: no responde') . '</strong>']],
-        // Connection status is tracked only for Evolution instances; Twilio and
-        // Cloud API accounts keep a stale default that reads as a real state.
-        'connection' => $this->fieldValue($account, 'provider') === 'evolution'
-          ? $this->connectionLabel($this->fieldValue($account, 'connection_status'))
-          : $this->t('No aplica'),
+        // Two lines per cell instead of five columns (account, number,
+        // status, provider, connection) that pushed the table past Claro's
+        // content column: the number goes under the account, and the
+        // provider with its connection under the status.
+        'account' => [
+          'data' => $this->stacked(
+            $account->toLink()->toRenderable(),
+            $this->fieldValue($account, 'phone_number') ?: $this->t('Sin número'),
+            'ai-whatsapp-routing-table__number',
+          ),
+        ],
+        'status' => [
+          'data' => $this->stacked(
+            $answers
+              ? ['#markup' => $this->statusLabel($this->fieldValue($account, 'status'))]
+              : ['#markup' => '<strong class="ai-whatsapp-routing-table__warning">' . $this->t('Inactiva: no responde') . '</strong>'],
+            // Connection status is tracked only for Evolution instances;
+            // Twilio and Cloud API accounts keep a stale default that reads
+            // as real.
+            $provider === 'evolution'
+              ? $this->providerLabel($provider) . ' · ' . $this->connectionLabel($this->fieldValue($account, 'connection_status'))
+              : $this->providerLabel($provider),
+          ),
+        ],
         'bot' => $bot instanceof ContentEntityInterface ? $bot->toLink() : $this->t('Sin bot activo'),
-        'model' => $bot instanceof ContentEntityInterface ? ($this->botManager->getEffectiveModel($bot, $account) ?: $this->t('Predeterminado')) : '',
+        'model' => [
+          'data' => $bot instanceof ContentEntityInterface ? ($this->botManager->getEffectiveModel($bot, $account) ?: $this->t('Predeterminado')) : '',
+          'class' => ['ai-whatsapp-routing-table__model'],
+        ],
         'knowledge_base' => $knowledge_base instanceof ContentEntityInterface ? $knowledge_base->toLink() : $this->t('Ninguna'),
-        'operations' => Link::fromTextAndUrl($this->t('Editar cuenta'), Url::fromRoute('entity.ai_whatsapp_account.edit_form', [
-          'ai_whatsapp_account' => $account->id(),
-        ])),
+        'operations' => ['data' => $this->operations($account, $bot)],
       ];
     }
 
@@ -182,20 +197,15 @@ final class MultiBotRoutingController extends ControllerBase {
       '#value' => $this->t('Asignaciones actuales'),
       '#attributes' => ['class' => ['ai-whatsapp-routing-assignments-title']],
     ];
-    $build['routing_wrapper'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['ai-whatsapp-routing-table-wrapper']],
-    ];
-    $build['routing_wrapper']['routing'] = [
+    // Shared component: scrolls inside its own box, with an edge shadow
+    // when there is more to the side, like every other list of the panel.
+    $build['routing'] = ResponsiveTable::wrap([
       '#type' => 'table',
       '#attributes' => ['class' => ['ai-whatsapp-routing-table']],
       '#header' => [
         $this->t('Cliente'),
         $this->t('Cuenta'),
-        $this->t('Proveedor'),
-        $this->t('Número'),
         $this->t('Estado'),
-        $this->t('Conexión'),
         $this->t('Bot'),
         $this->t('Modelo'),
         $this->t('Base de conocimiento'),
@@ -203,7 +213,7 @@ final class MultiBotRoutingController extends ControllerBase {
       ],
       '#rows' => $rows,
       '#empty' => $this->t('Todavía no hay números de WhatsApp. Empieza por el paso 1: crea el cliente.'),
-    ];
+    ]);
 
     return $build;
   }
@@ -219,6 +229,65 @@ final class MultiBotRoutingController extends ControllerBase {
     $value = $entity->get($field_name)->value;
 
     return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * A main value with a secondary line under it.
+   *
+   * @param array<string, mixed> $main
+   *   Render array of the main value.
+   * @param string|\Stringable|null $secondary
+   *   The secondary line, or NULL for none.
+   * @param string $class
+   *   Extra class for the secondary line.
+   *
+   * @return array<string, mixed>
+   *   A render array.
+   */
+  private function stacked(array $main, string|\Stringable|null $secondary, string $class = ''): array {
+    $build = ['main' => $main];
+    if ($secondary !== NULL && (string) $secondary !== '') {
+      $build['secondary'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => (string) $secondary,
+        '#attributes' => ['class' => array_filter(['ai-whatsapp-routing-table__secondary', $class])],
+      ];
+    }
+    return $build;
+  }
+
+  /**
+   * Edit links for the account and its bot, only those the viewer may use.
+   *
+   * The bot is what defines how a number answers, so editing it is offered
+   * right here next to the account.
+   *
+   * @return array<string, mixed>
+   *   A render array.
+   */
+  private function operations(ContentEntityInterface $account, ?ContentEntityInterface $bot): array {
+    $links = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['aiwa-actions']],
+    ];
+    $targets = ['account' => [$this->t('Editar cuenta'), $account]];
+    if ($bot instanceof ContentEntityInterface) {
+      $targets['bot'] = [$this->t('Editar bot'), $bot];
+    }
+    foreach ($targets as $key => [$label, $entity]) {
+      $url = $entity->toUrl('edit-form');
+      $access = $url->access(NULL, TRUE);
+      $links[$key] = [
+        '#type' => 'link',
+        '#title' => $label,
+        '#url' => $url,
+        '#access' => $access->isAllowed(),
+        '#attributes' => ['class' => ['aiwa-actions__button']],
+      ];
+      CacheableMetadata::createFromObject($access)->applyTo($links[$key]);
+    }
+    return $links;
   }
 
   /**

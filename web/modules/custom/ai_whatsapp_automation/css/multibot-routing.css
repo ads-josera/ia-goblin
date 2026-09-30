@@ -98,14 +98,6 @@
   margin: 0 0 12px;
 }
 
-.ai-whatsapp-routing-table-wrapper {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.ai-whatsapp-routing-table {
-  min-width: 1080px;
-}
 
 @media (max-width: 720px) {
   .ai-whatsapp-routing-guide {
@@ -130,14 +122,39 @@
 /*
  * A model name breaks after its hyphens ("gpt-5-/mini") and a phone number
  * after nothing at all. Both are identifiers: they wrap as a whole or not
- * at all, and the table scrolls sideways if the row needs the room.
+ * at all. Named classes, not column positions: positions silently pointed
+ * at other columns when the table was reorganised.
  */
-.ai-whatsapp-routing-table td:nth-child(4),
-.ai-whatsapp-routing-table td:nth-child(8) {
+.ai-whatsapp-routing-table__model,
+.ai-whatsapp-routing-table__number {
   white-space: nowrap;
 }
 
-/* The action link is a label, not prose: it wraps whole or not at all. */
-.ai-whatsapp-routing-table td:last-child {
-  white-space: nowrap;
+/* Second line of a cell: the number under the account, the connection
+   under the status. */
+.ai-whatsapp-routing-table__secondary {
+  margin-top: 2px;
+  color: #52637a;
+  font-size: 13px;
+}
+
+/*
+ * Rows are already two lines tall (number under the account, connection
+ * under the status), so stacking the two actions and letting the long
+ * "Base de conocimiento" heading wrap costs no height. On one line each,
+ * they pushed the table past Claro's 1080px content column.
+ */
+.aiwa-table-scroll .ai-whatsapp-routing-table th {
+  white-space: normal;
+}
+
+/* Seven columns in Claro's content column next to the admin sidebar. */
+.ai-whatsapp-routing-table th,
+.ai-whatsapp-routing-table td {
+  padding-inline: 12px;
+}
+
+.ai-whatsapp-routing-table .aiwa-actions {
+  flex-direction: column;
+  align-items: flex-start;
 }

@@ -152,10 +152,21 @@ final class PanelRolesTest extends BrowserTestBase {
     }
 
     // The routing guide never offers a step the manager cannot take.
+    $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_account')->create([
+      'name' => 'Cuenta Prueba',
+      'provider' => 'evolution',
+      'phone_number' => '+5215551112222',
+      'status' => 'active',
+      'bot' => $this->bot->id(),
+      'client' => $this->client->id(),
+    ])->save();
     $this->drupalGet('admin/content/ai-whatsapp/routing');
     $this->assertSession()->pageTextContains('Lo hace un administrador.');
     $this->assertSession()->linkByHrefNotExists('/admin/content/ai-whatsapp/clients/add');
     $this->assertSession()->elementTextEquals('css', '.ai-whatsapp-routing-step .button--primary', 'Agregar bot');
+    // Seven columns fit Claro's content column; the bot is editable from here.
+    $this->assertSession()->elementsCount('css', '.ai-whatsapp-routing-table thead th', 7);
+    $this->assertSession()->linkByHrefExists('/admin/content/ai-whatsapp/bots/' . $this->bot->id() . '/edit');
 
     foreach (['conversations', 'messages', 'leads', 'clients', 'conversations/' . $this->conversation->id()] as $section) {
       $this->drupalGet('admin/content/ai-whatsapp/' . $section);
