@@ -11,6 +11,12 @@
       var settings = (window.drupalSettings || {}).aiWhatsappAutomationWebChat || {};
       var isSpanish = String(settings.language || '').toLowerCase().indexOf('es') === 0;
       var messages = context.querySelector('[data-aiwa-messages]');
+      // The welcome is printed by the server as plain text; format it like
+      // every assistant reply, or its line breaks collapse into one line.
+      var welcome = messages && messages.querySelector('[data-aiwa-welcome]');
+      if (welcome) {
+        welcome.innerHTML = formatAssistantText(welcome.textContent);
+      }
       var input = context.querySelector('[data-aiwa-input]');
       var button = form.querySelector('button[type="submit"]');
       var minimizeButton = context.querySelector('[data-aiwa-minimize]');

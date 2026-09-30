@@ -42,12 +42,40 @@ antes de tiempo.
 Al crearse un lead, la conversación pasa a **atención humana** (la IA deja de
 responder en ella) y se avisa por WhatsApp a los números de notificación.
 
+## Reglas de canalización (además del prompt)
+
+Están en el script y se añaden al prompt; tienen prioridad sobre sus ejemplos.
+Salieron de la prueba en vivo:
+
+- **Nombre:** por WhatsApp el número ya se tiene y no se pide; el nombre se
+  confirma una vez («¿A nombre de quién registro la solicitud?») y solo al
+  decidir canalizar. El nombre del perfil de WhatsApp no se usa. En el chat
+  web se piden nombre y celular.
+- Después de «Datos capturados» no hay preguntas (la IA deja de responder).
+- Contraseñas o códigos que comparta el cliente: no se repiten ni van al
+  resumen; se le pide no compartirlas y cambiarlas.
+- No ofrecer precios, planes ni información que no tenga; no inventar URLs.
+
+## Chat web
+
+`https://<sitio>/ai-whatsapp-automation/chat/<token>` (token en el bot,
+sección avanzada del chat web). El script lo deja encendido, con el nombre
+«Goblin», la bienvenida del prompt, español y color `#065885` (las burbujas
+del visitante llevan texto blanco: el naranja no llega a 4.5:1). Límites por
+defecto: 8 mensajes por ventana, 50 conversaciones y 1.50 USD al día.
+
+## Prueba en vivo con OpenAI
+
+`tests/bots/goblin-live.php` + `goblin-live.json` (12 conversaciones). Gasta
+tokens y crea registros: correr sobre una copia (`ddev snapshot`) y
+restaurar. Instrucciones en la cabecera del script.
+
 ## Requisitos para que funcione en vivo
 
 - Clave de OpenAI configurada (en `settings.local.php`, nunca en la interfaz;
   ver README del proyecto).
-- **Leads activados** en la configuración del módulo y números de WhatsApp de
-  notificación del equipo.
+- Leads activados (hecho, en `config/sync`) y **números de WhatsApp del
+  equipo** para recibir los avisos (pendiente).
 - Una cuenta de WhatsApp del cliente Goblin con este bot asignado
   (Enrutamiento).
 

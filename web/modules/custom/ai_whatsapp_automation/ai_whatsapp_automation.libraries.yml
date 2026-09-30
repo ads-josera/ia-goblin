@@ -21,6 +21,10 @@ bot_form:
   css:
     theme:
       css/bot-form.css: {}
+  js:
+    js/color-preview.js: {}
+  dependencies:
+    - core/drupal
 
 multibot_routing:
   css:

@@ -8,29 +8,18 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-**Cierre del 2026-09-30.**
-
-- Bot «Goblin» creado para el cliente Goblin, leads configurados y probados en
-  simulación ([docs/bots/goblin](bots/goblin/README.md)).
-- Roles listos (Atención a clientes y Gestor): [roles-y-permisos.md](roles-y-permisos.md).
+- **Bot Goblin probado en vivo con OpenAI** (12 conversaciones, 3 rondas) y
+  ajustado. Chat web funcionando. Leads **activados**.
+- Clave de OpenAI de pruebas en `settings.local.php` (fuera de git).
+  **Rotarla al terminar las pruebas.**
 - Repositorio en `main` en GitHub, al día.
+- **Siguiente paso:** primer despliegue (paso 4 del plan): datos del servidor
+  y [despliegue.md](despliegue.md).
 
-**Plan para mañana (en este orden):**
-
-1. **Clave de OpenAI de pruebas** (la pasa el equipo). Va en
-   `web/sites/default/settings.local.php` como sobrescritura de config,
-   **nunca** en el formulario del módulo (acabaría en git con `drush cex`).
-   Recomendado: clave con límite de gasto, y rotarla después de las pruebas.
-2. **Activar leads** (`options.enable_lead_notifications`) y definir los
-   números de WhatsApp del equipo que reciben los avisos (preguntar).
-3. **Probar el bot Goblin en vivo** a fondo: bienvenida, menú, facturación,
-   correo, cPanel, dominios, cliente molesto, datos sensibles (no debe pedir
-   contraseñas), creación de leads y paso a atención humana.
-4. **Primer despliegue en el servidor**: completar
-   [despliegue.md](despliegue.md) con los datos del servidor, comandos
-   agrupados por fase, el equipo los ejecuta y pega la salida para revisarla.
-   En el servidor: `config:import`, `updb` (incluye 11039 y 11040),
-   `locale:update`, `scripts/bots/goblin.php`, cron y archivos privados.
+**Por decidir (equipo):**
+- Números de WhatsApp del equipo que reciben los avisos de leads.
+- Color secundario del chat web: hoy no se usa en ningún sitio (el
+  encabezado es un azul fijo). Propuesta: que sea el color del encabezado.
 
 ## Pendientes
 
@@ -46,6 +35,51 @@ lo **no comprobado**.
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
 | 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-30 — Bot Goblin en vivo, chat web y vista previa de colores
+
+**Qué se hizo**
+
+- Clave de OpenAI de pruebas en `settings.local.php` como sobrescritura de
+  config (no en la base de datos ni en git; comprobado).
+- Prueba en vivo del bot con OpenAI (`tests/bots/goblin-live.php`), mismo
+  camino que un mensaje de WhatsApp salvo el envío. Tres rondas.
+- **Corregido en el módulo:** el lead tomaba nombre y correo de toda la
+  conversación, incluidos los ejemplos del bot: un lead quedó con el correo
+  `juan@tunegocio.com`, que era un ejemplo. Ahora usa lo que escribió el
+  cliente más el resumen final. Prueba nueva (rompe si se revierte).
+- **Reglas del bot** (script, no el prompt): confirmar el nombre solo al
+  canalizar y no usar el del perfil; no pedir número por WhatsApp (sí en el
+  chat web); nada de preguntas tras «Datos capturados»; contraseñas
+  compartidas: no repetirlas y pedir cambiarlas; no ofrecer precios ni
+  inventar URLs.
+- **Chat web:** estaba apagado en el bot (403 «Chat not available»); el script
+  lo enciende con identidad Goblin. La **bienvenida salía en un solo
+  renglón**: el servidor la imprimía sin el formateador de las respuestas;
+  ahora usa el mismo. En **WhatsApp no pasaba**: comprobado que llegan los 9
+  saltos de línea al cuerpo que se envía a Evolution.
+- **Vista previa de color** en el formulario del bot: selector nativo
+  sincronizado con el código, contraste del texto blanco en vivo para el
+  color principal, y validación de formato en el servidor. Mismo acomodo en
+  ambos campos (corregido tras verlo el equipo).
+- Leads activados (`enable_lead_notifications: true`, en config/sync).
+
+**Comprobado**
+
+- Ronda final: cancelación → lead «Juan Pérez» con el número de WhatsApp;
+  cliente molesto → no pide el nombre de entrada; contraseña → pide no
+  compartirla y cambiarla, nunca la repite; precio → no inventa, canaliza;
+  chat web → pide nombre y celular, lead «Pedro Luna» correcto.
+- Chat web real en el navegador: respuesta de OpenAI formateada (18 bloques),
+  sin errores de consola.
+- 160 pruebas en verde (módulo 122, portal 8, tema 30).
+
+**No comprobado**
+
+- Envío real por WhatsApp (no hay número conectado todavía).
+- Avisos de lead por WhatsApp (faltan los números del equipo).
 
 ---
 

@@ -351,7 +351,10 @@ final class LeadHandoffService {
    * Creates a lead from a conversation.
    */
   private function createLead(ContentEntityInterface $conversation, string $ai_response, ?ContentEntityInterface $bot): ContentEntityInterface {
-    $text = $this->recentConversationText($conversation) . "\n" . $ai_response;
+    // What the contact wrote plus the assistant's closing summary. Earlier
+    // assistant messages are left out: their questions carry examples
+    // ("ej. juan@tunegocio.com") that were stored as the contact's data.
+    $text = $this->recentContactText($conversation) . "\n" . $ai_response;
     $is_web_conversation = $conversation->hasField('provider') && $conversation->get('provider')->value === 'web';
     // WhatsApp providers already deliver the sender's number; web visitors
     // only have a session identifier, so their phone comes from the chat.

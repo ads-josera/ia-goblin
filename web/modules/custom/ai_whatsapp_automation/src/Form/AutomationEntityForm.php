@@ -110,6 +110,16 @@ final class AutomationEntityForm extends ContentEntityForm {
   }
 
   /**
+   * Element validation: an empty value or a #rgb / #rrggbb color.
+   */
+  public static function validateHexColor(array &$element, FormStateInterface $form_state): void {
+    $value = trim((string) $element['#value']);
+    if ($value !== '' && !preg_match('/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i', $value)) {
+      $form_state->setError($element, t('@field: usa un color en formato #RRGGBB, por ejemplo #065885.', ['@field' => $element['#title']]));
+    }
+  }
+
+  /**
    * Organizes the bot form into focused, collapsible sections.
    */
   private function organizeBotForm(array &$form, bool $is_new): void {
@@ -192,6 +202,23 @@ final class AutomationEntityForm extends ContentEntityForm {
         ],
       ],
     ];
+
+    // Hex color fields get a live preview and are validated as colors.
+    $color_fields = [
+      'web_widget_primary_color' => TRUE,
+      'web_widget_secondary_color' => FALSE,
+    ];
+    foreach ($color_fields as $field_name => $carries_white_text) {
+      if (isset($form[$field_name]['widget'][0]['value'])) {
+        $element = &$form[$field_name]['widget'][0]['value'];
+        $element['#attributes']['data-aiwa-color'] = '';
+        if ($carries_white_text) {
+          $element['#attributes']['data-aiwa-color-white-text'] = '';
+        }
+        $element['#element_validate'][] = [self::class, 'validateHexColor'];
+        unset($element);
+      }
+    }
 
     foreach ($sections as $key => $section) {
       $form[$key] = [

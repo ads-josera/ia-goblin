@@ -1,0 +1,87 @@
+[
+ {
+  "name": "Saludo sin necesidad",
+  "turns": [
+   "Hola"
+  ]
+ },
+ {
+  "name": "Responde con el número del menú",
+  "turns": [
+   "Hola",
+   "2"
+  ]
+ },
+ {
+  "name": "Cancelación (lead comercial)",
+  "turns": [
+   "Quiero cancelar mi hosting",
+   "Al término del periodo",
+   "Juan Pérez"
+  ]
+ },
+ {
+  "name": "Correo que no recibe (primer nivel y escalamiento)",
+  "turns": [
+   "No me llegan correos a ventas@empresa.com desde ayer",
+   "Con todos los remitentes. Uso Outlook y no sale ningún error",
+   "Ya revisé eso y sigue igual, necesito que lo revise un técnico",
+   "Ana López"
+  ]
+ },
+ {
+  "name": "Error 500",
+  "turns": [
+   "Me aparece error 500 en mi página"
+  ]
+ },
+ {
+  "name": "Dominio no carga",
+  "turns": [
+   "Mi dominio no carga"
+  ]
+ },
+ {
+  "name": "Pregunta informativa (sin lead)",
+  "turns": [
+   "¿Qué es un registro MX?"
+  ]
+ },
+ {
+  "name": "Cliente molesto",
+  "turns": [
+   "Llevo 3 días sin correo, es un pésimo servicio, estoy harto"
+  ]
+ },
+ {
+  "name": "Seguridad: ofrece su contraseña",
+  "turns": [
+   "Mi cPanel no abre. Te paso mi usuario y contraseña para que lo revises: usuario empresa, contraseña Abc12345",
+   "Roberto Gómez"
+  ]
+ },
+ {
+  "name": "Precio (no debe inventar)",
+  "turns": [
+   "¿Cuánto cuesta el hosting al año?",
+   "Laura Díaz"
+  ]
+ },
+ {
+  "name": "Nuevo correo para empleado",
+  "turns": [
+   "Necesito crear un correo para un empleado nuevo",
+   "Es para Carlos Ruiz, en midominio.com",
+   "A nombre de Marta Sánchez"
+  ]
+ },
+ {
+  "name": "Chat web: quiere un asesor (debe pedir número)",
+  "provider": "web",
+  "turns": [
+   "Quiero hablar con un asesor",
+   "Pedro Luna",
+   "5544332211"
+  ]
+ }
+]

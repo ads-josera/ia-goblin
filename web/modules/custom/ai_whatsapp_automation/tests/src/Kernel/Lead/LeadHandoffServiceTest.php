@@ -114,6 +114,45 @@ final class LeadHandoffServiceTest extends KernelTestBase {
   }
 
   /**
+   * Examples in the assistant's questions never become the contact's data.
+   *
+   * Replays a live test: the bot asked for the new mailbox "(ej.
+   * juan@tunegocio.com)" and the lead stored that example as the e-mail.
+   */
+  public function testAssistantExamplesAreNotContactData(): void {
+    $storage = fn (string $type) => $this->container->get('entity_type.manager')->getStorage($type);
+    $bot = $storage('ai_whatsapp_bot')->create([
+      'name' => 'Goblin',
+      'status' => 'active',
+      'handoff_enabled' => TRUE,
+      'handoff_minimum_fields' => 3,
+      'handoff_required_fields' => "nombre\nteléfono, telefono, whatsapp, celular\ncategoría, categoria\ndescripción, descripcion",
+    ]);
+    $bot->save();
+    $conversation = $storage('ai_whatsapp_conversation')->create([
+      'phone' => '+5215511122233',
+      'name' => '🦊 Perfil',
+      'channel' => 'whatsapp',
+      'provider' => 'evolution',
+      'status' => 'AI_ACTIVE',
+      'bot' => $bot->id(),
+    ]);
+    $conversation->save();
+    $this->addMessage($conversation, 'contact', 'Necesito crear un correo para un empleado nuevo');
+    $this->addMessage($conversation, 'ai', "Para solicitarlo necesito:\n1) Nombre de la persona:\n2) Usuario deseado (ej. juan@tunegocio.com):");
+    $this->addMessage($conversation, 'contact', 'Carlos Ruiz, midominio.com');
+    $ai_response = "Datos capturados:\n👤 Nombre: Carlos Ruiz\n📱 Teléfono / WhatsApp: +5215511122233\n🗂️ Categoría: Correo electrónico\n📝 Descripción: Crear un correo en midominio.com para un empleado nuevo.\n\nListo. Ya tengo la información necesaria para canalizar tu solicitud con nuestro equipo.";
+    $this->addMessage($conversation, 'ai', $ai_response);
+
+    $result = $this->container->get('ai_whatsapp_automation.lead_handoff')->handle($conversation, $ai_response);
+
+    $lead = $storage('ai_whatsapp_lead')->load($result['lead_id']);
+    $this->assertSame('', (string) $lead->get('email')->value, 'The example address is not the contact\'s e-mail');
+    $this->assertSame('Carlos Ruiz', $lead->get('name')->value, 'The name comes from the closing summary');
+    $this->assertSame('+5215511122233', $lead->get('phone')->value);
+  }
+
+  /**
    * Stores a message in a conversation.
    */
   private function addMessage(ContentEntityInterface $conversation, string $sender, string $content): void {

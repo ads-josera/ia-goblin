@@ -28,7 +28,7 @@ options:
   enable_metrics: true
   enable_immediate_webhook_processing: false
   auto_close_ai_hours: 24
-  enable_lead_notifications: false
+  enable_lead_notifications: true
   lead_notification_numbers: ''
   notification_recipient_reply_text: 'Este número es exclusivo para notificaciones del sistema. No responde mensajes ni solicitudes.'
   unintelligible_reply_text: 'No logré entender tu mensaje 🤔 ¿Me lo escribes de nuevo, por favor?'

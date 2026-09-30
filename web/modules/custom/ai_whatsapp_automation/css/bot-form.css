@@ -121,3 +121,45 @@
     margin-right: 0;
   }
 }
+
+/* Color fields: swatch picker and hex text on one row, the contrast of
+   white text on its own line below (js/color-preview.js). */
+.aiwa-color-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.aiwa-color-preview > input.form-text {
+  flex: 0 1 11rem;
+  width: auto;
+  min-width: 0;
+}
+
+.aiwa-color-preview__picker {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 3px;
+  cursor: pointer;
+  border: 1px solid #8e96a3;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.aiwa-color-preview.is-invalid .aiwa-color-preview__picker {
+  opacity: 0.4;
+}
+
+.aiwa-color-preview__note {
+  flex-basis: 100%;
+  color: #3f4652;
+  font-size: 13px;
+}
+
+.aiwa-color-preview__note.is-low,
+.aiwa-color-preview.is-invalid .aiwa-color-preview__note {
+  color: #b42318;
+  font-weight: 600;
+}
