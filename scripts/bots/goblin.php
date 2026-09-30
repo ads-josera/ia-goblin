@@ -89,10 +89,14 @@ if ($prompt === '') {
   throw new \RuntimeException("Prompt not found or empty: $prompt_file");
 }
 
+// A fresh install (drush si --existing-config) has no clients: they are
+// content. The bot needs its client, so create it the first time.
 $clients = $etm->getStorage('ai_whatsapp_client')->loadByProperties(['name' => $client_name]);
 $client = reset($clients);
 if (!$client) {
-  throw new \RuntimeException("Client \"$client_name\" does not exist. Create it first.");
+  $client = $etm->getStorage('ai_whatsapp_client')->create(['name' => $client_name, 'status' => 'active']);
+  $client->save();
+  echo "Created client \"$client_name\" (id {$client->id()})." . PHP_EOL;
 }
 
 $bots = $etm->getStorage('ai_whatsapp_bot')->loadByProperties(['name' => $bot_name, 'client' => $client->id()]);

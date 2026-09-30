@@ -22,7 +22,12 @@
 | Estado inicial | Subdominio vacío (solo `cgi-bin`), con listado de directorios visible |
 | Ruta del proyecto (propuesta) | `~/ia-goblin` (fuera de la carpeta pública) |
 | Raíz del subdominio (propuesta) | `~/ia-goblin/web` |
-| PHP, extensiones, Composer, base de datos | _pendiente: salida de la Fase 0_ |
+| Sistema | CloudLinux 8.10, usuario `goblincr` |
+| PHP | Web del subdominio: **8.4** (MultiPHP). Terminal: 8.1 por defecto → usar siempre `/opt/cpanel/ea-php84/root/usr/bin/php` |
+| Base de datos | MySQL 8.0.46 |
+| Herramientas | git, pdftotext, convert, crontab ✅ · **Composer: no** (se instala en `~/bin`) |
+| GitHub | Sin acceso: se crea una llave de solo lectura (deploy key) |
+| Límites PHP (8.1) | memory_limit 128M, upload_max 2M → subir para el subdominio (256M / 32M) |
 
 ## Requisitos que el servidor debe cumplir
 
@@ -75,7 +80,25 @@ $settings['trusted_host_patterns'] = ['^dominio\.com$'];
 
 ## Procedimiento
 
-_Se documenta en el primer despliegue._
+### Comprobado en local antes de desplegar (2026-09-30)
+
+Instalación limpia desde la configuración, como en el servidor:
+
+1. `drush site:install --existing-config` → instala, **pero** no crea el
+   idioma inglés ni sus 96 traducciones de configuración (quedan 98
+   diferencias en `config:status`).
+2. `drush config:import -y` justo después → **0 diferencias**.
+3. `drush php:script scripts/bots/goblin.php` → crea el cliente «Goblin» (no
+   existe en una instalación nueva) y el bot.
+
+### Fases en el servidor
+
+- **Fase 0** (hecha): reconocimiento.
+- **Fase 1**: PHP 8.4, Composer en `~/bin`, deploy key de GitHub.
+- **Fase 2**: base de datos (cPanel), clonar en `~/ia-goblin`, `composer
+  install`, `settings.local.php`, raíz del subdominio → `~/ia-goblin/web`.
+- **Fase 3**: instalar (`si --existing-config` + `cim`), traducciones, bot,
+  cron, pruebas.
 
 ## Historial de despliegues
 
