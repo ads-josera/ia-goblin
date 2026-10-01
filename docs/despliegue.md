@@ -150,3 +150,4 @@ Las claves escritas en la Configuración del módulo **no se pierden** con
 | Fecha | Commit | Resultado | Notas |
 |-------|--------|-----------|-------|
 | 2026-09-30 | `4c590f2` | Instalado y funcionando | Primer despliegue (fases 0–3C) |
+| 2026-09-30 | `4942bfc` | OK | Claves en State: `updb` 11041 (nada que mover), `cim` sin cambios, `git status` limpio, State vacío |

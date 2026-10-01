@@ -11,13 +11,12 @@ lo **no comprobado**.
 - **En producción:** https://ia.goblincreative.com (primer despliegue
   2026-09-30, ver [despliegue.md](despliegue.md)).
 - **Claves de proveedores:** ahora se escriben en la Configuración del módulo
-  y sobreviven a los despliegues (entrada de abajo). Falta desplegarlo y que
+  y sobreviven a los despliegues (entrada de abajo). **Desplegado.** Falta que
   el equipo escriba ahí la clave de OpenAI **de producción**.
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
   **Rotarla al terminar las pruebas** (se compartió por chat).
-- **Siguiente paso:** desplegar esta mejora (`git pull`, `drush updb`,
-  `drush cim`, `drush cr`), escribir la clave en producción y probar el bot
-  en el chat web de producción. Forzar HTTPS en cPanel y confirmar el cron.
+- **Siguiente paso:** escribir la clave de OpenAI en la Configuración de
+  producción y probar el bot en el chat web de producción. Forzar HTTPS en cPanel y confirmar el cron.
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -31,7 +30,7 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
 | 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3 | Desplegar «claves que sobreviven a los despliegues» y escribir la clave de OpenAI de producción en la Configuración | Alta |
+| 3 | Escribir la clave de OpenAI de producción en la Configuración y probar el bot en producción | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
 | 3c | Producción: forzar HTTPS en cPanel, confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
@@ -79,7 +78,12 @@ de producción.
 - Suites completas (módulo, `goblin_portal`, tema): 166 pruebas OK.
   `phpcs` (Drupal, DrupalPractice) sin observaciones en los archivos nuevos.
 
-**No comprobado:** en el servidor (falta desplegarlo).
+**Desplegado en producción** (`4942bfc`): `updb` corrió la 11041 («No
+provider secrets were stored in config»), `cim` sin cambios, `git status`
+limpio y el State sin claves todavía.
+
+**No comprobado:** que una clave escrita en producción sobreviva al siguiente
+despliegue (se verá en el próximo).
 
 ---
 
