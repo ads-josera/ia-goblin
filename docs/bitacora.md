@@ -27,7 +27,7 @@ lo **no comprobado**.
   **nueva**: Soporte técnico → «quiero cancelar mi hosting» → dar nombre y
   celular → el bot cierra con «Datos capturados». Esperado: Conversaciones 2,
   Leads 1. Confirmar también `options.enable_lead_notifications` = `true`
-  (comandos en la entrada de abajo). Forzar HTTPS en cPanel y confirmar el cron.
+  (comandos en la entrada de abajo). Confirmar el cron.
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
