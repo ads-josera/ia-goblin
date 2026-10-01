@@ -13,7 +13,7 @@ lo **no comprobado**.
 - **Claves de proveedores:** ahora se escriben en la Configuración del módulo
   y sobreviven a los despliegues. **Desplegado** y con la clave de OpenAI de
   producción ya guardada desde el admin (el módulo la ve).
-- **Cron** en el crontab cada 5 min (`drush cron`, PHP 8.4); confirmado.
+- **Cron** en el crontab cada 5 min (`drush cron`, PHP 8.4); comprobado: última ejecución 18:35:01, hace 1 min.
 - **HTTPS forzado** (comprobado desde fuera: `http://` → 301 a `https://`,
   también `www.ia.` y rutas internas).
 - **Bot Goblin responde en producción** (chat web, sin errores en el
