@@ -17,7 +17,11 @@ lo **no comprobado**.
   registro).
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
   **Rotarla al terminar las pruebas** (se compartió por chat).
-- **Siguiente paso:** prueba del lead en producción. En una ventana privada
+- **Siguiente trabajo: separar el bot Goblin en tres** (Facturación, Soporte,
+  Ventas) en el mismo número de WhatsApp, con aviso del lead a cada
+  encargado. Diseño y decisiones en la entrada de abajo. Mañana: crear juntos
+  el prompt de Ventas.
+- **También pendiente:** prueba del lead en producción. En una ventana privada
   **nueva**: Soporte técnico → «quiero cancelar mi hosting» → dar nombre y
   celular → el bot cierra con «Datos capturados». Esperado: Conversaciones 2,
   Leads 1. Confirmar también `options.enable_lead_notifications` = `true`
@@ -34,7 +38,8 @@ lo **no comprobado**.
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
-| 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
+| 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
+| 2 | Bots por área (Facturación, Soporte, Ventas) con recepción por menú y aviso por encargado (ver entrada «Diseño: un bot por área») | Alta |
 | 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
 | 3c | Producción: forzar HTTPS en cPanel, confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
@@ -44,6 +49,48 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-09-30 — Diseño: un bot por área (por hacer)
+
+**Petición del equipo:** un bot de Facturación, uno de Soporte y uno de
+Ventas, **en el mismo número de WhatsApp**, y que el aviso de cada lead le
+llegue a su encargado.
+
+**Decisiones del equipo**
+
+- Reparto **por menú con números**: la bienvenida muestra 1 Facturación,
+  2 Soporte, 3 Ventas; el número (o la palabra) pasa la conversación al bot
+  de esa área. Sin costo de IA. Si escribe otra cosa, se repite el menú.
+- Cambio de área: cada bot atiende solo lo suyo; si le preguntan otra cosa,
+  indica escribir **«menú»**, que regresa la conversación a la recepción.
+- Prompt de Ventas: se escribe con el equipo (el prompt actual junta
+  «Facturación y atención comercial»).
+
+**Lo que ya existe en el módulo (revisado en el código)**
+
+- La conversación guarda su propio `bot` y `BotManagerService::
+  getBotForConversation()` lo usa antes que el de la cuenta: cambiar de bot
+  es cambiar ese campo.
+- Cada bot tiene sus propias reglas de lead (señales, mínimo, frases,
+  plantilla, `lead_notification_account`).
+
+**Lo que falta**
+
+1. Recepción: en el bot asignado a la cuenta, una lista «opción → bot»
+   (número y palabras) y la palabra «menú»; antes de llamar a la IA, si el
+   mensaje coincide, se cambia `conversation.bot` y responde el especialista.
+   Igual en WhatsApp y en el chat web.
+2. Números de aviso por bot (`lead_notification_numbers` en el bot), con
+   prioridad bot → cuenta → configuración general.
+3. Tres prompts cortos (Facturación y Soporte salen del prompt actual;
+   Ventas, nuevo) y el script `scripts/bots/goblin.php` para crearlos.
+4. Pruebas por rol, sabotaje, prueba en vivo y despliegue.
+
+**Por definir:** número de WhatsApp de cada encargado; qué pasa con el
+estado de la conversación al cambiar de área tras un lead (hoy un lead la
+pasa a atención humana).
 
 ---
 
