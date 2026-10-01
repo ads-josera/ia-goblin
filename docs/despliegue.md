@@ -144,6 +144,11 @@ Las claves escritas en la Configuración del módulo **no se pierden** con
   escribirlos en un archivo con marcador y reemplazarlo con una sola línea.
 - El subdominio se apunta a Drupal **después** de instalar desde la terminal:
   si no, el instalador web queda expuesto.
+- Tras entrar por primera vez con `drush uli`, **ponerle contraseña a
+  `admin` en ese momento**. Si no, el login normal falla (pasó el
+  2026-09-30). Si vuelve a pasar: `drush sqlq "DELETE FROM flood WHERE event
+  LIKE 'user.%'"` + `drush uli --uri=https://ia.goblincreative.com` (el
+  enlace no se comparte) y cambiar la contraseña.
 
 ## Historial de despliegues
 

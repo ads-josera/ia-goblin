@@ -42,6 +42,18 @@ lo **no comprobado**.
 
 ---
 
+## 2026-09-30 — Producción: no se podía entrar como admin
+
+**Causa (comprobada en el servidor):** `admin` activo y con rol de
+administrador, 2 intentos fallidos (no bloqueado: el límite es 5). La primera
+entrada fue con `drush uli` y nunca se le puso contraseña en producción.
+
+**Qué se hizo:** se limpiaron los intentos fallidos (`flood`), el equipo entró
+con `drush uli` y cambió la contraseña. **Comprobado:** el equipo ya entra con
+usuario y contraseña. Lección anotada en [despliegue.md](despliegue.md).
+
+---
+
 ## 2026-09-30 — Claves de proveedores que sobreviven a los despliegues
 
 **Problema:** las claves generales del módulo (OpenAI, token de Twilio,
