@@ -38,8 +38,8 @@ lo **no comprobado**.
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
-| 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 2 | Bots por área (Facturación, Soporte, Ventas) con recepción por menú y aviso por encargado (ver entrada «Diseño: un bot por área») | Alta |
+| 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
 | 3c | Producción: forzar HTTPS en cPanel, confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
