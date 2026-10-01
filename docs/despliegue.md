@@ -117,7 +117,8 @@ Instalación limpia desde la configuración, como en el servidor:
 - **Fase 3C** (hecha): verificado desde fuera (PHP 8.4.25, 600M/256M, login,
   rutas sensibles en 404), acceso admin, cron cada 5 min con drush.
   HTTPS forzado en cPanel (comprobado: `http://` → 301 a `https://`).
-  Pendiente: confirmar la línea del crontab.
+  Crontab confirmado:
+  `*/5 * * * * cd $HOME/ia.goblincreative.com && PATH=/opt/cpanel/ea-php84/root/usr/bin:$PATH vendor/bin/drush cron --quiet >/dev/null 2>&1`
 
 ### Desplegar una mejora
 

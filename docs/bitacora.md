@@ -13,6 +13,7 @@ lo **no comprobado**.
 - **Claves de proveedores:** ahora se escriben en la Configuración del módulo
   y sobreviven a los despliegues. **Desplegado** y con la clave de OpenAI de
   producción ya guardada desde el admin (el módulo la ve).
+- **Cron** en el crontab cada 5 min (`drush cron`, PHP 8.4); confirmado.
 - **HTTPS forzado** (comprobado desde fuera: `http://` → 301 a `https://`,
   también `www.ia.` y rutas internas).
 - **Bot Goblin responde en producción** (chat web, sin errores en el
@@ -27,7 +28,7 @@ lo **no comprobado**.
   **nueva**: Soporte técnico → «quiero cancelar mi hosting» → dar nombre y
   celular → el bot cierra con «Datos capturados». Esperado: Conversaciones 2,
   Leads 1. Confirmar también `options.enable_lead_notifications` = `true`
-  (comandos en la entrada de abajo). Confirmar el cron.
+  (comandos en la entrada de abajo).
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -44,7 +45,7 @@ lo **no comprobado**.
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
-| 3c | Producción: confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
+| 3c | Producción: borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
