@@ -13,6 +13,8 @@ lo **no comprobado**.
 - **Claves de proveedores:** ahora se escriben en la Configuración del módulo
   y sobreviven a los despliegues. **Desplegado** y con la clave de OpenAI de
   producción ya guardada desde el admin (el módulo la ve).
+- **HTTPS forzado** (comprobado desde fuera: `http://` → 301 a `https://`,
+  también `www.ia.` y rutas internas).
 - **Bot Goblin responde en producción** (chat web, sin errores en el
   registro).
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
@@ -42,7 +44,7 @@ lo **no comprobado**.
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
-| 3c | Producción: forzar HTTPS en cPanel, confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
+| 3c | Producción: confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |

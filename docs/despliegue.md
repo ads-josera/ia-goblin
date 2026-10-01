@@ -116,7 +116,8 @@ Instalación limpia desde la configuración, como en el servidor:
   (los tres ignorados en git).
 - **Fase 3C** (hecha): verificado desde fuera (PHP 8.4.25, 600M/256M, login,
   rutas sensibles en 404), acceso admin, cron cada 5 min con drush.
-  Pendiente: forzar HTTPS en cPanel y confirmar la línea del crontab.
+  HTTPS forzado en cPanel (comprobado: `http://` → 301 a `https://`).
+  Pendiente: confirmar la línea del crontab.
 
 ### Desplegar una mejora
 
