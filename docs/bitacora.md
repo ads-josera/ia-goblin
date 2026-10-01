@@ -11,12 +11,17 @@ lo **no comprobado**.
 - **En producción:** https://ia.goblincreative.com (primer despliegue
   2026-09-30, ver [despliegue.md](despliegue.md)).
 - **Claves de proveedores:** ahora se escriben en la Configuración del módulo
-  y sobreviven a los despliegues (entrada de abajo). **Desplegado.** Falta que
-  el equipo escriba ahí la clave de OpenAI **de producción**.
+  y sobreviven a los despliegues. **Desplegado** y con la clave de OpenAI de
+  producción ya guardada desde el admin (el módulo la ve).
+- **Bot Goblin responde en producción** (chat web, sin errores en el
+  registro).
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
   **Rotarla al terminar las pruebas** (se compartió por chat).
-- **Siguiente paso:** escribir la clave de OpenAI en la Configuración de
-  producción y probar el bot en el chat web de producción. Forzar HTTPS en cPanel y confirmar el cron.
+- **Siguiente paso:** prueba del lead en producción. En una ventana privada
+  **nueva**: Soporte técnico → «quiero cancelar mi hosting» → dar nombre y
+  celular → el bot cierra con «Datos capturados». Esperado: Conversaciones 2,
+  Leads 1. Confirmar también `options.enable_lead_notifications` = `true`
+  (comandos en la entrada de abajo). Forzar HTTPS en cPanel y confirmar el cron.
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -30,7 +35,7 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
 | 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3 | Escribir la clave de OpenAI de producción en la Configuración y probar el bot en producción | Alta |
+| 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
 | 3c | Producción: forzar HTTPS en cPanel, confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
@@ -39,6 +44,34 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-09-30 — Bot en producción con la clave del admin
+
+**Comprobado en el servidor**
+
+- Clave de OpenAI de producción escrita en la Configuración del módulo: el
+  State tiene `openai.api_key` y `\Drupal::config()` la devuelve (sin
+  mostrar el valor).
+- Chat web: 1 conversación, 8 mensajes, sin errores. El bot sigue el menú
+  del prompt (Soporte técnico → registro MX → explica y pide lo mínimo).
+  Estado `AI_ACTIVE`, 0 leads: **correcto**, en esa conversación no se pidió
+  canalizar (la prueba de «cancelar hosting» no llegó a hacerse; las dos
+  pruebas en la misma ventana comparten conversación).
+
+**No comprobado:** creación de un lead en producción;
+`options.enable_lead_notifications` en producción (el comando que se usó
+preguntaba por la clave sin `options.` y devolvió `NULL`; `cim` dijo «sin
+cambios», así que debería ser `true`).
+
+Comandos para revisar (no muestran secretos; los dígitos se ocultan):
+
+```bash
+drush php:eval 'foreach (["ai_whatsapp_conversation"=>"Conversaciones","ai_whatsapp_message"=>"Mensajes","ai_whatsapp_lead"=>"Leads"] as $t=>$l) { echo $l.": ".\Drupal::entityQuery($t)->accessCheck(FALSE)->count()->execute()."\n"; }'
+drush php:eval 'var_export(\Drupal::config("ai_whatsapp_automation.settings")->get("options.enable_lead_notifications")); echo "\n";'
+drush watchdog:show --count=10 --severity-min=3
+```
 
 ---
 
