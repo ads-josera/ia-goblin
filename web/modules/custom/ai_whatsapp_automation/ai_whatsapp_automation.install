@@ -6,6 +6,7 @@ use Drupal\ai_whatsapp_automation\Access\PanelRoles;
 use Drupal\ai_whatsapp_automation\Application\AI\AccountOverrideMigration;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadContactExtractor;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService;
+use Drupal\ai_whatsapp_automation\Infrastructure\Secrets\SecretStore;
 
 /**
  * Role given to users of a client.
@@ -1169,6 +1170,32 @@ function ai_whatsapp_automation_update_11040(): string {
   return $report === []
     ? (string) t('Account overrides removed; no account was using them.')
     : (string) t('Account overrides moved into bots: @report', ['@report' => implode(' ', $report)]);
+}
+
+/**
+ * Moves provider secrets out of the exported settings into SecretStore.
+ *
+ * The settings form now saves them in State, where a deployment
+ * (`drush cim`) cannot reset them. Values already stored in config are moved
+ * and blanked there, so `drush cex` never exports them.
+ */
+function ai_whatsapp_automation_update_11041(): string {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  $secrets = \Drupal::service('ai_whatsapp_automation.secrets');
+  $moved = [];
+  foreach (SecretStore::KEYS as $key) {
+    $value = trim((string) $config->get($key));
+    if ($value !== '') {
+      $secrets->set($key, $value);
+      $config->set($key, '');
+      $moved[] = $key;
+    }
+  }
+  $config->save();
+
+  return $moved === []
+    ? (string) t('No provider secrets were stored in config.')
+    : (string) t('Provider secrets moved out of exported config: @keys.', ['@keys' => implode(', ', $moved)]);
 }
 
 /**

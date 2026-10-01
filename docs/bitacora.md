@@ -8,18 +8,22 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- **Bot Goblin probado en vivo con OpenAI** (12 conversaciones, 3 rondas) y
-  ajustado. Chat web funcionando. Leads **activados**.
-- Clave de OpenAI de pruebas en `settings.local.php` (fuera de git).
-  **Rotarla al terminar las pruebas.**
-- Repositorio en `main` en GitHub, al día.
-- **Siguiente paso:** primer despliegue (paso 4 del plan): datos del servidor
-  y [despliegue.md](despliegue.md).
+- **En producción:** https://ia.goblincreative.com (primer despliegue
+  2026-09-30, ver [despliegue.md](despliegue.md)).
+- **Claves de proveedores:** ahora se escriben en la Configuración del módulo
+  y sobreviven a los despliegues (entrada de abajo). Falta desplegarlo y que
+  el equipo escriba ahí la clave de OpenAI **de producción**.
+- Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
+  **Rotarla al terminar las pruebas** (se compartió por chat).
+- **Siguiente paso:** desplegar esta mejora (`git pull`, `drush updb`,
+  `drush cim`, `drush cr`), escribir la clave en producción y probar el bot
+  en el chat web de producción. Forzar HTTPS en cPanel y confirmar el cron.
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
 - Color secundario del chat web: hoy no se usa en ningún sitio (el
   encabezado es un azul fijo). Propuesta: que sea el color del encabezado.
+- En el chat web la IA sigue respondiendo después de crear un lead.
 
 ## Pendientes
 
@@ -27,14 +31,55 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
 | 2 | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3 | Mover las API keys del módulo a `settings.local.php` antes de guardarlas en la interfaz (si no, `drush cex` las sube a git). **Necesario para probar el bot Goblin en vivo** | Alta |
-| 3b | Activar leads (`enable_lead_notifications`) y definir los números de WhatsApp del equipo que reciben los avisos | Alta |
+| 3 | Desplegar «claves que sobreviven a los despliegues» y escribir la clave de OpenAI de producción en la Configuración | Alta |
+| 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
+| 3c | Producción: forzar HTTPS en cPanel, confirmar la línea del crontab, borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
+| 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
 | 6 | Comprobar `drush site:install --existing-config` en una copia limpia | Media |
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
-| 10 | Documentar el despliegue en [despliegue.md](despliegue.md) cuando se elija servidor | Cuando toque |
+
+---
+
+## 2026-09-30 — Claves de proveedores que sobreviven a los despliegues
+
+**Problema:** las claves generales del módulo (OpenAI, token de Twilio,
+WhatsApp Cloud, Evolution) se guardaban en la configuración
+`ai_whatsapp_automation.settings`. En `config/sync` están vacías a propósito
+(no deben ir a git), así que cada `drush cim` de un despliegue **las borraba**
+de producción.
+
+**Qué se hizo** (sin cambiar la pantalla: mismos campos y textos)
+
+- `SecretStore`: el formulario guarda esas 6 claves en el State de Drupal
+  (base de datos, nunca exportado, `cim` no lo toca). En la configuración
+  quedan vacías.
+- `SecretsConfigOverride`: pone esas claves encima de
+  `ai_whatsapp_automation.settings` al leerla, así que el resto del módulo
+  (OpenAI, embeddings, Twilio…) no cambió. Una clave en
+  `settings.local.php` sigue ganando.
+- `update_11041`: en un sitio que ya tenía claves en la configuración, las
+  mueve al State.
+- Las credenciales por cuenta de WhatsApp (Twilio SID/token, instancia de
+  Evolution) no se tocaron: ya eran por cuenta y no viajan en los
+  despliegues. OpenAI por cliente queda para el futuro.
+
+**Comprobado**
+
+- Pruebas nuevas (kernel y funcional): el formulario guarda en el State, la
+  configuración exportada queda vacía, guardar con el campo vacío conserva la
+  clave, `settings.local.php` gana, la actualización mueve las claves
+  existentes, claves desconocidas se rechazan.
+- Sabotaje: sin registrar el override fallan 3 pruebas.
+- Real en local: clave en el State + `drush cim` con un cambio en
+  `ai_whatsapp_automation.settings` → el cambio se importó y la clave
+  siguió. `config/sync` restaurado y la clave de prueba borrada.
+- Suites completas (módulo, `goblin_portal`, tema): 166 pruebas OK.
+  `phpcs` (Drupal, DrupalPractice) sin observaciones en los archivos nuevos.
+
+**No comprobado:** en el servidor (falta desplegarlo).
 
 ---
 

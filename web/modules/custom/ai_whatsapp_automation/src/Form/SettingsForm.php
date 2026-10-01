@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_whatsapp_automation\Form;
 
+use Drupal\ai_whatsapp_automation\Infrastructure\Secrets\SecretStore;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\StorableConfigBase;
 use Drupal\Core\Config\TypedConfigManagerInterface;
@@ -32,6 +33,7 @@ final class SettingsForm extends ConfigFormBase {
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TypedConfigManagerInterface $typed_config_manager,
+    private readonly SecretStore $secrets,
   ) {
     parent::__construct($config_factory, $typed_config_manager);
   }
@@ -42,7 +44,8 @@ final class SettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container): self {
     return new self(
       $container->get('config.factory'),
-      $container->get('config.typed')
+      $container->get('config.typed'),
+      $container->get('ai_whatsapp_automation.secrets'),
     );
   }
 
@@ -65,6 +68,9 @@ final class SettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config(self::SETTINGS);
+    // Secrets are kept out of the stored config (SecretStore); the effective
+    // config, with overrides, is what tells whether one is configured.
+    $effective = $this->configFactory->get(self::SETTINGS);
 
     $form['#attached']['library'][] = 'ai_whatsapp_automation/settings';
     $form['#attributes']['class'][] = 'ai-whatsapp-settings';
@@ -89,7 +95,7 @@ final class SettingsForm extends ConfigFormBase {
         'class' => ['ai-whatsapp-settings__status-grid'],
       ],
     ];
-    foreach ($this->buildStatusItems($config) as $key => $item) {
+    foreach ($this->buildStatusItems($effective) as $key => $item) {
       $form['overview']['status'][$key] = [
         '#type' => 'container',
         '#attributes' => [
@@ -134,7 +140,7 @@ final class SettingsForm extends ConfigFormBase {
         'autocomplete' => 'new-password',
         'spellcheck' => 'false',
       ],
-      '#description' => $config->get('openai.api_key') ? $this->t('An API key is already configured. Leave empty to keep the current value.') : $this->t('Enter the OpenAI API key.'),
+      '#description' => $effective->get('openai.api_key') ? $this->t('An API key is already configured. Leave empty to keep the current value.') : $this->t('Enter the OpenAI API key.'),
     ];
     $form['openai']['default_model'] = [
       '#type' => 'select',
@@ -243,7 +249,7 @@ final class SettingsForm extends ConfigFormBase {
         'autocomplete' => 'new-password',
         'spellcheck' => 'false',
       ],
-      '#description' => $config->get('twilio.auth_token') ? $this->t('An auth token is already configured. Leave empty to keep the current value.') : $this->t('Enter the Twilio auth token.'),
+      '#description' => $effective->get('twilio.auth_token') ? $this->t('An auth token is already configured. Leave empty to keep the current value.') : $this->t('Enter the Twilio auth token.'),
     ];
     $form['twilio']['whatsapp_number'] = [
       '#type' => 'textfield',
@@ -283,7 +289,7 @@ final class SettingsForm extends ConfigFormBase {
         'autocomplete' => 'new-password',
         'spellcheck' => 'false',
       ],
-      '#description' => $config->get('whatsapp_cloud.access_token') ? $this->t('An access token is already configured. Leave empty to keep the current value.') : $this->t('Enter the WhatsApp Cloud API access token.'),
+      '#description' => $effective->get('whatsapp_cloud.access_token') ? $this->t('An access token is already configured. Leave empty to keep the current value.') : $this->t('Enter the WhatsApp Cloud API access token.'),
     ];
     $form['whatsapp_cloud']['phone_number_id'] = [
       '#type' => 'textfield',
@@ -305,7 +311,7 @@ final class SettingsForm extends ConfigFormBase {
         'autocomplete' => 'new-password',
         'spellcheck' => 'false',
       ],
-      '#description' => $config->get('whatsapp_cloud.verify_token') ? $this->t('A verify token is already configured. Leave empty to keep the current value.') : $this->t('Enter the webhook verify token.'),
+      '#description' => $effective->get('whatsapp_cloud.verify_token') ? $this->t('A verify token is already configured. Leave empty to keep the current value.') : $this->t('Enter the webhook verify token.'),
     ];
     $form['whatsapp_cloud']['app_secret'] = [
       '#type' => 'password',
@@ -315,7 +321,7 @@ final class SettingsForm extends ConfigFormBase {
         'autocomplete' => 'new-password',
         'spellcheck' => 'false',
       ],
-      '#description' => $config->get('whatsapp_cloud.app_secret') ? $this->t('An App Secret is already configured. Leave empty to keep the current value.') : $this->t('Required to verify incoming Meta webhook signatures.'),
+      '#description' => $effective->get('whatsapp_cloud.app_secret') ? $this->t('An App Secret is already configured. Leave empty to keep the current value.') : $this->t('Required to verify incoming Meta webhook signatures.'),
     ];
 
     $form['evolution'] = [
@@ -341,7 +347,7 @@ final class SettingsForm extends ConfigFormBase {
         'autocomplete' => 'new-password',
         'spellcheck' => 'false',
       ],
-      '#description' => $config->get('evolution.api_key') ? $this->t('An API key is already configured. Leave empty to keep the current value.') : $this->t('Enter the Evolution API key.'),
+      '#description' => $effective->get('evolution.api_key') ? $this->t('An API key is already configured. Leave empty to keep the current value.') : $this->t('Enter the Evolution API key.'),
     ];
     $form['evolution']['instance_name'] = [
       '#type' => 'textfield',
@@ -540,23 +546,40 @@ final class SettingsForm extends ConfigFormBase {
     $options = $form_state->getValue('options');
     $cost_rates = $this->submittedCostRates($openai);
 
+    // Secrets go to SecretStore (State), not to this config: the exported
+    // config is reset on every deployment and would wipe them. An empty field
+    // keeps the current value, as before.
+    $submitted_secrets = [
+      'openai.api_key' => $openai['api_key'],
+      'twilio.auth_token' => $twilio['auth_token'],
+      'whatsapp_cloud.access_token' => $whatsapp_cloud['access_token'],
+      'whatsapp_cloud.verify_token' => $whatsapp_cloud['verify_token'],
+      'whatsapp_cloud.app_secret' => $whatsapp_cloud['app_secret'],
+      'evolution.api_key' => $evolution['api_key'],
+    ];
+    foreach ($submitted_secrets as $key => $value) {
+      if (trim((string) $value) !== '') {
+        $this->secrets->set($key, (string) $value);
+      }
+    }
+
     $config
-      ->set('openai.api_key', $this->resolveSecretValue($openai['api_key'], $config->get('openai.api_key')))
+      ->set('openai.api_key', '')
       ->set('openai.default_model', $openai['default_model'])
       ->set('openai.timeout', (int) $openai['timeout'])
       ->set('openai.cost_rates', $cost_rates)
       ->set('twilio.account_sid', $twilio['account_sid'])
-      ->set('twilio.auth_token', $this->resolveSecretValue($twilio['auth_token'], $config->get('twilio.auth_token')))
+      ->set('twilio.auth_token', '')
       ->set('twilio.whatsapp_number', $twilio['whatsapp_number'])
       ->set('twilio.content_template_sid', $twilio['content_template_sid'])
       ->set('twilio.messaging_service_sid', $twilio['messaging_service_sid'])
-      ->set('whatsapp_cloud.access_token', $this->resolveSecretValue($whatsapp_cloud['access_token'], $config->get('whatsapp_cloud.access_token')))
+      ->set('whatsapp_cloud.access_token', '')
       ->set('whatsapp_cloud.phone_number_id', $whatsapp_cloud['phone_number_id'])
       ->set('whatsapp_cloud.business_account_id', $whatsapp_cloud['business_account_id'])
-      ->set('whatsapp_cloud.verify_token', $this->resolveSecretValue($whatsapp_cloud['verify_token'], $config->get('whatsapp_cloud.verify_token')))
-      ->set('whatsapp_cloud.app_secret', $this->resolveSecretValue($whatsapp_cloud['app_secret'], $config->get('whatsapp_cloud.app_secret')))
+      ->set('whatsapp_cloud.verify_token', '')
+      ->set('whatsapp_cloud.app_secret', '')
       ->set('evolution.server_url', $evolution['server_url'])
-      ->set('evolution.api_key', $this->resolveSecretValue($evolution['api_key'], $config->get('evolution.api_key')))
+      ->set('evolution.api_key', '')
       ->set('evolution.instance_name', $evolution['instance_name'])
       ->set('options.enable_ai', (bool) $options['enable_ai'])
       ->set('options.enable_logs', (bool) $options['enable_logs'])
@@ -573,19 +596,6 @@ final class SettingsForm extends ConfigFormBase {
       ->save();
 
     parent::submitForm($form, $form_state);
-  }
-
-  /**
-   * Keeps the current secret when the password field is left empty.
-   */
-  private function resolveSecretValue(?string $submitted_value, mixed $current_value): string {
-    $submitted_value = trim((string) $submitted_value);
-
-    if ($submitted_value === '') {
-      return (string) $current_value;
-    }
-
-    return $submitted_value;
   }
 
   /**

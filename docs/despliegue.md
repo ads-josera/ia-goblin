@@ -1,7 +1,7 @@
 # Despliegue
 
-> **Estado:** todavía no hay servidor de producción. Este documento se completa
-> en cuanto se elija, con los comandos reales que se usen y su resultado.
+> **Estado:** en producción en https://ia.goblincreative.com desde el
+> 2026-09-30.
 
 ## Cómo trabajamos los despliegues
 
@@ -20,8 +20,8 @@
 | HTTPS | Let's Encrypt válido para `ia.` y `www.ia.`, vence 2026-12-28 (renovación automática de cPanel: confirmar) |
 | Acceso | SSH (confirmado por el equipo) |
 | Estado inicial | Subdominio vacío (solo `cgi-bin`), con listado de directorios visible |
-| Ruta del proyecto (propuesta) | `~/ia-goblin` (fuera de la carpeta pública) |
-| Raíz del subdominio (propuesta) | `~/ia-goblin/web` |
+| Ruta del proyecto | `~/ia.goblincreative.com` (la carpeta del dominio que creó el equipo) |
+| Raíz del subdominio | `ia.goblincreative.com/web` |
 | Sistema | CloudLinux 8.10, usuario `goblincr` |
 | PHP | Web del subdominio: **8.4** (MultiPHP). Terminal: 8.1 por defecto → usar siempre `/opt/cpanel/ea-php84/root/usr/bin/php` |
 | Base de datos | MySQL 8.0.46 |
@@ -77,7 +77,9 @@ $databases['default']['default'] = [
 $settings['hash_salt'] = '...';  // Valor largo y aleatorio, distinto al local.
 $settings['trusted_host_patterns'] = ['^dominio\.com$'];
 
-// Credenciales del módulo: aquí, nunca en la configuración exportada.
+// Las claves del módulo (OpenAI, Twilio…) se escriben en su pantalla de
+// Configuración y sobreviven a los despliegues. Solo si se quiere fijar una
+// aquí (gana sobre la del formulario):
 // $config['ai_whatsapp_automation.settings']['openai']['api_key'] = '...';
 ```
 
@@ -98,8 +100,8 @@ Instalación limpia desde la configuración, como en el servidor:
 
 - **Fase 0** (hecha): reconocimiento.
 - **Fase 1** (hecha): PHP 8.4.25 con las extensiones de Drupal, Composer en `~/bin`, deploy key de GitHub.
-- **Fase 2** (hecha): base de datos `goblincr_iagoblin`; código clonado en
-  `~/ia-goblin` (deploy key); `composer install --no-dev -o`; carpeta
+- **Fase 2** (hecha): base de datos `goblincr_iagoblin`; código clonado
+  (deploy key; hoy en `~/ia.goblincreative.com`); `composer install --no-dev -o`; carpeta
   `private/`; `settings.local.php` (permisos 600, fuera de git) con base de
   datos, `hash_salt`, `trusted_host_patterns` y errores ocultos.
   Contraseña de la base: la generó el servidor y se asignó con
@@ -108,12 +110,34 @@ Instalación limpia desde la configuración, como en el servidor:
   diferencias), traducciones, `scripts/bots/goblin.php` (cliente y bot
   creados), `settings.php` en 444 y `sites/default` en 555. `drush
   core:requirements --severity=2`: sin errores.
-- **Fase 3B**: raíz del subdominio → `ia-goblin/web`; MultiPHP INI (256M,
-  32M, 32M, 120 s). Crea `web/.user.ini` (ignorado en git).
-- **Fase 3C**: verificación externa, acceso admin, cron.
+- **Fase 3B** (hecha): proyecto movido a `~/ia.goblincreative.com` y raíz
+  del subdominio → `ia.goblincreative.com/web`. PHP 8.4 y límites: handler en
+  `~/ia.goblincreative.com/.htaccess`, `web/.user.ini` y `web/php.ini`
+  (los tres ignorados en git).
+- **Fase 3C** (hecha): verificado desde fuera (PHP 8.4.25, 600M/256M, login,
+  rutas sensibles en 404), acceso admin, cron cada 5 min con drush.
+  Pendiente: forzar HTTPS en cPanel y confirmar la línea del crontab.
+
+### Desplegar una mejora
+
+```bash
+source ~/.ia-goblin.env
+cd ~/ia.goblincreative.com
+git pull
+composer install --no-dev -o      # solo si cambió composer.lock
+drush updb -y
+drush cim -y
+drush cr
+git status --short                # debe salir vacío
+```
+
+Las claves escritas en la Configuración del módulo **no se pierden** con
+`drush cim` (viven en el State, no en `config/sync`).
 
 ### Lecciones del primer despliegue
 
+- **Respetar la estructura del servidor que ya preparó el equipo** (la
+  carpeta del dominio) y preguntar antes de decidir rutas.
 - Con la Terminal web de cPanel, pegar dentro de `read -s` no funciona y
   pegar varias líneas hace que `read` se trague las siguientes. Para
   secretos: generarlos en el servidor (como la contraseña de la base) o
@@ -125,4 +149,4 @@ Instalación limpia desde la configuración, como en el servidor:
 
 | Fecha | Commit | Resultado | Notas |
 |-------|--------|-----------|-------|
-| — | — | — | — |
+| 2026-09-30 | `4c590f2` | Instalado y funcionando | Primer despliegue (fases 0–3C) |

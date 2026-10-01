@@ -78,8 +78,8 @@ restaurar. Instrucciones en la cabecera del script.
 
 ## Requisitos para que funcione en vivo
 
-- Clave de OpenAI configurada (en `settings.local.php`, nunca en la interfaz;
-  ver README del proyecto).
+- Clave de OpenAI escrita en la Configuración del módulo (se guarda fuera de
+  `config/sync` y sobrevive a los despliegues; ver README del proyecto).
 - Leads activados (hecho, en `config/sync`) y **números de WhatsApp del
   equipo** para recibir los avisos (pendiente).
 - Una cuenta de WhatsApp del cliente Goblin con este bot asignado

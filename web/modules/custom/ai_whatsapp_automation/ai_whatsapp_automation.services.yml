@@ -209,3 +209,17 @@ services:
       - '@config.factory'
       - '@file_url_generator'
       - '@entity_type.manager'
+
+  # Provider credentials saved from the settings form live in State, not in
+  # exported config; the override keeps every reader using config as before.
+  ai_whatsapp_automation.secrets:
+    class: Drupal\ai_whatsapp_automation\Infrastructure\Secrets\SecretStore
+    arguments:
+      - '@state'
+
+  ai_whatsapp_automation.secrets_config_override:
+    class: Drupal\ai_whatsapp_automation\Infrastructure\Secrets\SecretsConfigOverride
+    arguments:
+      - '@ai_whatsapp_automation.secrets'
+    tags:
+      - { name: config.factory.override, priority: 5 }

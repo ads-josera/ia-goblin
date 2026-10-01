@@ -62,12 +62,22 @@ Sitio: https://ia-goblin.ddev.site
   SES. Las credenciales de SES van en `settings.local.php`, nunca en la
   configuración.
 
-## Secretos: dónde NO van
+## Secretos: dónde van
 
-El módulo guarda las API keys (OpenAI, Twilio, WhatsApp, Evolution) en su
-configuración `ai_whatsapp_automation.settings`. Si se escriben en el
-formulario y luego se ejecuta `drush cex`, **acaban en git**. Deben ir como
-sobrescritura en `settings.local.php`:
+Las claves generales del módulo (OpenAI, token de Twilio, WhatsApp Cloud,
+Evolution) **se escriben en su pantalla de Configuración**
+(`/admin/config/services/ai-whatsapp-automation`). El módulo las guarda en el
+State de Drupal, no en la configuración: `drush cex` no las exporta a git y
+`drush cim` (cada despliegue) no las borra. El código las sigue leyendo de
+`ai_whatsapp_automation.settings` como siempre
+(`src/Infrastructure/Secrets/`).
+
+Las credenciales **por cuenta de WhatsApp** (Twilio SID/token, instancia de
+Evolution) siguen en cada cuenta, como antes; son contenido y tampoco viajan
+con los despliegues.
+
+Opcional: una clave escrita en `settings.local.php` gana sobre la del
+formulario (así está la de pruebas en local):
 
 ```php
 $config['ai_whatsapp_automation.settings']['openai']['api_key'] = '...';
