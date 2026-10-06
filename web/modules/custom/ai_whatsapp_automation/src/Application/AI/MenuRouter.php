@@ -30,6 +30,15 @@ final class MenuRouter {
   private const DEFAULT_INTRO = 'Hola, ¿con qué área quieres hablar?';
 
   /**
+   * What the area bot reads instead of a bare option number.
+   *
+   * "2" alone, after an older numbered list in the same conversation, was
+   * read as option 2 of that list ("Renovación") instead of the area. The
+   * stored message stays "2": only the model gets this sentence.
+   */
+  private const CHOICE_NOTE = '(El cliente eligió «%s» en el menú de áreas de Goblin Creative. Salúdalo brevemente y pregúntale en qué le ayudas dentro de esta área. El número que escribió no es una opción de ninguna lista anterior de esta conversación.)';
+
+  /**
    * Shown below the options.
    */
   private const FOOTER = 'Responde con el número. Escribe «menú» en cualquier momento para volver a estas opciones.';
@@ -49,35 +58,41 @@ final class MenuRouter {
    * @param string $message
    *   What the contact wrote.
    *
-   * @return array{bot: \Drupal\Core\Entity\ContentEntityInterface, menu: string}
-   *   The bot that handles the message, and the menu text when the menu is
-   *   the answer (empty string otherwise). The conversation is saved when its
-   *   bot changes.
+   * @return array{bot: \Drupal\Core\Entity\ContentEntityInterface, menu: string, message: string}
+   *   The bot that handles the message; the menu text when the menu is the
+   *   answer (empty string otherwise); and the message the model must read,
+   *   which is a description of the choice when an area was picked by its
+   *   number. The conversation is saved when its bot changes.
    */
   public function route(ContentEntityInterface $conversation, ContentEntityInterface $bot, string $message): array {
     $reception = $this->reception($conversation, $bot);
     if ($reception === NULL) {
-      return ['bot' => $bot, 'menu' => ''];
+      return ['bot' => $bot, 'menu' => '', 'message' => $message];
     }
 
     $options = $this->options($reception);
     if ($bot->id() !== $reception->id()) {
       if ($this->normalize($message) !== self::MENU_WORD) {
-        return ['bot' => $bot, 'menu' => ''];
+        return ['bot' => $bot, 'menu' => '', 'message' => $message];
       }
       $this->assign($conversation, $reception, $reception);
 
-      return ['bot' => $reception, 'menu' => $this->menuText($reception, $options)];
+      return ['bot' => $reception, 'menu' => $this->menuText($reception, $options), 'message' => $message];
     }
 
     $chosen = $this->match($message, $options);
     if ($chosen !== NULL) {
       $this->assign($conversation, $chosen, $reception);
+      $by_number = (bool) preg_match('/^\d{1,2}$/', $this->normalize($message));
 
-      return ['bot' => $chosen, 'menu' => ''];
+      return [
+        'bot' => $chosen,
+        'menu' => '',
+        'message' => $by_number ? sprintf(self::CHOICE_NOTE, $this->label($chosen)) : $message,
+      ];
     }
 
-    return ['bot' => $reception, 'menu' => $this->menuText($reception, $options)];
+    return ['bot' => $reception, 'menu' => $this->menuText($reception, $options), 'message' => $message];
   }
 
   /**
@@ -189,12 +204,18 @@ final class MenuRouter {
   private function menuText(ContentEntityInterface $reception, array $options): string {
     $lines = [];
     foreach ($options as $number => $area_bot) {
-      $label = trim($this->fieldValue($area_bot, 'menu_label')) ?: (string) $area_bot->label();
-      $lines[] = $this->keycap($number) . ' ' . $label;
+      $lines[] = $this->keycap($number) . ' ' . $this->label($area_bot);
     }
     $intro = trim($this->fieldValue($reception, 'menu_message')) ?: self::DEFAULT_INTRO;
 
     return $intro . "\n\n" . implode("\n", $lines) . "\n\n" . self::FOOTER;
+  }
+
+  /**
+   * How an area bot appears in the menu.
+   */
+  private function label(ContentEntityInterface $area_bot): string {
+    return trim($this->fieldValue($area_bot, 'menu_label')) ?: (string) $area_bot->label();
   }
 
   /**

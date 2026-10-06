@@ -177,6 +177,9 @@ final class ReceptionMenuTest extends KernelTestBase {
     $this->assertSame(1, $this->openAiCalls());
     $this->assertStringContainsString('PROMPT-SOPORTE', $this->lastOpenAiBody());
     $this->assertStringNotContainsString('PROMPT-FACTURACION', $this->lastOpenAiBody());
+    // A bare "2" after an older numbered list was read as option 2 of that
+    // list: the model is told it is the area choice instead.
+    $this->assertStringContainsString('El cliente eligió «Soporte técnico» en el menú de áreas', $this->lastOpenAiInput());
 
     // From now on support answers; its lead notifies support's person only.
     $this->assistantReplies = ["Datos capturados:\nNombre: Ana Ruiz\nCelular: 5512345678"];
@@ -198,6 +201,9 @@ final class ReceptionMenuTest extends KernelTestBase {
     $this->send('SM1', 'Necesito mi FACTURA de septiembre');
     $this->assertSame('billing', $this->currentBot());
     $this->assertStringContainsString('PROMPT-FACTURACION', $this->lastOpenAiBody());
+    // Reached by a keyword: the model reads what the contact wrote.
+    $this->assertStringContainsString("Incoming WhatsApp message:\nNecesito mi FACTURA de septiembre", $this->lastOpenAiInput());
+    $this->assertStringNotContainsString('menú de áreas', $this->lastOpenAiInput());
 
     // "Menú", with any accent or capitals, returns to the menu without AI.
     $calls = $this->openAiCalls();
@@ -328,6 +334,13 @@ final class ReceptionMenuTest extends KernelTestBase {
     }
 
     return $body;
+  }
+
+  /**
+   * Returns the conversation text of the last request sent to OpenAI.
+   */
+  private function lastOpenAiInput(): string {
+    return (string) (json_decode($this->lastOpenAiBody(), TRUE)['input'] ?? '');
   }
 
   /**

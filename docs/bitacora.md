@@ -61,6 +61,28 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-05 — El «2» del menú se leía como opción de una lista vieja
+
+**Encontrado por el equipo** (en local): en una conversación del 30 de
+septiembre que ya tenía una lista numerada donde «2» era «Renovación», el
+cliente escribió «2» en el menú. El menú **sí** pasó la conversación a
+Soporte, pero Soporte recibió el «2» suelto con ese historial y respondió
+sobre «Renovación». Puede pasar en producción con un cliente que vuelve días
+después.
+
+**Qué se hizo:** cuando el área se elige por número, el modelo recibe «El
+cliente eligió «Soporte técnico» en el menú de áreas…» en lugar del número.
+En el historial queda el «2» tal cual (el operador ve lo que escribió el
+cliente). Si el área se eligió por palabra clave, el modelo recibe el
+mensaje original.
+
+**Comprobado:** prueba nueva en `ReceptionMenuTest` (falla si se quita el
+arreglo: sabotaje hecho); en vivo con OpenAI sobre esa misma conversación
+(copia restaurada): «menú» → menú; «2» → Soporte saluda y pregunta el tipo de
+problema. 172 pruebas OK.
+
+---
+
 ## 2026-10-05 — Un bot por área: recepción con menú, Facturación y Soporte
 
 **Petición del equipo:** separar el bot Goblin por áreas en el mismo número

@@ -113,7 +113,7 @@ final class ConversationEngineService {
       return $this->answerUnintelligible($conversation, $bot, $incoming);
     }
 
-    $prompt_data = $this->promptBuilder->build($bot, $conversation, $incoming_message);
+    $prompt_data = $this->promptBuilder->build($bot, $conversation, $route['message']);
     $response = $this->openAIService->sendPrompt(
       (string) $prompt_data['prompt'],
       $prompt_data['model'] ?? NULL,
