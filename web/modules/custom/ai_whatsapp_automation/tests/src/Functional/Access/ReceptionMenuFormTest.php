@@ -89,6 +89,22 @@ final class ReceptionMenuFormTest extends BrowserTestBase {
     $this->assertStringContainsString("1\u{FE0F}\u{20E3} Facturación", $menu);
     $this->assertStringContainsString("2\u{FE0F}\u{20E3} Soporte", $menu);
 
+    // The routing table says the number hands over to the areas, and that
+    // the reception answers without the AI. Labels are text, never markup.
+    $support->set('menu_label', 'Soporte <em>técnico</em>')->save();
+    $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_account')->create([
+      'name' => 'WhatsApp Goblin',
+      'client' => $own->id(),
+      'provider' => 'twilio',
+      'phone_number' => '+5215550009999',
+      'status' => 'active',
+      'bot' => $reception->id(),
+    ])->save();
+    $this->drupalGet('admin/content/ai-whatsapp/routing');
+    $this->assertSession()->pageTextContains('Menú: Facturación · Soporte <em>técnico</em>');
+    $this->assertSession()->responseNotContains('<em>técnico</em>');
+    $this->assertSession()->pageTextContains('Menú, sin IA');
+
     // Another client's bot cannot be offered in this client's menu.
     $this->drupalGet($edit_url);
     $this->submitForm([

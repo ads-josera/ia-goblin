@@ -1,5 +1,7 @@
 # Acuerdos de trabajo — IA Goblin
 
+- Al empezar cada sesión, **cargar la skill `jarvis`** antes de cualquier
+  trabajo (decisión del equipo, 2026-10-05).
 - Al empezar, leer [docs/bitacora.md](docs/bitacora.md): la sección «Dónde
   quedamos» dice el estado actual y los pendientes.
 - Todo trabajo se documenta: una entrada nueva en la bitácora (qué, por qué,

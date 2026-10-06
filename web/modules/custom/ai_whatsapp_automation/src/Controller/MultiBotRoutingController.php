@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_whatsapp_automation\Controller;
 
 use Drupal\ai_whatsapp_automation\Application\AI\BotManagerService;
+use Drupal\ai_whatsapp_automation\Application\AI\MenuRouter;
 use Drupal\ai_whatsapp_automation\Ui\ResponsiveTable;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
@@ -24,6 +25,7 @@ final class MultiBotRoutingController extends ControllerBase {
   public function __construct(
     private readonly EntityTypeManagerInterface $automationEntityTypeManager,
     private readonly BotManagerService $botManager,
+    private readonly MenuRouter $menuRouter,
   ) {
   }
 
@@ -34,6 +36,7 @@ final class MultiBotRoutingController extends ControllerBase {
     return new self(
       $container->get('entity_type.manager'),
       $container->get('ai_whatsapp_automation.bot_manager'),
+      $container->get('ai_whatsapp_automation.menu_router'),
     );
   }
 
@@ -64,6 +67,9 @@ final class MultiBotRoutingController extends ControllerBase {
         ? $this->botManager->getEffectiveKnowledgeBase($bot, $account)
         : NULL;
 
+      // A reception answers with a menu and hands over to its area bots:
+      // without saying so, this row would hide who really answers.
+      $areas = $bot instanceof ContentEntityInterface ? $this->menuRouter->areaLabels($bot) : [];
       $client = $account->get('client')->entity ?? ($bot instanceof ContentEntityInterface ? $bot->get('client')->entity : NULL);
       $provider = $this->fieldValue($account, 'provider');
       // Incoming messages are only routed to active or connected accounts.
@@ -94,9 +100,22 @@ final class MultiBotRoutingController extends ControllerBase {
               : $this->providerLabel($provider),
           ),
         ],
-        'bot' => $bot instanceof ContentEntityInterface ? $bot->toLink() : $this->t('Sin bot activo'),
+        'bot' => match (TRUE) {
+          !$bot instanceof ContentEntityInterface => $this->t('Sin bot activo'),
+          $areas === [] => $bot->toLink(),
+          default => [
+            'data' => $this->stacked(
+              $bot->toLink()->toRenderable(),
+              $this->t('Menú: @areas', ['@areas' => implode(' · ', $areas)]),
+            ),
+          ],
+        },
         'model' => [
-          'data' => $bot instanceof ContentEntityInterface ? ($this->botManager->getEffectiveModel($bot, $account) ?: $this->t('Predeterminado')) : '',
+          'data' => match (TRUE) {
+            !$bot instanceof ContentEntityInterface => '',
+            $areas !== [] => $this->t('Menú, sin IA'),
+            default => $this->botManager->getEffectiveModel($bot, $account) ?: $this->t('Predeterminado'),
+          },
           'class' => ['ai-whatsapp-routing-table__model'],
         ],
         'knowledge_base' => $knowledge_base instanceof ContentEntityInterface ? $knowledge_base->toLink() : $this->t('Ninguna'),

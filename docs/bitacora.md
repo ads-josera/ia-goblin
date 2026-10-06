@@ -45,7 +45,7 @@ lo **no comprobado**.
 
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
-| 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
+| 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model», sección «Reception menu»); de paso, ocultar «Menu areas» en los bots de área | Media |
 | 2 | Bots por área: desplegar Facturación y Soporte; crear Ventas (prompt con el equipo); números de cada encargado en su bot | Alta |
 | 2c | Prompt de Soporte: ofreció «revisar los registros MX» si le dan el dominio, algo que no puede hacer (viene del prompt original) | Media |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
@@ -58,6 +58,32 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-05 — Revisión con la cuenta del Gestor; Enrutamiento muestra las áreas
+
+Con la skill Jarvis cargada (acuerdo nuevo: se carga al iniciar cada sesión,
+ver `CLAUDE.md`) se recorrieron con la cuenta **demo-gestor** las pantallas
+que cambian con los bots de área: lista de bots, formulario de la recepción y
+de un área, Enrutamiento, integración web de un área.
+
+**Encontrado y arreglado:** en Enrutamiento, una cuenta con la recepción
+decía solo «Goblin»: no se veía que el número reparte a dos áreas ni que la
+recepción no usa IA. Ahora la celda del bot dice «Menú: Facturación y
+atención comercial · Soporte técnico» y la de modelo «Menú, sin IA».
+
+**Comprobado:** prueba funcional con la cuenta del Gestor (incluye que un
+nombre con HTML se muestra como texto); sabotaje (sin el cambio, falla);
+captura en escritorio y en móvil (la tabla se desplaza dentro de su
+contenedor, la página no); 172 pruebas OK; `phpcs` sin observaciones nuevas.
+Cuenta temporal de la captura creada y borrada en local.
+
+**Visto y anotado, sin cambiar:** los textos de la sección «Reception menu»
+están en inglés como el resto del formulario del bot (pendiente 1); un bot de
+área también muestra «Menu areas» vacío (no rompe nada; mejorar cuando se
+traduzca el formulario). La integración web de un bot de área dice que su
+chat está apagado: correcto, se entra por la recepción.
 
 ---
 

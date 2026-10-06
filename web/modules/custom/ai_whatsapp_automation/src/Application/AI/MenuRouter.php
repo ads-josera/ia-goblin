@@ -103,6 +103,16 @@ final class MenuRouter {
   }
 
   /**
+   * The area labels of a reception, in menu order (empty for a normal bot).
+   *
+   * @return string[]
+   *   Labels keyed by option number.
+   */
+  public function areaLabels(ContentEntityInterface $reception): array {
+    return array_map($this->label(...), $this->options($reception));
+  }
+
+  /**
    * The menu a reception bot shows, for the web chat welcome or previews.
    */
   public function menuFor(ContentEntityInterface $reception): string {
