@@ -24,7 +24,8 @@ lo **no comprobado**.
   recepción con menú (sin IA) y hay dos bots de área, **Goblin Facturación**
   y **Goblin Soporte**, cada uno con su prompt y sus números de aviso. Probado
   (pruebas automáticas, sabotaje, prueba en vivo con OpenAI). **Desplegado
-  en producción** (`4e6c8c9`). Falta: probarlo en el chat web de producción
+  en producción** (`4e6c8c9`, y `2c38c80` con el arreglo del «2» y las áreas
+  en Enrutamiento). Falta: probarlo en el chat web de producción
   (incluye la prueba del lead) y que el equipo revise los encabezados de área
   de los prompts.
 - **Siguiente:** prompt de **Ventas** con el equipo (se agrega como tercer
