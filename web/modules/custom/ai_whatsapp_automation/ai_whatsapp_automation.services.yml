@@ -35,6 +35,11 @@ services:
       - '@ai_whatsapp_automation.unintelligible_message_detector'
       - '@config.factory'
       - '@logger.factory'
+      - '@ai_whatsapp_automation.menu_router'
+
+  ai_whatsapp_automation.menu_router:
+    class: Drupal\ai_whatsapp_automation\Application\AI\MenuRouter
+    arguments: ['@transliteration']
 
   ai_whatsapp_automation.web_chat:
     class: Drupal\ai_whatsapp_automation\Application\WebChat\WebChatService

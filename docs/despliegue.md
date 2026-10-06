@@ -136,6 +136,18 @@ git status --short                # debe salir vacío
 Las claves escritas en la Configuración del módulo **no se pierden** con
 `drush cim` (viven en el State, no en `config/sync`).
 
+### Bots por área (2026-10-05)
+
+Además de los pasos de arriba, después de `drush cr`:
+
+```bash
+drush php:script scripts/bots/goblin.php
+```
+
+Debe decir `Created bot "Goblin Facturación"`, `Created bot "Goblin
+Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
+`11042` (campos del menú). El enlace del chat web no cambia.
+
 ### Lecciones del primer despliegue
 
 - **Respetar la estructura del servidor que ya preparó el equipo** (la

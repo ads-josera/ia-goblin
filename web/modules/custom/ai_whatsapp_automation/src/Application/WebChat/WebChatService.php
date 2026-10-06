@@ -282,9 +282,13 @@ final class WebChatService {
     $day_start = (new \DateTimeImmutable('today'))->getTimestamp();
     $daily_conversation_limit = $this->integerField($bot, 'web_widget_daily_conversation_limit', 50);
     if ($is_new_conversation && $daily_conversation_limit > 0) {
-      $count = $this->entityTypeManager->getStorage('ai_whatsapp_conversation')->getQuery()
-        ->accessCheck(FALSE)
-        ->condition('bot', $bot->id())
+      // Conversations handed to an area bot still started on this one.
+      $query = $this->entityTypeManager->getStorage('ai_whatsapp_conversation')->getQuery()
+        ->accessCheck(FALSE);
+      $count = $query
+        ->condition($query->orConditionGroup()
+          ->condition('bot', $bot->id())
+          ->condition('reception_bot', $bot->id()))
         ->condition('provider', 'web')
         ->condition('created', $day_start, '>=')
         ->count()
@@ -307,7 +311,10 @@ final class WebChatService {
     $query = $this->database->select('ai_whatsapp_message', 'message');
     $query->join('ai_whatsapp_conversation', 'conversation', 'conversation.id = message.conversation');
     $query->addExpression('COALESCE(SUM(message.cost), 0)', 'total_cost');
-    $query->condition('conversation.bot', $bot_id);
+    // Area bots reached from this bot's menu spend this bot's budget.
+    $query->condition($query->orConditionGroup()
+      ->condition('conversation.bot', $bot_id)
+      ->condition('conversation.reception_bot', $bot_id));
     $query->condition('conversation.provider', 'web');
     $query->condition('message.sender', 'ai');
     $query->condition('message.created', $day_start, '>=');

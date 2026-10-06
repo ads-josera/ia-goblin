@@ -382,7 +382,11 @@ final class WebhookProcessorService {
   }
 
   /**
-   * Returns account-specific notification numbers or the global fallback.
+   * Returns every number that receives this account's lead notifications.
+   *
+   * The account's numbers (or the global ones), plus the numbers of its bot
+   * and of the area bots of its menu: a person in charge of one area who
+   * writes to the shared number must not be answered as a customer.
    *
    * @return string[]
    *   Configured WhatsApp numbers.
@@ -391,6 +395,19 @@ final class WebhookProcessorService {
     $raw = $this->fieldValue($account, 'lead_notification_numbers');
     if ($raw === '') {
       $raw = (string) $this->setting('options.lead_notification_numbers');
+    }
+
+    $bot = $account->hasField('bot') ? $account->get('bot')->entity : NULL;
+    if ($bot instanceof ContentEntityInterface) {
+      $bots = [$bot];
+      if ($bot->hasField('menu_bots')) {
+        $bots = array_merge($bots, $bot->get('menu_bots')->referencedEntities());
+      }
+      foreach ($bots as $notified_bot) {
+        if ($notified_bot instanceof ContentEntityInterface) {
+          $raw .= "\n" . $this->fieldValue($notified_bot, 'lead_notification_numbers');
+        }
+      }
     }
 
     return array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', $raw) ?: [])));

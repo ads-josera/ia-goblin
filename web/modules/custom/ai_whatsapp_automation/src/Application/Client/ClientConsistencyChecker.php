@@ -25,6 +25,7 @@ final class ClientConsistencyChecker {
     'ai_whatsapp_bot' => [
       'knowledge_base' => 'La base de conocimiento',
       'lead_notification_account' => 'La cuenta de notificación',
+      'menu_bots' => 'El bot del menú',
     ],
     'ai_whatsapp_account' => [
       'bot' => 'El bot',
@@ -50,15 +51,18 @@ final class ClientConsistencyChecker {
       if ($entity->getEntityTypeId() === 'ai_whatsapp_account' && $field_name === 'bot' && $entity->get('client')->isEmpty()) {
         continue;
       }
-      $referenced = $entity->hasField($field_name) ? $entity->get($field_name)->entity : NULL;
-      $referenced_client = $referenced instanceof ContentEntityInterface ? $this->effectiveClient($referenced) : NULL;
-      if ($referenced_client !== NULL && $referenced_client->id() !== $client->id()) {
-        $conflicts[$field_name] = $this->t('@label «@referenced» pertenece al cliente «@other», pero este registro es del cliente «@client». Elige uno del mismo cliente.', [
-          '@label' => $label,
-          '@referenced' => $referenced->label(),
-          '@other' => $referenced_client->label(),
-          '@client' => $client->label(),
-        ]);
+      $referenced_entities = $entity->hasField($field_name) ? $entity->get($field_name)->referencedEntities() : [];
+      foreach ($referenced_entities as $referenced) {
+        $referenced_client = $referenced instanceof ContentEntityInterface ? $this->effectiveClient($referenced) : NULL;
+        if ($referenced_client !== NULL && $referenced_client->id() !== $client->id()) {
+          $conflicts[$field_name] = $this->t('@label «@referenced» pertenece al cliente «@other», pero este registro es del cliente «@client». Elige uno del mismo cliente.', [
+            '@label' => $label,
+            '@referenced' => $referenced->label(),
+            '@other' => $referenced_client->label(),
+            '@client' => $client->label(),
+          ]);
+          break;
+        }
       }
     }
 

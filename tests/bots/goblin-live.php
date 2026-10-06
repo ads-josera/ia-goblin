@@ -2,8 +2,11 @@
 
 /**
  * @file
- * Live test of the Goblin bot against the real OpenAI API.
+ * Live test of the Goblin bots against the real OpenAI API.
  *
+ * Conversations start on the "Goblin" reception, like real ones: a scenario
+ * with "area" first answers the menu with that option, so its turns reach
+ * the area bot; without "area" the reception's menu is part of the test.
  * Same steps as WebhookProcessorService for each message, except the
  * provider send: save incoming, AI only while AI_ACTIVE, lead handoff check.
  * Scenarios: goblin-live.json. It spends OpenAI tokens and writes
@@ -38,7 +41,8 @@ foreach ($scenarios as $i => $s) {
   ]);
   $conversation->save();
   $log = ['scenario' => $s['name'], 'turns' => []];
-  foreach ($s['turns'] as $text) {
+  $turns = isset($s['area']) ? array_merge([$s['area']], $s['turns']) : $s['turns'];
+  foreach ($turns as $text) {
     $incoming = $etm->getStorage('ai_whatsapp_message')->create(['conversation' => $conversation->id(), 'sender' => 'contact', 'content' => $text]);
     $incoming->save();
     $conversation = $etm->getStorage('ai_whatsapp_conversation')->load($conversation->id());

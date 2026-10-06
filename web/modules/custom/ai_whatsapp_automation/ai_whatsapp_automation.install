@@ -1199,6 +1199,37 @@ function ai_whatsapp_automation_update_11041(): string {
 }
 
 /**
+ * Adds reception menus (one WhatsApp number, one bot per area).
+ *
+ * A bot with menu areas answers with a numbered menu and hands the
+ * conversation to the chosen bot; the conversation remembers its reception
+ * so "menú" can go back to it. Bots also get their own lead notification
+ * numbers, so each area notifies its own people.
+ */
+function ai_whatsapp_automation_update_11042(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+  $fields = [
+    'ai_whatsapp_bot' => ['menu_bots', 'menu_message', 'menu_label', 'menu_keywords', 'lead_notification_numbers'],
+    'ai_whatsapp_conversation' => ['reception_bot'],
+  ];
+  $installed = [];
+  foreach ($fields as $entity_type_id => $field_names) {
+    $definitions = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    foreach ($field_names as $field_name) {
+      if ($definition_update_manager->getFieldStorageDefinition($field_name, $entity_type_id) === NULL) {
+        $definition_update_manager->installFieldStorageDefinition($field_name, $entity_type_id, 'ai_whatsapp_automation', $definitions[$field_name]);
+        $installed[] = $entity_type_id . '.' . $field_name;
+      }
+    }
+  }
+
+  return $installed === []
+    ? (string) t('Reception menu fields already existed.')
+    : (string) t('Reception menu fields added: @fields.', ['@fields' => implode(', ', $installed)]);
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]

@@ -1,11 +1,44 @@
-# Bot «Goblin» — cliente Goblin
+# Bots de Goblin — una recepción y un bot por área
+
+Un solo número de WhatsApp y un solo enlace de chat web. El cliente ve un
+menú y elige el área; desde ahí lo atiende el bot de esa área, con su propio
+prompt y sus propios encargados.
+
+| Bot | Qué hace |
+|-----|----------|
+| **Goblin** (recepción) | Responde con el menú **sin llamar a la IA**. Está asignado a la cuenta de WhatsApp y tiene el chat web, así que el enlace no cambió |
+| **Goblin Facturación** | Pagos, facturas, renovaciones, cancelaciones, cotizaciones, asesor |
+| **Goblin Soporte** | Correo, cPanel / hosting, dominios y DNS |
+
+Cómo se mueve el cliente:
+
+- **«hola» o cualquier cosa** en la recepción → el menú (1️⃣ Facturación y
+  atención comercial, 2️⃣ Soporte técnico).
+- **El número** (`1`, `2`, `1️⃣`…) → pasa al bot de esa área, que contesta ese
+  mismo mensaje.
+- **Una palabra clave** de un solo área («necesito mi factura») → pasa directo.
+  Si coinciden dos áreas («cancelar mi hosting») se muestra el menú en lugar
+  de adivinar.
+- **«menú»** (sin importar acentos o mayúsculas, como mensaje completo) → vuelve
+  a la recepción. «no encuentro el menú de cPanel» no cuenta: es una pregunta.
+- Si en un área le preguntan algo de la otra, el bot le indica escribir
+  «menú».
 
 | Archivo | Qué es |
 |---------|--------|
-| [prompt.md](prompt.md) | El prompt maestro. **La fuente de verdad**: se edita aquí |
-| [../../../scripts/bots/goblin.php](../../../scripts/bots/goblin.php) | Crea o actualiza el bot con ese prompt y su configuración de leads |
+| [comun.md](comun.md) | Parte común de los dos bots de área (identidad, datos del lead, escalamiento, seguridad, estilo…) |
+| [facturacion.md](facturacion.md) | Lo propio de Facturación, con un encabezado que dice qué atiende |
+| [soporte.md](soporte.md) | Lo propio de Soporte, con su encabezado |
+| [prompt-maestro-original.md](prompt-maestro-original.md) | El prompt único de antes, **solo como referencia**: ya no se carga en ningún bot |
+| [../../../scripts/bots/goblin.php](../../../scripts/bots/goblin.php) | Crea o actualiza los tres bots y el menú |
 
-## Cargar o actualizar el bot
+Prompt de cada área = `comun.md` + el archivo del área. Se separó el prompt
+maestro **sin reescribirlo**: mismas secciones, con su número original. Ya no
+se usan la 2 (bienvenida) ni la 20 (menú), que ahora muestra la recepción, ni
+la 3 (regla del menú) y la 19 (flujo general), porque la clasificación ahora
+la hace el menú. Lo único nuevo es el encabezado de cada área.
+
+## Cargar o actualizar los bots
 
 ```bash
 ddev drush php:script scripts/bots/goblin.php     # local
@@ -13,18 +46,34 @@ drush php:script scripts/bots/goblin.php          # servidor
 ```
 
 Los bots son **contenido**, no configuración: no viajan con `config/sync`.
-Este script es cómo el bot llega a cada entorno. Crea el bot si no existe y,
-si existe, actualiza solo el prompt y los leads; lo demás (límites, chat web,
-notificaciones) se respeta si se cambió desde la interfaz.
+Este script es cómo llegan a cada entorno. Crea los bots si no existen y, si
+existen, actualiza solo prompts, menú y reglas de leads; lo demás (límites,
+dominios, **números de aviso**) se respeta si se cambió desde la interfaz.
+Se puede correr las veces que haga falta.
 
-Si se edita el prompt desde la interfaz, hay que copiarlo también a
-`prompt.md`, o la siguiente ejecución del script lo sobrescribe.
+Si se edita un prompt desde la interfaz, hay que copiarlo también al archivo
+del área, o la siguiente ejecución del script lo sobrescribe.
+
+## Avisos de leads por área
+
+Cada bot de área tiene su campo **«Lead notification WhatsApp numbers»**
+(sección *Lead handoff* del bot): ahí van los números del encargado de esa
+área. Si está vacío, se usan los de la cuenta de WhatsApp o los generales.
+Esos números tampoco reciben respuestas de la IA si escriben al número de
+Goblin.
+
+## Configurar un menú desde la interfaz
+
+En el bot de recepción, sección **«Reception menu»**: «Menu areas» (los bots
+del menú, en orden: el primero es la opción 1) y «Menu message» (el texto
+sobre las opciones). En cada bot de área: «Menu label» (cómo aparece en el
+menú) y «Menu keywords». Solo se pueden poner bots del mismo cliente.
 
 ## Cómo se crea un lead
 
-El bot no crea leads: los crea el módulo (`LeadHandoffService`) cuando en la
-conversación hay **un contacto**, **al menos 3 de estas señales** y **una
-frase de cierre** del bot.
+Los bots no crean leads: los crea el módulo (`LeadHandoffService`) cuando en
+la conversación hay **un contacto**, **al menos 3 de estas señales** y **una
+frase de cierre** del bot de área (la recepción nunca crea leads).
 
 | Señal | Palabras |
 |-------|----------|
@@ -40,7 +89,7 @@ el bot todavía está pidiendo datos, ese bloque no existe y no se crea el lead
 antes de tiempo.
 
 Al crearse un lead, la conversación pasa a **atención humana** (la IA deja de
-responder en ella) y se avisa por WhatsApp a los números de notificación.
+responder en ella) y se avisa por WhatsApp a los números del área.
 
 ## Reglas de canalización (además del prompt)
 
@@ -58,13 +107,15 @@ Salieron de la prueba en vivo:
 
 ## Chat web
 
-`https://<sitio>/ai-whatsapp-automation/chat/<token>` (token en el bot,
-sección avanzada del chat web). El script lo deja encendido, con el nombre
-«Goblin», la bienvenida del prompt, español y color `#065885` (las burbujas
+`https://<sitio>/ai-whatsapp-automation/chat/<token>` (token en el bot
+«Goblin», sección avanzada del chat web; los bots de área no tienen chat
+propio). El script lo deja encendido, con el nombre «Goblin», el menú como
+bienvenida, español y color `#065885` (las burbujas
 del visitante llevan texto blanco: el naranja no llega a 4.5:1). Límites:
 **20 mensajes por conversación cada 15 minutos** (decisión del equipo: un caso
 de soporte normal necesitó 9 y el valor por defecto, 8, lo cortaba), 50
-conversaciones y 1.50 USD al día. Al llegar a un límite el chat muestra el
+conversaciones y 1.50 USD al día, contando también lo que gastan los bots de
+área en conversaciones que empezaron en este chat. Al llegar a un límite el chat muestra el
 motivo («Intenta nuevamente en unos minutos»).
 
 Para volver a probar desde cero: abrir el chat en una ventana privada (la
@@ -82,8 +133,27 @@ restaurar. Instrucciones en la cabecera del script.
   `config/sync` y sobrevive a los despliegues; ver README del proyecto).
 - Leads activados (hecho, en `config/sync`) y **números de WhatsApp del
   equipo** para recibir los avisos (pendiente).
-- Una cuenta de WhatsApp del cliente Goblin con este bot asignado
-  (Enrutamiento).
+- Una cuenta de WhatsApp del cliente Goblin con el bot **Goblin** (recepción)
+  asignado (Enrutamiento).
+- Los números de cada encargado en su bot de área (pendiente).
+
+## Prueba en vivo de los bots separados (2026-10-05, local)
+
+Con OpenAI real, sobre una copia de la base de datos (restaurada después):
+
+| Mensaje | Bot | Resultado |
+|---------|-----|-----------|
+| «hola» | Goblin | Menú, sin IA ✅ |
+| «2» | Soporte | Saluda en Soporte y pregunta el tipo de problema ✅ |
+| «no me llegan los correos…» | Soporte | Preguntas de primer nivel (sección 5) ✅ |
+| «¿y cuánto cuesta renovar mi hosting?» | Soporte | No contesta precios; pide escribir «menú» y elegir 1 ✅ |
+| «menú» | Goblin | Menú, sin IA ✅ |
+| «1», «quiero cancelar mi hosting» | Facturación | Pide nombre, celular y servicio para canalizar ✅ |
+| «necesito mi factura de septiembre» (chat nuevo) | Facturación | Pasa directo por la palabra «factura» ✅ |
+
+Observado, para revisar con el equipo: Soporte dijo «si me das el dominio,
+puedo revisar los registros MX», algo que no puede hacer (viene del prompt
+original, no de la separación).
 
 ## Pruebas hechas (2026-09-30)
 

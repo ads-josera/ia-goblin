@@ -230,6 +230,17 @@ final class Conversation extends ContentEntityBase {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['reception_bot'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Reception bot'))
+      ->setDescription(t('The menu bot this conversation came from. Writing "menú" goes back to it; its web chat limits keep counting this conversation.'))
+      ->setSetting('target_type', 'ai_whatsapp_bot')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('view', [
+        'type' => 'entity_reference_label',
+        'weight' => 66,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
       ->setDisplayOptions('view', [

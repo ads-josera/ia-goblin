@@ -409,7 +409,7 @@ final class LeadHandoffService {
    */
   private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot): array {
     $account = $this->notificationAccount($conversation, $bot);
-    $numbers = $this->notificationNumbers($account);
+    $numbers = $this->notificationNumbers($bot, $account);
     if ($numbers === []) {
       return [];
     }
@@ -593,13 +593,19 @@ final class LeadHandoffService {
   }
 
   /**
-   * Returns configured administrator WhatsApp numbers.
+   * Returns who is notified: the bot's people, the account's, or global.
+   *
+   * With one bot per area on the same number, each area bot lists its own
+   * people; the account and global numbers stay as the fallback.
    *
    * @return string[]
    *   Phone numbers.
    */
-  private function notificationNumbers(?ContentEntityInterface $account): array {
-    $raw = $this->getFieldValue($account, 'lead_notification_numbers');
+  private function notificationNumbers(?ContentEntityInterface $bot, ?ContentEntityInterface $account): array {
+    $raw = $this->getFieldValue($bot, 'lead_notification_numbers');
+    if ($raw === '') {
+      $raw = $this->getFieldValue($account, 'lead_notification_numbers');
+    }
     if ($raw === '') {
       $raw = (string) $this->configFactory
         ->get('ai_whatsapp_automation.settings')
@@ -654,15 +660,30 @@ final class LeadHandoffService {
       return $conversation_account;
     }
 
-    if ($bot instanceof ContentEntityInterface && $bot->hasField('lead_notification_account') && !$bot->get('lead_notification_account')->isEmpty()) {
+    // An area bot reached from a reception menu has no account of its own:
+    // web chat leads go out through the reception's account.
+    $reception = $conversation->hasField('reception_bot') ? $conversation->get('reception_bot')->entity : NULL;
+    foreach ([$bot, $reception] as $candidate) {
+      if ($candidate instanceof ContentEntityInterface) {
+        $account = $this->botNotificationAccount($candidate);
+        if ($account instanceof ContentEntityInterface) {
+          return $account;
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Returns the bot's notification account, or its only active account.
+   */
+  private function botNotificationAccount(ContentEntityInterface $bot): ?ContentEntityInterface {
+    if ($bot->hasField('lead_notification_account') && !$bot->get('lead_notification_account')->isEmpty()) {
       $account = $bot->get('lead_notification_account')->entity;
       if ($account instanceof ContentEntityInterface) {
         return $account;
       }
-    }
-
-    if (!$bot instanceof ContentEntityInterface) {
-      return NULL;
     }
 
     $ids = $this->entityTypeManager

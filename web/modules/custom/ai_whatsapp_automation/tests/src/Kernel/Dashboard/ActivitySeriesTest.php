@@ -127,8 +127,10 @@ final class ActivitySeriesTest extends KernelTestBase {
    * A chosen period returns exactly its days.
    */
   public function testAPeriodReturnsItsOwnDays(): void {
-    $start = (int) strtotime('today') - (2 * 86400);
-    $end = (int) strtotime('today') + 86400;
+    // Calendar days, not 86400-second blocks: on a daylight-saving change a
+    // day lasts 23 or 25 hours (kernel tests run in Australia/Sydney).
+    $start = (int) strtotime('-2 days', (int) strtotime('today'));
+    $end = (int) strtotime('+1 day', (int) strtotime('today'));
     $this->message('a', 'contact', $start + 3600);
 
     $series = $this->service()->getActivitySeries(['start' => $start, 'end' => $end], 0);

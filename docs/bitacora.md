@@ -20,10 +20,14 @@ lo **no comprobado**.
   registro).
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
   **Rotarla al terminar las pruebas** (se compartió por chat).
-- **Siguiente trabajo: separar el bot Goblin en tres** (Facturación, Soporte,
-  Ventas) en el mismo número de WhatsApp, con aviso del lead a cada
-  encargado. Diseño y decisiones en la entrada de abajo. Mañana: crear juntos
-  el prompt de Ventas.
+- **Bots por área hechos en local (2026-10-05):** «Goblin» es ahora una
+  recepción con menú (sin IA) y hay dos bots de área, **Goblin Facturación**
+  y **Goblin Soporte**, cada uno con su prompt y sus números de aviso. Probado
+  (pruebas automáticas, sabotaje, prueba en vivo con OpenAI). **Falta
+  desplegarlo** (comandos en [despliegue.md](despliegue.md), «Bots por área»)
+  y que el equipo revise los encabezados de área de los prompts.
+- **Siguiente:** prompt de **Ventas** con el equipo (se agrega como tercer
+  bot del menú, sin cambiar código) y los números de cada encargado.
 - **También pendiente:** prueba del lead en producción. En una ventana privada
   **nueva**: Soporte técnico → «quiero cancelar mi hosting» → dar nombre y
   celular → el bot cierra con «Datos capturados». Esperado: Conversaciones 2,
@@ -41,7 +45,8 @@ lo **no comprobado**.
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model») | Media |
-| 2 | Bots por área (Facturación, Soporte, Ventas) con recepción por menú y aviso por encargado (ver entrada «Diseño: un bot por área») | Alta |
+| 2 | Bots por área: desplegar Facturación y Soporte; crear Ventas (prompt con el equipo); números de cada encargado en su bot | Alta |
+| 2c | Prompt de Soporte: ofreció «revisar los registros MX» si le dan el dominio, algo que no puede hacer (viene del prompt original) | Media |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
@@ -52,6 +57,74 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-05 — Un bot por área: recepción con menú, Facturación y Soporte
+
+**Petición del equipo:** separar el bot Goblin por áreas en el mismo número
+de WhatsApp, con el aviso del lead a cada encargado. Hoy Facturación y
+Soporte; Ventas después (su prompt se escribe con el equipo).
+
+**Qué se hizo (módulo)**
+
+- `MenuRouter`: un bot con «Menu areas» es una **recepción**. Responde con un
+  menú numerado **sin llamar a la IA** y, cuando el cliente elige (número o
+  palabra clave de un solo área), cambia el bot de la conversación al del
+  área, que contesta ese mismo mensaje. «menú» como mensaje completo regresa
+  a la recepción. Está en `ConversationEngineService`, el punto por donde
+  pasan WhatsApp y chat web.
+- Campos nuevos del bot: `menu_bots`, `menu_message`, `menu_label`,
+  `menu_keywords`, `lead_notification_numbers`; de la conversación:
+  `reception_bot`. Actualización `11042`. Sección «Reception menu» en el
+  formulario del bot.
+- Avisos: números del bot → de la cuenta → generales. Los números de las
+  áreas tampoco reciben respuestas de la IA si escriben al número.
+- Chat web: los límites diarios y el presupuesto de la recepción cuentan
+  también las conversaciones que pasaron a un área.
+- Mismo cliente: un menú no puede ofrecer bots de otro cliente (la
+  validación ahora revisa campos con varios valores).
+- Ruido en la recepción (texto ilegible) sigue la escalera de mensajes
+  ilegibles, que se calla después de dos, en lugar de repetir el menú.
+
+**Qué se hizo (contenido)**
+
+- El prompt maestro se separó **sin reescribirlo** en `comun.md`,
+  `facturacion.md` y `soporte.md` (mismas secciones con su número original).
+  Fuera: 2 y 20 (bienvenida y menú, ahora de la recepción), 3 y 19 (la
+  clasificación la hace el menú). Nuevo: un encabezado por área (qué atiende,
+  no repetir el menú, «menú» para otro tema). **Pendiente que el equipo lo
+  revise.** El original queda como `prompt-maestro-original.md`.
+- `scripts/bots/goblin.php` crea o actualiza los tres bots y el menú (corre
+  como el usuario 1: la validación de referencias exige poder ver los bots).
+  Idempotente: probado dos veces seguidas.
+- `tests/bots/goblin-live.*`: cada escenario elige su área primero.
+
+**Comprobado**
+
+- Pruebas nuevas: `ReceptionMenuTest` (kernel, 5) y `ReceptionMenuFormTest`
+  (funcional, con la cuenta del **Gestor**: arma el menú desde el formulario
+  y no puede poner un bot de otro cliente).
+- Sabotaje: 8 cambios rotos a propósito (sin router, avisos sin números del
+  bot, límite web sin recepción, encargado tratado como cliente, validación
+  solo del primer bot, adivinar con dos áreas, «menú» dentro de una frase,
+  sin validación de cliente en el formulario): todos detectados.
+- Suites completas (módulo, `goblin_portal`, tema): 172 pruebas OK.
+  `phpcs`: ninguna observación nueva en los archivos tocados.
+- En vivo con OpenAI (local, copia restaurada): menú, paso a Soporte,
+  preguntas de primer nivel, Soporte manda los precios a «menú», regreso al
+  menú, Facturación pide datos para cancelar, «necesito mi factura» pasa
+  directo. Detalle en `docs/bots/goblin/README.md`.
+
+**Arreglado de paso:** `ActivitySeriesTest` fallaba desde el 4 de octubre:
+restaba días como bloques de 86400 s y las pruebas de Drupal corren en hora
+de Sídney, que cambió al horario de verano ese día (23 h). La gráfica estaba
+bien (usa días de calendario); se corrigió la prueba.
+
+**No comprobado:** en producción (falta desplegar); WhatsApp real (la cuenta
+de producción todavía no tiene número conectado; probado con Twilio
+simulado); la prueba en vivo completa de 12 escenarios con los bots
+separados.
 
 ---
 

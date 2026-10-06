@@ -312,6 +312,20 @@ final class Bot extends ContentEntityBase {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['lead_notification_numbers'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Lead notification WhatsApp numbers'))
+      ->setDescription(t('WhatsApp numbers of the people in charge of the leads of this bot, one per line. When empty, the WhatsApp account numbers or the global ones are used.'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 51,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'basic_string',
+        'weight' => 51,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['notification_recipient_reply_text'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Notification recipient auto-reply'))
       ->setDescription(t('Message sent when one of this bot\'s lead-notification recipients writes to the WhatsApp number. Leave empty to use the global fallback.'))
@@ -364,6 +378,66 @@ final class Bot extends ContentEntityBase {
       ->setDisplayOptions('view', [
         'type' => 'basic_string',
         'weight' => 55,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['menu_bots'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Menu areas'))
+      ->setDescription(t('Makes this bot a reception: it answers with a numbered menu, without calling the AI, and hands the conversation to the chosen bot. Option 1 is the first bot, option 2 the second. Leave empty for a normal bot.'))
+      ->setSetting('target_type', 'ai_whatsapp_bot')
+      ->setSetting('handler', 'default')
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 53,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'entity_reference_label',
+        'weight' => 53,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['menu_message'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Menu message'))
+      ->setDescription(t('Text shown above the numbered options. Leave empty for a generic greeting.'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 54,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'basic_string',
+        'weight' => 54,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['menu_label'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Menu label'))
+      ->setDescription(t('How this bot appears in a reception menu, for example "Soporte técnico". Defaults to the bot name.'))
+      ->setSetting('max_length', 120)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => 55,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'string',
+        'weight' => 55,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['menu_keywords'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Menu keywords'))
+      ->setDescription(t('Words that send a contact straight to this bot from a reception menu, separated by commas, for example: factura, pago, cobro.'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 56,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'basic_string',
+        'weight' => 56,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);

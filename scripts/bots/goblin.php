@@ -2,24 +2,30 @@
 
 /**
  * @file
- * Creates or updates the "Goblin" bot of the Goblin client.
+ * Creates or updates the Goblin client's bots: a reception and one per area.
+ *
+ * One WhatsApp number and one chat link: the "Goblin" bot is a reception that
+ * answers with a numbered menu (no AI) and hands the conversation to the bot
+ * of the chosen area. Each area bot has its own prompt, lead rules and people
+ * to notify. See docs/bots/goblin/README.md.
  *
  * Bots are content, not configuration: they do not travel with config/sync.
- * This script is how the bot reaches every environment, from the prompt kept
- * in git (docs/bots/goblin/prompt.md):
+ * This script is how they reach every environment, from the prompts kept in
+ * git (docs/bots/goblin/*.md):
  *
  *   drush php:script scripts/bots/goblin.php
  *
- * Idempotent: finds the bot by name and client and updates only the fields
+ * Idempotent: finds each bot by name and client and updates only the fields
  * below; anything else edited in the UI (daily limits and budget, allowed
- * domains, notifications) is left as it is.
+ * domains, notification numbers) is left as it is.
  */
 
 declare(strict_types=1);
 
+use Drupal\Core\Entity\ContentEntityInterface;
+
 $client_name = 'Goblin';
-$bot_name = 'Goblin';
-$prompt_file = DRUPAL_ROOT . '/../docs/bots/goblin/prompt.md';
+$prompt_dir = DRUPAL_ROOT . '/../docs/bots/goblin';
 
 /*
  * How a lead is detected (LeadHandoffService::isLeadReady): a contact, at
@@ -47,7 +53,7 @@ Datos capturados:
 📱 Teléfono / WhatsApp: …
 ✉️ Correo: …
 🌐 Dominio o sitio: …
-🗂️ Categoría: Facturación y atención comercial / Correo electrónico / cPanel y hosting / Dominio y DNS / Otro soporte
+🗂️ Categoría: {categories}
 📝 Descripción: resumen con el contexto completo de la conversación (sección 13)
 
 Listo. Ya tengo la información necesaria para canalizar tu solicitud con nuestro equipo.
@@ -67,10 +73,41 @@ Estas reglas tienen prioridad sobre los ejemplos del prompt:
 RULES;
 
 /*
- * Web chat identity. The primary color paints the visitor's bubbles with
- * white normal-size text, so it must reach 4.5:1: the logo blue #065885
- * gives 7.66:1; the brand orange (3.16:1) would not be readable there.
- * The welcome is the prompt's own (section 2), shown before the first reply.
+ * Area bots, in menu order. Keywords send a contact straight to the area
+ * when exactly one area matches; "cancelar mi hosting" matches both and gets
+ * the menu, which is better than guessing.
+ */
+$areas = [
+  'billing' => [
+    'name' => 'Goblin Facturación',
+    'prompt' => 'facturacion.md',
+    'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, cotizaciones y contacto con un asesor.',
+    'menu_label' => 'Facturación y atención comercial',
+    'menu_keywords' => 'factura, facturas, facturacion, pago, pagos, pagar, cobro, cotizacion, cotizar, precio, precios, asesor, cancelar, cancelacion, suspendida',
+    'categories' => 'Facturación y atención comercial',
+  ],
+  'support' => [
+    'name' => 'Goblin Soporte',
+    'prompt' => 'soporte.md',
+    'description' => 'Goblin Creative, área de soporte técnico: correo, cPanel / hosting, dominios y DNS. Resuelve primer nivel y canaliza con el equipo técnico.',
+    'menu_label' => 'Soporte técnico',
+    'menu_keywords' => 'soporte, correo, correos, outlook, gmail, smtp, imap, cpanel, dominio, dns, ssl',
+    'categories' => 'Correo electrónico / cPanel y hosting / Dominio y DNS / Otro soporte',
+  ],
+];
+
+/*
+ * Reception. Its prompt is never sent to the AI (a reception only answers
+ * with its menu), but the field is required.
+ */
+$reception_prompt = 'Bot de recepción de Goblin Creative. No llama a la IA: responde con el menú de áreas y pasa la conversación al bot del área elegida (Goblin Facturación o Goblin Soporte).';
+$reception_menu_message = "👋 ¡Bienvenido a Goblin Creative!\n\nSi buscas información, una cotización, asesoría sobre nuestros servicios o necesitas soporte, estoy listo para ayudarte.\n\nSelecciona una opción:";
+
+/*
+ * Web chat identity, on the reception (the chat link stays the same). The
+ * primary color paints the visitor's bubbles with white normal-size text, so
+ * it must reach 4.5:1: the logo blue #065885 gives 7.66:1; the brand orange
+ * (3.16:1) would not be readable there.
  */
 $web_widget = [
   'web_widget_enabled' => TRUE,
@@ -80,17 +117,24 @@ $web_widget = [
   // A normal support case took 9 messages; the default 8 per 15 minutes cut
   // customers off mid-problem. Daily conversations and budget still cap cost.
   'web_widget_message_limit' => 20,
-  'web_widget_welcome_message' => "👋 ¡Bienvenido a Goblin Creative!\n\nSi buscas información, una cotización, asesoría sobre nuestros servicios o necesitas soporte, estoy listo para ayudarte.\n\nCuéntame qué necesitas o selecciona una opción:\n\n1️⃣ Facturación y atención comercial\n2️⃣ Soporte técnico\n\nTambién puedes escribirme directamente qué problema tienes y yo te ayudaré a identificarlo.",
 ];
 
 $etm = \Drupal::entityTypeManager();
-$prompt = trim((string) @file_get_contents($prompt_file));
-if ($prompt === '') {
-  throw new \RuntimeException("Prompt not found or empty: $prompt_file");
-}
+// Validation checks that referenced bots (the menu) can be seen by the
+// current user; drush runs as anonymous. Act as the site administrator, as
+// someone editing the bots in the admin would.
+\Drupal::service('account_switcher')->switchTo($etm->getStorage('user')->load(1));
+$read_prompt = static function (string $file) use ($prompt_dir): string {
+  $prompt = trim((string) @file_get_contents($prompt_dir . '/' . $file));
+  if ($prompt === '') {
+    throw new \RuntimeException("Prompt not found or empty: $prompt_dir/$file");
+  }
+  return $prompt;
+};
+$common = $read_prompt('comun.md');
 
 // A fresh install (drush si --existing-config) has no clients: they are
-// content. The bot needs its client, so create it the first time.
+// content. The bots need their client, so create it the first time.
 $clients = $etm->getStorage('ai_whatsapp_client')->loadByProperties(['name' => $client_name]);
 $client = reset($clients);
 if (!$client) {
@@ -99,36 +143,61 @@ if (!$client) {
   echo "Created client \"$client_name\" (id {$client->id()})." . PHP_EOL;
 }
 
-$bots = $etm->getStorage('ai_whatsapp_bot')->loadByProperties(['name' => $bot_name, 'client' => $client->id()]);
-$bot = reset($bots);
-$created = !$bot;
-if ($created) {
-  $bot = $etm->getStorage('ai_whatsapp_bot')->create([
-    'name' => $bot_name,
+$load_or_create = static function (string $name) use ($etm, $client): array {
+  $bots = $etm->getStorage('ai_whatsapp_bot')->loadByProperties(['name' => $name, 'client' => $client->id()]);
+  $bot = reset($bots);
+  if ($bot) {
+    return [$bot, FALSE];
+  }
+  return [$etm->getStorage('ai_whatsapp_bot')->create([
+    'name' => $name,
     'client' => $client->id(),
     'model' => 'gpt-5-mini',
     'reasoning_effort' => 'low',
     'status' => 'active',
-  ]);
-}
-
-$bot->set('description', 'Asistente virtual de Goblin Creative: orienta, resuelve primer nivel (correo, cPanel/hosting, dominios/DNS, facturación) y canaliza con el equipo.');
-$bot->set('system_prompt', $prompt);
-$bot->set('handoff_enabled', TRUE);
-$bot->set('handoff_required_fields', $handoff_required_fields);
-$bot->set('handoff_minimum_fields', $handoff_minimum_fields);
-$bot->set('handoff_prompt_rules', $handoff_prompt_rules);
-foreach ($web_widget as $field => $value) {
-  $bot->set($field, $value);
-}
-
-$violations = $bot->validate();
-if ($violations->count() > 0) {
-  foreach ($violations as $violation) {
-    echo 'Invalid: ' . $violation->getPropertyPath() . ': ' . $violation->getMessage() . PHP_EOL;
+  ]), TRUE];
+};
+$save = static function (ContentEntityInterface $bot, bool $created, string $detail) use ($client): void {
+  $violations = $bot->validate();
+  if ($violations->count() > 0) {
+    foreach ($violations as $violation) {
+      echo 'Invalid: ' . $violation->getPropertyPath() . ': ' . $violation->getMessage() . PHP_EOL;
+    }
+    throw new \RuntimeException('The bot "' . $bot->label() . '" was not saved.');
   }
-  throw new \RuntimeException('The bot was not saved.');
-}
-$bot->save();
+  $bot->save();
+  printf("%s bot \"%s\" (id %d) for client \"%s\" — %s.\n", $created ? 'Created' : 'Updated', $bot->label(), $bot->id(), $client->label(), $detail);
+};
 
-printf("%s bot \"%s\" (id %d) for client \"%s\" — prompt %d characters.\n", $created ? 'Created' : 'Updated', $bot->label(), $bot->id(), $client->label(), mb_strlen($prompt));
+$area_ids = [];
+foreach ($areas as $area) {
+  [$bot, $created] = $load_or_create($area['name']);
+  $prompt = $common . "\n\n⸻\n\n" . $read_prompt($area['prompt']);
+  $bot->set('description', $area['description']);
+  $bot->set('system_prompt', $prompt);
+  $bot->set('menu_label', $area['menu_label']);
+  $bot->set('menu_keywords', $area['menu_keywords']);
+  $bot->set('handoff_enabled', TRUE);
+  $bot->set('handoff_required_fields', $handoff_required_fields);
+  $bot->set('handoff_minimum_fields', $handoff_minimum_fields);
+  $bot->set('handoff_prompt_rules', str_replace('{categories}', $area['categories'], $handoff_prompt_rules));
+  // Reached through the reception: no chat link of its own.
+  $bot->set('web_widget_enabled', FALSE);
+  $save($bot, $created, 'prompt ' . mb_strlen($prompt) . ' characters');
+  $area_ids[] = $bot->id();
+}
+
+[$reception, $created] = $load_or_create('Goblin');
+$reception->set('description', 'Recepción de Goblin Creative: muestra el menú de áreas (sin IA) y pasa la conversación al bot del área elegida.');
+$reception->set('system_prompt', $reception_prompt);
+$reception->set('menu_message', $reception_menu_message);
+$reception->set('menu_bots', $area_ids);
+// The reception collects no data: leads come from the area bots.
+$reception->set('handoff_enabled', FALSE);
+foreach ($web_widget as $field => $value) {
+  $reception->set($field, $value);
+}
+// The chat shows the same menu as WhatsApp before the first message.
+$reception->set('web_widget_welcome_message', \Drupal::service('ai_whatsapp_automation.menu_router')->menuFor($reception));
+$save($reception, $created, 'menu with ' . count($area_ids) . ' areas');
+\Drupal::service('account_switcher')->switchBack();

@@ -152,8 +152,15 @@ final class AutomationEntityForm extends ContentEntityForm {
           'lead_notification_template_sid',
           'lead_notification_template_variables',
           'lead_notification_account',
+          'lead_notification_numbers',
           'notification_recipient_reply_text',
         ],
+      ],
+      'menu' => [
+        'title' => $this->t('Reception menu'),
+        'description' => $this->t('One WhatsApp number or chat link, one bot per area. A reception bot shows a numbered menu and hands the conversation to the chosen bot; the contact writes «menú» to go back. Area bots set how they appear in the menu.'),
+        'open' => FALSE,
+        'fields' => ['menu_bots', 'menu_message', 'menu_label', 'menu_keywords'],
       ],
       'web_widget' => [
         'title' => $this->t('Web widget'),

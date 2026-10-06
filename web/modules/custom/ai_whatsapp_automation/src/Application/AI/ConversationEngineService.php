@@ -42,6 +42,7 @@ final class ConversationEngineService {
     private readonly UnintelligibleMessageDetector $unintelligibleDetector,
     private readonly ConfigFactoryInterface $configFactory,
     LoggerChannelFactoryInterface $loggerFactory,
+    private readonly MenuRouter $menuRouter,
   ) {
     $this->logger = $loggerFactory->get('ai_whatsapp_automation');
   }
@@ -99,7 +100,16 @@ final class ConversationEngineService {
       throw new OpenAIServiceException('No active bot is associated with this conversation.');
     }
 
-    if ($this->unintelligibleDetector->isUnintelligible($incoming_message)) {
+    $route = $this->menuRouter->route($conversation, $bot, $incoming_message);
+    $bot = $route['bot'];
+    $unintelligible = $this->unintelligibleDetector->isUnintelligible($incoming_message);
+    // Noise on the menu falls through to the unreadable-message ladder, which
+    // goes silent after two replies instead of repeating the menu forever.
+    if ($route['menu'] !== '' && !$unintelligible) {
+      return $this->answerWithMenu($conversation, $bot, $incoming, $route['menu']);
+    }
+
+    if ($unintelligible) {
       return $this->answerUnintelligible($conversation, $bot, $incoming);
     }
 
@@ -131,6 +141,39 @@ final class ConversationEngineService {
       'response_text' => (string) ($response['text'] ?? ''),
       'delivery_status' => 'pending_provider_delivery',
       'openai' => $response,
+    ];
+  }
+
+  /**
+   * Answers with the reception menu, without the model.
+   *
+   * @return array<string, mixed>
+   *   Engine result.
+   */
+  private function answerWithMenu(
+    ContentEntityInterface $conversation,
+    ContentEntityInterface $bot,
+    ContentEntityInterface $incoming,
+    string $menu,
+  ): array {
+    $outgoing = $this->saveMessage($conversation, [
+      'sender' => 'ai',
+      'content' => $menu,
+    ]);
+
+    $this->logger->info('Conversation @conversation was answered with the menu of bot @bot.', [
+      '@conversation' => (string) $conversation->id(),
+      '@bot' => (string) $bot->id(),
+    ]);
+
+    return [
+      'conversation_id' => $conversation->id(),
+      'bot_id' => $bot->id(),
+      'incoming_message_id' => $incoming->id(),
+      'outgoing_message_id' => $outgoing->id(),
+      'response_text' => $menu,
+      'menu' => TRUE,
+      'delivery_status' => 'pending_provider_delivery',
     ];
   }
 
