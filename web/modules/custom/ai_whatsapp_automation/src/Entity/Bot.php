@@ -591,9 +591,10 @@ final class Bot extends ContentEntityBase {
       ->setDefaultValue('chat')
       ->setSettings([
         'allowed_values' => [
-          'chat' => 'Chat',
-          'sparkles' => 'Sparkles',
+          'chat' => 'Chat bubble',
+          'sparkles' => 'Sparkles (AI)',
           'help' => 'Help',
+          'logo' => 'Widget logo (upload it in "Web widget logo")',
         ],
       ])
       ->setDisplayOptions('form', [

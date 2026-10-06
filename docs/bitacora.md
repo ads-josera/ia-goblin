@@ -26,6 +26,8 @@ lo **no comprobado**.
   3. Que el equipo revise los encabezados de área de `facturacion.md` y
      `soporte.md`.
   4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
+  5. Chat web después del lead: la IA sigue contestando y promete cosas
+     («lo adjunto al caso») que nadie va a leer.
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -48,6 +50,54 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-05 — Botón flotante del chat: centrado en cualquier sitio, iconos que funcionan
+
+**Visto por el equipo en goblincreative.com:** el icono del botón flotante
+no estaba centrado. **Medido:** corrido 12.5 px a la izquierda. Causa: el tema
+del sitio da a todos los `<button>` `padding: 1px 6px` e `inline-block`, y el
+icono (un dibujo hecho con cajas CSS) quedaba pegado al borde. Le pasaría lo
+mismo en el sitio de cualquier cliente. Además, el campo «Web widget button
+icon» del bot (Chat / Sparkles / Help) **no hacía nada**: el script lo
+ignoraba.
+
+**Qué se hizo**
+
+- El script del botón pasó de un texto dentro de `WebChatController` a su
+  archivo, `js/web-chat-embed.js`.
+- Botón y ventana dentro de un **shadow root**: ningún estilo del sitio del
+  cliente los alcanza.
+- Iconos SVG nuevos y centrados (burbuja moderna, destellos de IA, ayuda) y
+  opción nueva **«Logo»**: usa el logo subido en el bot, sobre botón blanco
+  (un logo suele tener los colores de la marca, los mismos del botón). Sin
+  logo, cae a la burbuja. Actualización `11043` (opción nueva de la lista).
+- Abierto, el botón muestra una **X**; `aria-expanded` y nombre accesible
+  («Abrir chat con Goblin» / «Cerrar chat»), foco visible,
+  `prefers-reduced-motion`.
+- El nombre del bot va al script con `JSON_HEX_*`: un `</script>` en el
+  nombre no puede romper la página del cliente.
+
+**Comprobado**
+
+- `tests/visual/embed-check.mjs` (nuevo): página **hostil** (estilos agresivos
+  sobre button, span, svg, img, iframe); 5 casos de icono: centrado (0 px de
+  desvío), 60×60, icono sin deformar, nombre accesible, abre y cierra, sin
+  borde ajeno en la ventana. **OK en Chromium, WebKit (Safari) y Firefox.**
+- Sabotaje: sin el shadow root, icono de 100 px y 20 px de desvío.
+- `WebChatEmbedTest` (funcional, nuevo): el icono, el logo, los textos y el
+  escape del nombre llegan al script; falla si se quita el escape o el logo
+  (sabotaje hecho).
+- 173 pruebas OK; `phpcs` sin observaciones nuevas en PHP; sintaxis JS con
+  `node --check` (phpcs no sirve para JS y el proyecto no tiene ESLint).
+
+**No comprobado:** en goblincreative.com (falta desplegar; el sitio carga el
+script desde producción, así que se verá al desplegar, sin tocar el sitio).
+
+**Visto, para después:** en el chat web la IA sigue contestando después del
+lead y prometió «lo adjunto al caso» (pendiente ya anotado: nadie lee esos
+mensajes). El encabezado del chat dice «AI» porque el bot no tiene logo.
 
 ---
 

@@ -92,17 +92,23 @@ final class WebChatController extends ControllerBase {
       'absolute' => TRUE,
       'query' => $this->apiKeyQuery($bot),
     ])->toString();
+    $labels = $this->chatLabels($config['language']);
     $payload = [
       'chatUrl' => $chat_url,
       'name' => $config['name'],
       'position' => $config['position'],
       'icon' => $config['icon'],
+      'logoUrl' => $config['logoUrl'],
       'size' => $config['size'],
-      'primaryColor' => $config['primaryColor'],
-      'secondaryColor' => $config['secondaryColor'],
+      'primaryColor' => $this->safeColor($config['primaryColor']),
+      'secondaryColor' => $this->safeColor($config['secondaryColor']),
+      'openLabel' => sprintf($labels['open'], $config['name']),
+      'closeLabel' => $labels['close'],
     ];
 
-    $js = 'window.AIWhatsAppAutomationWidget=' . json_encode($payload, JSON_THROW_ON_ERROR) . ';' . "\n" . $this->embedScript();
+    // JSON_HEX_* keep "</script>" or quotes in a bot name from breaking out
+    // when a site inlines this response.
+    $js = 'window.AIWhatsAppAutomationWidget=' . json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) . ';' . "\n" . $this->embedScript();
     $response = new Response($js, Response::HTTP_OK, [
       'Content-Type' => 'application/javascript; charset=UTF-8',
       'Access-Control-Allow-Origin' => $this->webChat->corsOrigin($bot, $request),
@@ -198,7 +204,7 @@ final class WebChatController extends ControllerBase {
   /**
    * Returns browser-facing labels for the configured widget language.
    *
-   * @return array{status: string, placeholder: string, send: string, minimize: string}
+   * @return array{status: string, placeholder: string, send: string, minimize: string, open: string, close: string}
    *   Widget labels.
    */
   private function chatLabels(string $language): array {
@@ -208,12 +214,16 @@ final class WebChatController extends ControllerBase {
         'placeholder' => 'Escribe tu mensaje...',
         'send' => 'Enviar',
         'minimize' => 'Minimizar chat',
+        'open' => 'Abrir chat con %s',
+        'close' => 'Cerrar chat',
       ],
       default => [
         'status' => 'Online assistant',
         'placeholder' => 'Write your message...',
         'send' => 'Send',
         'minimize' => 'Minimize chat',
+        'open' => 'Open chat with %s',
+        'close' => 'Close chat',
       ],
     };
   }
@@ -250,78 +260,12 @@ final class WebChatController extends ControllerBase {
   }
 
   /**
-   * Floating widget JavaScript.
+   * Floating widget JavaScript (js/web-chat-embed.js).
    */
   private function embedScript(): string {
-    return <<<'JS'
-(function () {
-  function mount() {
-    var config = window.AIWhatsAppAutomationWidget || {};
-    if (!config.chatUrl || document.querySelector('[data-aiwa-widget-root]')) {
-      return;
-    }
+    $path = dirname(__DIR__, 2) . '/js/web-chat-embed.js';
 
-  var root = document.createElement('div');
-  root.setAttribute('data-aiwa-widget-root', 'true');
-  root.style.position = 'fixed';
-  root.style.zIndex = '2147483000';
-  root.style.bottom = '22px';
-  root.style[config.position === 'left' ? 'left' : 'right'] = '22px';
-  root.style.fontFamily = 'Arial, sans-serif';
-
-  var frame = document.createElement('iframe');
-  frame.title = config.name || 'AI chat';
-  frame.src = config.chatUrl;
-  frame.style.position = 'fixed';
-  frame.style.bottom = '88px';
-  frame.style[config.position === 'left' ? 'left' : 'right'] = '22px';
-  frame.style.width = config.size === 'large' ? '420px' : (config.size === 'small' ? '330px' : '380px');
-  frame.style.height = config.size === 'large' ? '660px' : (config.size === 'small' ? '500px' : '580px');
-  frame.style.maxWidth = 'calc(100vw - 32px)';
-  frame.style.maxHeight = 'calc(100vh - 112px)';
-  frame.style.border = '0';
-  frame.style.borderRadius = '16px';
-  frame.style.boxShadow = '0 20px 55px rgba(15, 23, 42, .25)';
-  frame.style.display = 'none';
-  frame.style.background = '#fff';
-
-  var button = document.createElement('button');
-  button.type = 'button';
-  button.setAttribute('aria-label', config.name || 'Open chat');
-  button.innerHTML = '<span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:25px;height:19px;border:2px solid currentColor;border-radius:8px;position:relative;box-sizing:border-box"><i style="position:absolute;bottom:-5px;left:5px;width:7px;height:7px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:skewY(-34deg);background:inherit"></i><b style="display:block;width:3px;height:3px;border-radius:50%;background:currentColor;box-shadow:6px 0 0 currentColor,-6px 0 0 currentColor"></b></span>';
-  button.style.width = '62px';
-  button.style.height = '62px';
-  button.style.borderRadius = '999px';
-  button.style.border = '0';
-  button.style.cursor = 'pointer';
-  button.style.background = config.primaryColor || '#155EEF';
-  button.style.color = '#fff';
-  button.style.fontWeight = '700';
-  button.style.boxShadow = '0 12px 30px rgba(15, 23, 42, .24)';
-
-  button.addEventListener('click', function () {
-    frame.style.display = frame.style.display === 'none' ? 'block' : 'none';
-  });
-
-  window.addEventListener('message', function (event) {
-    if (event.source === frame.contentWindow && event.data && event.data.type === 'aiwa:minimize-chat') {
-      frame.style.display = 'none';
-    }
-  });
-
-  root.appendChild(frame);
-  root.appendChild(button);
-    document.body.appendChild(root);
-  }
-
-  if (document.body) {
-    mount();
-  }
-  else {
-    document.addEventListener('DOMContentLoaded', mount, { once: true });
-  }
-}());
-JS;
+    return is_file($path) ? (string) file_get_contents($path) : '';
   }
 
 }

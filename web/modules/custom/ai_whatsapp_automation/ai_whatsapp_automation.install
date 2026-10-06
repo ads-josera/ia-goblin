@@ -1230,6 +1230,20 @@ function ai_whatsapp_automation_update_11042(): string {
 }
 
 /**
+ * Lets the floating chat button use the bot's uploaded logo as its icon.
+ *
+ * Adds the "logo" option to the button icon list. The icon setting used to be
+ * ignored by the embed script; it now picks the drawn icon or the logo.
+ */
+function ai_whatsapp_automation_update_11043(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $definition = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_bot')['web_widget_icon'];
+  $definition_update_manager->updateFieldStorageDefinition($definition);
+
+  return (string) t('The floating chat button icon can now be the widget logo.');
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]

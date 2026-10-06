@@ -154,6 +154,12 @@ git stash pop      # lo vuelve a poner al final
 
 Si `stash pop` reporta conflicto, avisar antes de seguir.
 
+### Comprobar el botón flotante del chat
+
+`js/web-chat-embed.js` se inserta en sitios de clientes. Tras cambiarlo, en
+local: `cd tests/visual && for e in chromium webkit firefox; do ENGINE=$e
+node embed-check.mjs; done` (página hostil, centrado, abrir y cerrar).
+
 ### Bots por área (2026-10-05)
 
 Además de los pasos de arriba, después de `drush cr`:
