@@ -88,7 +88,11 @@ logo del encabezado; fue una decisión mía sin preguntar.
 - 174 pruebas OK; `phpcs` sin observaciones nuevas (la URL de archivos ahora
   se inyecta en el formulario, sin `\Drupal::service()`).
 
-**Desplegado** (`e96ad1f`, `updb` 11044: 0 bots movidos). Falta que el equipo suba el icono y el logo en producción.
+**Desplegado** (`e96ad1f`, `updb` 11044: 0 bots movidos). El equipo subió
+icono («Custom», `transparente.png`) y logo (`icono-gob_0.jpg`). **Medido en
+goblincreative.com** (Chromium, WebKit, Firefox): botón con la imagen
+cargada, fondo blanco, 0 px de desvío; encabezado del chat con el logo
+completo.
 
 **Pendiente (anotado):** los textos del formulario del bot siguen en inglés
 («Web widget button icon», «Custom»…), pendiente 1.
