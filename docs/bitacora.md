@@ -26,8 +26,12 @@ lo **no comprobado**.
   3. Que el equipo revise los encabezados de área de `facturacion.md` y
      `soporte.md`.
   4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
-  5. Chat web después del lead: la IA sigue contestando y promete cosas
-     («lo adjunto al caso») que nadie va a leer.
+  5. **Próxima tarea acordada (en pausa por decisión del equipo):** chat web
+     después del lead — la IA sigue contestando y promete cosas («lo adjunto
+     al caso») que nadie va a leer.
+- **Chat web en goblincreative.com (2026-10-05):** botón flotante aislado y
+  centrado, icono propio («Custom») y logo en el encabezado, verificados en
+  3 navegadores.
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
