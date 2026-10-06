@@ -48,7 +48,6 @@ lo **no comprobado**.
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model», sección «Reception menu»); de paso, ocultar «Menu areas» en los bots de área | Media |
 | 2 | Bots por área: desplegar Facturación y Soporte; crear Ventas (prompt con el equipo); números de cada encargado en su bot | Alta |
-| 2c | Prompt de Soporte: ofreció «revisar los registros MX» si le dan el dominio, algo que no puede hacer (viene del prompt original) | Media |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
@@ -59,6 +58,33 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-05 — El bot ofrecía «revisar» cosas a las que no tiene acceso
+
+**Visto en producción y en local:** Soporte ofrecía «revise el MX actual del
+dominio» / «puedo revisar los registros MX». No tiene acceso a DNS,
+servidores, cuentas ni pagos.
+
+**Qué se hizo:** regla nueva en las reglas de canalización
+(`scripts/bots/goblin.php`, aplica a los dos bots de área): no ofrecer
+revisar, consultar ni verificar nada por su cuenta; explicar cómo lo revisa
+el cliente o canalizar. Texto nuestro, no del prompt maestro.
+
+**Comprobado (en vivo, local, OpenAI real):** sin la regla, 2 de 2 respuestas
+a «¿Qué es un registro MX? Mi dominio es rayere.com.mx» ofrecieron revisarlo
+(«¿Quieres que lo revise por ti?»). Con la regla, 0 de 3 (MX, página que no
+carga, estado de un pago); en el pago dijo «No tengo acceso directo a los
+registros de pago». Pocas corridas: el modelo no es determinista. Base local
+restaurada sin las conversaciones de prueba.
+
+**También aclarado:** en producción el bot recordó la conversación del 30 de
+septiembre porque el navegador conservó la sesión del chat. Es una función
+del módulo: si un visitante (o número de WhatsApp) vuelve y su conversación
+anterior se cerró por inactividad hace menos de 7 días, la IA recibe un
+resumen para no hacerle repetir. Se deja así (decisión del equipo). Para
+probar desde cero: cerrar todas las ventanas privadas y abrir una nueva.
 
 ---
 

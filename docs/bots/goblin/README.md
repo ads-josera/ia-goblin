@@ -151,9 +151,18 @@ Con OpenAI real, sobre una copia de la base de datos (restaurada después):
 | «1», «quiero cancelar mi hosting» | Facturación | Pide nombre, celular y servicio para canalizar ✅ |
 | «necesito mi factura de septiembre» (chat nuevo) | Facturación | Pasa directo por la palabra «factura» ✅ |
 
-Observado, para revisar con el equipo: Soporte dijo «si me das el dominio,
-puedo revisar los registros MX», algo que no puede hacer (viene del prompt
-original, no de la separación).
+Observado: Soporte ofrecía «revisar los registros MX», algo que no puede
+hacer. Corregido con una regla de canalización (no ofrecer revisar nada por
+su cuenta): sin ella 2 de 2 respuestas lo ofrecían, con ella 0 de 3.
+
+## Memoria de una conversación anterior
+
+Si un visitante del chat (mismo navegador) o un número de WhatsApp vuelve y
+su conversación anterior **se cerró sola por inactividad** hace menos de 7
+días, la IA recibe un resumen de esa conversación para no hacerle repetir
+datos. Por eso, al probar en el mismo navegador, el bot puede mencionar algo
+de una prueba anterior. Para probar desde cero: cerrar todas las ventanas
+privadas y abrir una nueva.
 
 ## Pruebas hechas (2026-09-30)
 
