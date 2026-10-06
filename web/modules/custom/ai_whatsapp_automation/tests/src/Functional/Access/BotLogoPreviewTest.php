@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests that a manager sees the widget logo they upload, before saving.
+ * Tests the header logo and the button icon a manager uploads and previews.
  */
 #[Group('ai_whatsapp_automation')]
 #[RunTestsInSeparateProcesses]
@@ -56,20 +56,34 @@ final class BotLogoPreviewTest extends BrowserTestBase {
     $logo = $this->container->get('file_system')->getTempDirectory() . '/logo-preview-test.png';
     file_put_contents($logo, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='));
 
+    $icon = $this->container->get('file_system')->getTempDirectory() . '/button-icon-test.png';
+    copy($logo, $icon);
+
     $this->drupalGet($bot->toUrl('edit-form'));
     $this->assertSession()->elementNotExists('css', '.aiwa-logo-preview');
-    $this->submitForm(['files[web_widget_logo_file_0]' => $logo], 'Upload');
-    // Before saving: the manager sees what went up, header and button.
-    $this->assertSession()->elementsCount('css', '.aiwa-logo-preview img', 2);
-    $this->assertSession()->elementAttributeContains('css', '.aiwa-logo-preview img', 'src', 'logo-preview-test');
+    // Each icon choice is drawn as the button; "Custom" has nothing yet.
+    $this->assertSession()->elementsCount('css', '.aiwa-icon-choices .aiwa-icon-choice__button svg', 3);
+    $this->assertSession()->elementExists('css', '.aiwa-icon-choices input[value="custom"] + label .aiwa-icon-choice__button--empty');
+    // The custom upload only shows when "Custom" is chosen.
+    $this->assertSession()->elementAttributeContains('css', '[data-drupal-selector="edit-web-widget-button-icon-file-wrapper"]', 'data-drupal-states', 'custom');
 
-    $this->submitForm(['web_widget_icon' => 'logo'], 'Save');
+    $this->submitForm(['files[web_widget_logo_file_0]' => $logo], 'Upload');
+    // Before saving: the logo as the chat header shows it.
+    $this->assertSession()->elementAttributeContains('css', '.aiwa-logo-preview__tile--header img', 'src', 'logo-preview-test');
+    $this->submitForm(['files[web_widget_button_icon_file_0]' => $icon], 'Upload');
+    // And the icon as the floating button shows it, independent of the logo.
+    $this->assertSession()->elementAttributeContains('css', '.aiwa-logo-preview__tile--button img', 'src', 'button-icon-test');
+
+    $this->submitForm(['web_widget_icon' => 'custom'], 'Save');
     $this->drupalGet($bot->toUrl('edit-form'));
     $this->assertSession()->elementsCount('css', '.aiwa-logo-preview img', 2);
+    $this->assertSession()->elementAttributeContains('css', '.aiwa-icon-choices input[value="custom"] + label img', 'src', 'button-icon-test');
 
-    // The public chat shows it in its header.
+    // The public chat shows the logo in its header; the button gets the icon.
     $this->drupalGet('ai-whatsapp-automation/chat/logo-test-token');
     $this->assertSession()->elementAttributeContains('css', 'img.aiwa-chat__logo', 'src', 'logo-preview-test');
+    $this->drupalGet('ai-whatsapp-automation/embed/logo-test-token');
+    $this->assertStringContainsString('button-icon-test', $this->getSession()->getPage()->getContent());
   }
 
 }

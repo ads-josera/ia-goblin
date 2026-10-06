@@ -14,15 +14,6 @@
 (function () {
   'use strict';
 
-  // 24x24 line icons, drawn for this widget. currentColor = white on the
-  // bot's primary color (checked at 4.5:1 when the color is saved).
-  var ICONS = {
-    chat: '<path d="M12 3.5c4.7 0 8.5 3.3 8.5 7.5s-3.8 7.5-8.5 7.5c-1.2 0-2.3-.2-3.3-.6L4 19.5l1.4-3.6C4.2 14.6 3.5 12.9 3.5 11c0-4.2 3.8-7.5 8.5-7.5z"/><circle cx="8.3" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11" r="1.1" fill="currentColor" stroke="none"/>',
-    sparkles: '<path d="M11 3.5l1.8 4.9 4.9 1.8-4.9 1.8L11 16.9l-1.8-4.9-4.9-1.8 4.9-1.8z"/><path d="M18.5 14.5v5M16 17h5"/><path d="M5 2.5v3M3.5 4h3"/>',
-    help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.7.3-1.2 1-1.2 1.8v.5"/><circle cx="12" cy="16.9" r="1.1" fill="currentColor" stroke="none"/>',
-    close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'
-  };
-
   var STYLE = [
     ':host{all:initial}',
     '.launcher{all:unset;box-sizing:border-box;display:grid;place-items:center;width:60px;height:60px;border-radius:50%;cursor:pointer;color:#fff;',
@@ -30,10 +21,10 @@
     '.launcher:hover{transform:scale(1.06);box-shadow:0 14px 34px rgba(15,23,42,.32)}',
     '.launcher:focus-visible{outline:3px solid var(--aiwa-primary);outline-offset:3px}',
     '.launcher svg{display:block;width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}',
-    '.launcher img{display:block;width:38px;height:38px;object-fit:contain}',
-    // A logo is usually drawn in the brand colors, the same as the button:
-    // on a white button any logo reads. The close icon keeps the color.
-    '.launcher--logo{background:#fff;color:var(--aiwa-primary)}',
+    '.launcher img{display:block;width:34px;height:34px;object-fit:contain}',
+    // An uploaded icon is usually drawn in the brand colors, the same as the
+    // button: on a white button any icon reads. The close icon keeps the color.
+    '.launcher--image{background:#fff;color:var(--aiwa-primary)}',
     '.frame{position:fixed;bottom:92px;border:0;border-radius:16px;background:#fff;box-shadow:0 20px 55px rgba(15,23,42,.25);',
     'max-width:calc(100vw - 32px);max-height:calc(100vh - 116px)}',
     '.frame[hidden]{display:none}',
@@ -42,8 +33,12 @@
 
   var SIZES = { small: ['330px', '500px'], medium: ['380px', '580px'], large: ['420px', '660px'] };
 
-  function svg(name) {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (ICONS[name] || ICONS.chat) + '</svg>';
+  // The drawn icons come from the server (WidgetIcons, also used by the bot
+  // form): trusted constants, never the bot's settings.
+  function svg(markup) {
+    var wrap = document.createElement('span');
+    wrap.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + markup + '</svg>';
+    return wrap.firstChild;
   }
 
   function mount() {
@@ -77,31 +72,25 @@
     button.style.setProperty('--aiwa-primary', config.primaryColor || '#155EEF');
     button.setAttribute('aria-expanded', 'false');
 
-    // The bot's own logo as the icon; built as an element, never as markup,
-    // because the URL comes from the bot's settings.
+    // The uploaded icon is built as an element, never as markup, because its
+    // URL comes from the bot's settings. Without one: the drawn icon.
     var openIcon = function () {
-      if (config.icon === 'logo' && config.logoUrl) {
+      if (config.icon === 'custom' && config.iconUrl) {
         var img = document.createElement('img');
-        img.src = config.logoUrl;
+        img.src = config.iconUrl;
         img.alt = '';
         return img;
       }
-      var wrap = document.createElement('span');
-      wrap.innerHTML = svg(config.icon);
-      return wrap.firstChild;
+      return svg(config.iconMarkup || '');
     };
 
     function render(open) {
       frame.hidden = !open;
       button.setAttribute('aria-expanded', open ? 'true' : 'false');
       button.setAttribute('aria-label', open ? (config.closeLabel || 'Close chat') : (config.openLabel || 'Open chat'));
-      var icon = open ? null : openIcon();
-      button.classList.toggle('launcher--logo', !!icon && icon.tagName === 'IMG');
-      button.replaceChildren(icon || (function () {
-        var wrap = document.createElement('span');
-        wrap.innerHTML = svg('close');
-        return wrap.firstChild;
-      }()));
+      var icon = open ? svg(config.closeMarkup || '') : openIcon();
+      button.classList.toggle('launcher--image', icon.tagName === 'IMG');
+      button.replaceChildren(icon);
     }
 
     button.addEventListener('click', function () {

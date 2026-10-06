@@ -17,12 +17,14 @@ import { mkdirSync } from 'node:fs';
 const BASE = 'http://ia-goblin.ddev.site';
 const TOKEN = process.argv[2] ?? '0f76fd51-b1a9-47cc-8dfc-6ccedab5ecd8';
 const BOT = process.argv[3] ?? '3';
-const LOGO = `${BASE}/themes/custom/goblin/logo.svg`;
+// The custom icon: a copy of the theme logo as a file entity (made once).
+const ICON_FILE = `cd ../.. && ddev drush php:eval '$fs=\\Drupal::service("file_system"); $d="public://ai-whatsapp-widget-icons"; $fs->prepareDirectory($d, 1); $u=$fs->copy("themes/custom/goblin/logo.svg", "$d/embed-check.svg", 1); $f=\\Drupal::entityTypeManager()->getStorage("file")->loadByProperties(["uri"=>$u]); $f=reset($f) ?: \\Drupal\\file\\Entity\\File::create(["uri"=>$u,"status"=>1]); $f->save(); echo $f->id();'`;
 const shots = new URL('./screenshots/', import.meta.url).pathname;
 mkdirSync(shots, { recursive: true });
 
-const setIcon = (icon, logo) => execSync(
-  `cd ../.. && ddev drush php:eval '$b=\\Drupal::entityTypeManager()->getStorage("ai_whatsapp_bot")->load(${BOT}); $b->set("web_widget_icon","${icon}")->set("web_widget_logo_url","${logo}")->save();'`,
+const iconFile = String(execSync(ICON_FILE)).trim();
+const setIcon = (icon, file) => execSync(
+  `cd ../.. && ddev drush php:eval '$b=\\Drupal::entityTypeManager()->getStorage("ai_whatsapp_bot")->load(${BOT}); $b->set("web_widget_icon","${icon}")->set("web_widget_button_icon_file", ${file || 'NULL'})->save();'`,
 );
 
 const HOSTILE = `<!doctype html><html><head><style>
@@ -36,12 +38,12 @@ const HOSTILE = `<!doctype html><html><head><style>
 <script src="${BASE}/ai-whatsapp-automation/embed/${TOKEN}"></script></body></html>`;
 
 const CASES = [
-  { icon: 'chat', logo: '', expect: 'svg' },
-  { icon: 'sparkles', logo: '', expect: 'svg' },
-  { icon: 'help', logo: '', expect: 'svg' },
-  { icon: 'logo', logo: LOGO, expect: 'img', white: true },
-  // No logo uploaded: falls back to the chat bubble.
-  { icon: 'logo', logo: '', expect: 'svg' },
+  { icon: 'chat', file: '', expect: 'svg' },
+  { icon: 'sparkles', file: '', expect: 'svg' },
+  { icon: 'help', file: '', expect: 'svg' },
+  { icon: 'custom', file: iconFile, expect: 'img', white: true },
+  // Nothing uploaded: falls back to the chat bubble.
+  { icon: 'custom', file: '', expect: 'svg' },
 ];
 
 const failures = [];
@@ -50,8 +52,8 @@ const ENGINE = process.env.ENGINE ?? 'chromium';
 const browser = await ({ chromium, webkit, firefox })[ENGINE].launch();
 try {
   for (const c of CASES) {
-    setIcon(c.icon, c.logo);
-    const name = `${c.icon}${c.logo ? '' : (c.icon === 'logo' ? '-sin-logo' : '')}`;
+    setIcon(c.icon, c.file);
+    const name = `${c.icon}${c.icon === 'custom' && !c.file ? '-sin-imagen' : ''}`;
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     await page.setContent(HOSTILE, { waitUntil: 'networkidle' });
     const button = page.locator('[data-aiwa-widget-root] >> css=button');

@@ -201,6 +201,7 @@ final class WebChatService {
       'primaryColor' => $this->getFieldValue($bot, 'web_widget_primary_color') ?: '#155EEF',
       'secondaryColor' => $this->getFieldValue($bot, 'web_widget_secondary_color') ?: '#111827',
       'logoUrl' => $this->logoUrl($bot),
+      'iconUrl' => $this->fileUrl($bot, 'web_widget_button_icon_file'),
       'welcomeMessage' => $this->getFieldValue($bot, 'web_widget_welcome_message') ?: 'Hola, ¿en qué puedo ayudarte?',
       'position' => $this->getFieldValue($bot, 'web_widget_position') ?: 'right',
       'icon' => $this->getFieldValue($bot, 'web_widget_icon') ?: 'chat',
@@ -409,14 +410,21 @@ final class WebChatService {
    * Returns the uploaded logo URL, with legacy URL support as a fallback.
    */
   private function logoUrl(ContentEntityInterface $bot): string {
-    if ($bot->hasField('web_widget_logo_file') && !$bot->get('web_widget_logo_file')->isEmpty()) {
-      $file = $bot->get('web_widget_logo_file')->entity;
+    return $this->fileUrl($bot, 'web_widget_logo_file') ?: $this->getFieldValue($bot, 'web_widget_logo_url');
+  }
+
+  /**
+   * Returns the absolute URL of a file field's file, or an empty string.
+   */
+  private function fileUrl(ContentEntityInterface $bot, string $field_name): string {
+    if ($bot->hasField($field_name) && !$bot->get($field_name)->isEmpty()) {
+      $file = $bot->get($field_name)->entity;
       if ($file !== NULL && method_exists($file, 'getFileUri')) {
         return $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
       }
     }
 
-    return $this->getFieldValue($bot, 'web_widget_logo_url');
+    return '';
   }
 
   /**

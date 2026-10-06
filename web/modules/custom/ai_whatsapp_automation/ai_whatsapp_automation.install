@@ -1244,6 +1244,34 @@ function ai_whatsapp_automation_update_11043(): string {
 }
 
 /**
+ * Separates the floating button icon from the chat header logo.
+ *
+ * The button gets its own uploaded icon ("custom") instead of reusing the
+ * header logo ("logo", added by 11043). Bots that chose "logo" keep the same
+ * image: it becomes their custom icon.
+ */
+function ai_whatsapp_automation_update_11044(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_bot');
+  if ($definition_update_manager->getFieldStorageDefinition('web_widget_button_icon_file', 'ai_whatsapp_bot') === NULL) {
+    $definition_update_manager->installFieldStorageDefinition('web_widget_button_icon_file', 'ai_whatsapp_bot', 'ai_whatsapp_automation', $definitions['web_widget_button_icon_file']);
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('ai_whatsapp_bot');
+  $ids = $storage->getQuery()->accessCheck(FALSE)->condition('web_widget_icon', 'logo')->execute();
+  foreach ($storage->loadMultiple($ids) as $bot) {
+    $bot->set('web_widget_icon', 'custom');
+    if ($bot->get('web_widget_button_icon_file')->isEmpty() && !$bot->get('web_widget_logo_file')->isEmpty()) {
+      $bot->set('web_widget_button_icon_file', $bot->get('web_widget_logo_file')->target_id);
+    }
+    $bot->save();
+  }
+  $definition_update_manager->updateFieldStorageDefinition($definitions['web_widget_icon']);
+
+  return (string) t('The floating button has its own custom icon; @count bot(s) moved from the header logo to it.', ['@count' => count($ids)]);
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]

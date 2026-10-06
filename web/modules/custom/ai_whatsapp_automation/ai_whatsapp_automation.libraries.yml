@@ -23,6 +23,7 @@ bot_form:
       css/bot-form.css: {}
   js:
     js/color-preview.js: {}
+    js/icon-choices.js: {}
   dependencies:
     - core/drupal
 

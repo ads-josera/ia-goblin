@@ -53,6 +53,48 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-05 — Icono del botón: selector visual y subida propia
+
+**Pedido del equipo:** el icono del botón debe ser distinto del logo del
+encabezado («no sé por qué lo pusiste así»), con vista previa y la opción de
+subirlo ahí mismo. Tenía razón: la opción «Widget logo» ataba el botón al
+logo del encabezado; fue una decisión mía sin preguntar.
+
+**Qué se hizo**
+
+- `WidgetIcons`: los iconos del botón se definen **una sola vez** (PHP). El
+  formulario los muestra y el script de los sitios los recibe del servidor
+  (antes el script tenía su propia copia).
+- «Web widget button icon» es ahora un **selector visual**: cada opción
+  dibujada como el botón real, en el color del bot (se actualiza al cambiar
+  el color). Opciones: burbuja, destellos de IA, ayuda y **«Custom»**.
+- Campo nuevo **«Custom button icon»** (SVG/PNG/JPG, 1 MB), justo debajo del
+  selector y visible solo con «Custom», con vista previa en el botón. Al
+  subirlo, la opción «Custom» lo muestra sin esperar a guardar
+  (`js/icon-choices.js`). Independiente del logo del encabezado, que tiene
+  su propia vista previa.
+- Actualización `11044`: instala el campo y pasa «logo» a «custom» (con la
+  misma imagen) si algún bot lo había elegido (en producción ninguno).
+
+**Comprobado**
+
+- Con la cuenta del Gestor y la imagen del equipo (local, restaurado):
+  subir oculto hasta elegir «Custom»; vista previa al subir; «Custom»
+  muestra la imagen antes y después de guardar; el script recibe la imagen.
+- `embed-check.mjs` (página hostil) con los 5 casos: OK en Chromium, WebKit
+  y Firefox. Sabotaje: si el script ignora la imagen, falla.
+- `WebChatEmbedTest` y `BotLogoPreviewTest` actualizadas (logo del
+  encabezado y icono del botón por separado; mismos iconos que `WidgetIcons`).
+- 174 pruebas OK; `phpcs` sin observaciones nuevas (la URL de archivos ahora
+  se inyecta en el formulario, sin `\Drupal::service()`).
+
+**No comprobado:** en producción (falta desplegar).
+
+**Pendiente (anotado):** los textos del formulario del bot siguen en inglés
+(«Web widget button icon», «Custom»…), pendiente 1.
+
+---
+
 ## 2026-10-05 — Logo del chat: vista previa en el admin y logo completo
 
 **Reportado por el equipo:** subió un logo y «no funcionó»; además pidió una

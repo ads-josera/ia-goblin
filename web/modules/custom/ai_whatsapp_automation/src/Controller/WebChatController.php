@@ -6,6 +6,7 @@ namespace Drupal\ai_whatsapp_automation\Controller;
 
 use Drupal\ai_whatsapp_automation\Application\WebChat\WebChatService;
 use Drupal\ai_whatsapp_automation\Exception\WebChatLimitException;
+use Drupal\ai_whatsapp_automation\Ui\WidgetIcons;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Url;
@@ -98,7 +99,10 @@ final class WebChatController extends ControllerBase {
       'name' => $config['name'],
       'position' => $config['position'],
       'icon' => $config['icon'],
-      'logoUrl' => $config['logoUrl'],
+      'iconUrl' => $config['iconUrl'],
+      // Drawn from WidgetIcons, the same definitions the bot form shows.
+      'iconMarkup' => WidgetIcons::paths($config['icon']),
+      'closeMarkup' => WidgetIcons::CLOSE,
       'size' => $config['size'],
       'primaryColor' => $this->safeColor($config['primaryColor']),
       'secondaryColor' => $this->safeColor($config['secondaryColor']),

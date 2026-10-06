@@ -42,6 +42,11 @@
           wrapper.classList.toggle('is-invalid', hex === null);
           if (hex !== null) {
             picker.value = hex;
+            // The button previews (icon choices) are painted with this color.
+            var form = input.closest('.aiwa-bot-form');
+            if (form && note) {
+              form.style.setProperty('--aiwa-primary', hex);
+            }
           }
           if (note) {
             if (hex === null) {

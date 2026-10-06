@@ -588,21 +588,37 @@ final class Bot extends ContentEntityBase {
 
     $fields['web_widget_icon'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Web widget button icon'))
+      ->setDescription(t('The icon on the floating chat button. "Custom" uses an image you upload below; it is independent of the logo in the chat header.'))
       ->setDefaultValue('chat')
+      ->setRequired(TRUE)
       ->setSettings([
         'allowed_values' => [
           'chat' => 'Chat bubble',
           'sparkles' => 'Sparkles (AI)',
           'help' => 'Help',
-          'logo' => 'Widget logo (upload it in "Web widget logo")',
+          'custom' => 'Custom',
         ],
       ])
+      // Radios: the bot form draws each one as the real button.
       ->setDisplayOptions('form', [
-        'type' => 'options_select',
+        'type' => 'options_buttons',
         'weight' => 59,
       ])
       ->setDisplayOptions('view', [
         'type' => 'list_default',
+        'weight' => 59,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['web_widget_button_icon_file'] = BaseFieldDefinition::create('file')
+      ->setLabel(t('Custom button icon'))
+      ->setDescription(t('Used when the button icon is "Custom". SVG or PNG with a transparent background, square; it is shown on a white button. JPG works if its background is white.'))
+      ->setSetting('file_directory', 'ai-whatsapp-widget-icons')
+      ->setSetting('file_extensions', 'svg png jpg jpeg')
+      ->setSetting('max_filesize', '1 MB')
+      ->setDisplayOptions('form', [
+        'type' => 'file_generic',
         'weight' => 59,
       ])
       ->setDisplayConfigurable('form', TRUE)

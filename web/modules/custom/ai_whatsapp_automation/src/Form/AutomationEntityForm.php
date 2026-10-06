@@ -4,16 +4,36 @@ declare(strict_types=1);
 
 namespace Drupal\ai_whatsapp_automation\Form;
 
+use Drupal\ai_whatsapp_automation\Ui\WidgetIcons;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\file\FileInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the default form for AI WhatsApp Automation content entities.
  */
 final class AutomationEntityForm extends ContentEntityForm {
+
+  /**
+   * Builds the URLs of uploaded images for the icon choices.
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->fileUrlGenerator = $container->get('file_url_generator');
+
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -33,11 +53,15 @@ final class AutomationEntityForm extends ContentEntityForm {
     }
 
     if ($entity->getEntityTypeId() === 'ai_whatsapp_bot') {
-      // Runs after the file element's own processing, so the preview also
+      // Run after the file element's own processing, so a preview also
       // appears right after an upload, before the bot is saved.
-      if (isset($form['web_widget_logo_file']['widget'][0])) {
-        $form['web_widget_logo_file']['widget'][0]['#process'][] = [self::class, 'addLogoPreview'];
+      foreach (['web_widget_logo_file' => 'header', 'web_widget_button_icon_file' => 'button'] as $field_name => $variant) {
+        if (isset($form[$field_name]['widget'][0])) {
+          $form[$field_name]['widget'][0]['#aiwa_preview'] = $variant;
+          $form[$field_name]['widget'][0]['#process'][] = [self::class, 'addImagePreview'];
+        }
       }
+      $this->decorateIconChoices($form, $entity);
       $this->organizeBotForm($form, $entity->isNew());
     }
 
@@ -116,51 +140,74 @@ final class AutomationEntityForm extends ContentEntityForm {
   }
 
   /**
-   * Shows the uploaded widget logo, on the button's colors.
+   * Shows an uploaded image as it will look: chat header or floating button.
    *
    * A file field only lists the file name: nobody could tell whether the
-   * right image went up, or how it looks on the button.
+   * right image went up, or how it looks where it is used.
    */
-  public static function addLogoPreview(array $element, FormStateInterface $form_state): array {
+  public static function addImagePreview(array $element, FormStateInterface $form_state): array {
     $file = is_array($element['#files'] ?? NULL) ? reset($element['#files']) : NULL;
     if (!$file instanceof FileInterface) {
       return $element;
     }
 
-    $image = [
-      '#theme' => 'image',
-      '#uri' => $file->getFileUri(),
-      '#alt' => '',
-    ];
-    $element['aiwa_logo_preview'] = [
+    $variant = ($element['#aiwa_preview'] ?? 'header') === 'button' ? 'button' : 'header';
+    $element['aiwa_image_preview'] = [
       '#type' => 'container',
       '#weight' => 50,
       '#attributes' => ['class' => ['aiwa-logo-preview']],
       'label' => [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => t('Preview'),
+        '#value' => $variant === 'button' ? t('Preview on the floating button') : t('Preview in the chat header'),
         '#attributes' => ['class' => ['aiwa-logo-preview__label']],
       ],
-      'header' => [
+      'tile' => [
         '#type' => 'container',
-        '#attributes' => [
-          'class' => ['aiwa-logo-preview__tile', 'aiwa-logo-preview__tile--header'],
-          'title' => t('Chat header'),
+        '#attributes' => ['class' => ['aiwa-logo-preview__tile', 'aiwa-logo-preview__tile--' . $variant]],
+        'image' => [
+          '#theme' => 'image',
+          '#uri' => $file->getFileUri(),
+          '#alt' => '',
         ],
-        'image' => $image,
-      ],
-      'button' => [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['aiwa-logo-preview__tile', 'aiwa-logo-preview__tile--button'],
-          'title' => t('Floating button (icon "Widget logo")'),
-        ],
-        'image' => $image,
       ],
     ];
 
     return $element;
+  }
+
+  /**
+   * Draws each button icon choice as the real button, in the bot's color.
+   *
+   * The custom upload sits right under the choices and only shows when
+   * "Custom" is chosen.
+   */
+  private function decorateIconChoices(array &$form, ContentEntityInterface $bot): void {
+    $color = trim((string) $bot->get('web_widget_primary_color')->value);
+    $form['#attributes']['style'] = '--aiwa-primary: ' . (preg_match('/^#[0-9a-f]{3}([0-9a-f]{3})?$/i', $color) ? $color : '#155EEF');
+
+    if (isset($form['web_widget_icon']['widget']['#options'])) {
+      $widget = &$form['web_widget_icon']['widget'];
+      // A wrapper of our own: radios pass #attributes down to every option.
+      $widget['#prefix'] = '<div class="aiwa-icon-choices">';
+      $widget['#suffix'] = '</div>';
+      $custom = $bot->get('web_widget_button_icon_file')->entity;
+      foreach ($widget['#options'] as $value => $label) {
+        $face = match (TRUE) {
+          $value !== WidgetIcons::CUSTOM => '<span class="aiwa-icon-choice__button">' . WidgetIcons::svg((string) $value) . '</span>',
+          $custom instanceof FileInterface => '<span class="aiwa-icon-choice__button aiwa-icon-choice__button--image"><img src="' . Html::escape($this->fileUrlGenerator->generateString($custom->getFileUri())) . '" alt=""></span>',
+          default => '<span class="aiwa-icon-choice__button aiwa-icon-choice__button--empty" aria-hidden="true">+</span>',
+        };
+        $widget['#options'][$value] = Markup::create($face . '<span class="aiwa-icon-choice__name">' . Html::escape((string) $label) . '</span>');
+      }
+      unset($widget);
+    }
+
+    if (isset($form['web_widget_button_icon_file'])) {
+      $form['web_widget_button_icon_file']['#states'] = [
+        'visible' => [':input[name="web_widget_icon"]' => ['value' => WidgetIcons::CUSTOM]],
+      ];
+    }
   }
 
   /**
@@ -229,6 +276,7 @@ final class AutomationEntityForm extends ContentEntityForm {
           'web_widget_welcome_message',
           'web_widget_position',
           'web_widget_icon',
+          'web_widget_button_icon_file',
           'web_widget_size',
           'web_widget_language',
           'web_widget_allowed_domains',

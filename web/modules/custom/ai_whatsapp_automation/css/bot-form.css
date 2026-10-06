@@ -220,3 +220,93 @@
   background: #fff;
   box-shadow: 0 6px 16px rgb(15 23 42 / 18%);
 }
+
+/* Floating button icon: each choice drawn as the real button, in the bot's
+   primary color (--aiwa-primary, set on the form and kept live by
+   color-preview.js). Same size as on client sites (60px). */
+.aiwa-icon-choices .form-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Claro indents each option for its own radio circle: the tile replaces it. */
+.aiwa-icon-choices .form-radios > .form-item {
+  margin: 0;
+  padding: 0;
+}
+
+.aiwa-icon-choices input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.aiwa-icon-choices label.option {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 104px;
+  margin: 0;
+  padding: 12px 8px;
+  border: 2px solid #d7deea;
+  border-radius: 10px;
+  background: #fff;
+  color: #162a50;
+  cursor: pointer;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.aiwa-icon-choices input[type="radio"]:checked + label.option {
+  border-color: var(--aiwa-primary, #155eef);
+  box-shadow: 0 0 0 3px rgb(21 94 239 / 15%);
+}
+
+.aiwa-icon-choices input[type="radio"]:focus-visible + label.option {
+  outline: 3px solid var(--aiwa-primary, #155eef);
+  outline-offset: 2px;
+}
+
+.aiwa-icon-choice__button {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--aiwa-primary, #155eef);
+  color: #fff;
+  box-shadow: 0 6px 16px rgb(15 23 42 / 18%);
+}
+
+.aiwa-icon-choice__button .aiwa-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* An uploaded icon: on white, as on client sites. */
+.aiwa-icon-choice__button--image {
+  border: 1px solid #d7deea;
+  background: #fff;
+}
+
+.aiwa-icon-choice__button--image img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+/* "Custom" before anything was uploaded. */
+.aiwa-icon-choice__button--empty {
+  border: 2px dashed #94a3b8;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 1.75rem;
+  font-weight: 300;
+  box-shadow: none;
+}
+
+.aiwa-icon-choice__name {
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
