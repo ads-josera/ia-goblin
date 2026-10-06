@@ -53,6 +53,43 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-05 — Logo del chat: vista previa en el admin y logo completo
+
+**Reportado por el equipo:** subió un logo y «no funcionó»; además pidió una
+vista previa de la imagen en el admin.
+
+**Revisado en producción (desde fuera, el script de goblincreative.com):** el
+bot del chat tiene icono «chat» y **ningún logo guardado**. El logo no quedó
+en ese bot (¿otro bot, sin «Guardar», o error al subir?). Pendiente: la
+salida del comando de diagnóstico que se pasó al equipo.
+
+**Qué se hizo**
+
+- Vista previa del logo en el formulario del bot, **apenas se sube** (antes
+  de guardar) y al volver a editar: cómo se ve en el encabezado del chat y en
+  el botón flotante (`AutomationEntityForm::addLogoPreview`, un `#process`
+  del campo de archivo).
+- Encabezado del chat: el logo se mostraba recortado (`object-fit: cover`)
+  sobre un cuadro azul. Ahora completo (`contain`) y sobre blanco, como en la
+  vista previa.
+
+**Comprobado**
+
+- Con la cuenta del Gestor y el logo que mandó el equipo (local, copia
+  restaurada después): vista previa al subir (2 imágenes cargadas), «Saved
+  Goblin», vista previa al volver a editar; encabezado del chat con el logo
+  completo sobre blanco; botón con el logo, fondo blanco, 0 px de desvío.
+- `BotLogoPreviewTest` (funcional, cuenta del Gestor): falla si se quita la
+  vista previa (sabotaje hecho). Hallazgo al escribirla: referenciar un
+  archivo subido exige el permiso «access content»; en el sitio lo tienen los
+  usuarios con sesión (`user.role.authenticated.yml`), la prueba lo replica.
+- 174 pruebas OK; `phpcs` sin observaciones nuevas.
+
+**No comprobado:** en producción (falta desplegar y saber dónde quedó el
+logo que se subió).
+
+---
+
 ## 2026-10-05 — Botón flotante del chat: centrado en cualquier sitio, iconos que funcionan
 
 **Visto por el equipo en goblincreative.com:** el icono del botón flotante

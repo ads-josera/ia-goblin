@@ -45,8 +45,16 @@ body {
   place-items: center;
   border-radius: 14px;
   background: #3e6ed6;
-  object-fit: cover;
   font-weight: 800;
+}
+
+/* A logo is shown whole (a wide one would lose its sides to "cover") and on
+   white, where any logo reads; the bot form previews it the same way. */
+.aiwa-chat__logo {
+  padding: 5px;
+  box-sizing: border-box;
+  background: #fff;
+  object-fit: contain;
 }
 
 .aiwa-chat__title {

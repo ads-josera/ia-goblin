@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\file\FileInterface;
 
 /**
  * Provides the default form for AI WhatsApp Automation content entities.
@@ -32,6 +33,11 @@ final class AutomationEntityForm extends ContentEntityForm {
     }
 
     if ($entity->getEntityTypeId() === 'ai_whatsapp_bot') {
+      // Runs after the file element's own processing, so the preview also
+      // appears right after an upload, before the bot is saved.
+      if (isset($form['web_widget_logo_file']['widget'][0])) {
+        $form['web_widget_logo_file']['widget'][0]['#process'][] = [self::class, 'addLogoPreview'];
+      }
       $this->organizeBotForm($form, $entity->isNew());
     }
 
@@ -107,6 +113,54 @@ final class AutomationEntityForm extends ContentEntityForm {
     }
 
     return $entity;
+  }
+
+  /**
+   * Shows the uploaded widget logo, on the button's colors.
+   *
+   * A file field only lists the file name: nobody could tell whether the
+   * right image went up, or how it looks on the button.
+   */
+  public static function addLogoPreview(array $element, FormStateInterface $form_state): array {
+    $file = is_array($element['#files'] ?? NULL) ? reset($element['#files']) : NULL;
+    if (!$file instanceof FileInterface) {
+      return $element;
+    }
+
+    $image = [
+      '#theme' => 'image',
+      '#uri' => $file->getFileUri(),
+      '#alt' => '',
+    ];
+    $element['aiwa_logo_preview'] = [
+      '#type' => 'container',
+      '#weight' => 50,
+      '#attributes' => ['class' => ['aiwa-logo-preview']],
+      'label' => [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => t('Preview'),
+        '#attributes' => ['class' => ['aiwa-logo-preview__label']],
+      ],
+      'header' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['aiwa-logo-preview__tile', 'aiwa-logo-preview__tile--header'],
+          'title' => t('Chat header'),
+        ],
+        'image' => $image,
+      ],
+      'button' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['aiwa-logo-preview__tile', 'aiwa-logo-preview__tile--button'],
+          'title' => t('Floating button (icon "Widget logo")'),
+        ],
+        'image' => $image,
+      ],
+    ];
+
+    return $element;
   }
 
   /**
