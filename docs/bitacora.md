@@ -23,9 +23,10 @@ lo **no comprobado**.
 - **Bots por área hechos en local (2026-10-05):** «Goblin» es ahora una
   recepción con menú (sin IA) y hay dos bots de área, **Goblin Facturación**
   y **Goblin Soporte**, cada uno con su prompt y sus números de aviso. Probado
-  (pruebas automáticas, sabotaje, prueba en vivo con OpenAI). **Falta
-  desplegarlo** (comandos en [despliegue.md](despliegue.md), «Bots por área»)
-  y que el equipo revise los encabezados de área de los prompts.
+  (pruebas automáticas, sabotaje, prueba en vivo con OpenAI). **Desplegado
+  en producción** (`4e6c8c9`). Falta: probarlo en el chat web de producción
+  (incluye la prueba del lead) y que el equipo revise los encabezados de área
+  de los prompts.
 - **Siguiente:** prompt de **Ventas** con el equipo (se agrega como tercer
   bot del menú, sin cambiar código) y los números de cada encargado.
 - **También pendiente:** prueba del lead en producción. En una ventana privada
@@ -121,7 +122,9 @@ restaba días como bloques de 86400 s y las pruebas de Drupal corren en hora
 de Sídney, que cambió al horario de verano ese día (23 h). La gráfica estaba
 bien (usa días de calendario); se corrigió la prueba.
 
-**No comprobado:** en producción (falta desplegar); WhatsApp real (la cuenta
+**Desplegado** (`4e6c8c9`): 11042 aplicada, bots creados (Facturación 2, Soporte 3, recepción 1). `web/.htaccess` aparece modificado en el servidor: lo añadió cPanel (handler de PHP 8.4); se deja, ver despliegue.md.
+
+**No comprobado:** el chat en producción; WhatsApp real (la cuenta
 de producción todavía no tiene número conectado; probado con Twilio
 simulado); la prueba en vivo completa de 12 escenarios con los bots
 separados.

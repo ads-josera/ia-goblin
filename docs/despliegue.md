@@ -136,6 +136,24 @@ git status --short                # debe salir vacío
 Las claves escritas en la Configuración del módulo **no se pierden** con
 `drush cim` (viven en el State, no en `config/sync`).
 
+### `web/.htaccess` modificado en el servidor (esperado)
+
+`git status --short` muestra ` M web/.htaccess`: cPanel (MultiPHP) añadió al
+final su bloque `cPanel-generated handler` con `ea-php84`. Se deja: es como
+cPanel administra la versión de PHP y, si se borra, puede volver a escribirlo.
+Repite lo que ya hace `~/ia.goblincreative.com/.htaccess`.
+
+Ese archivo es de Drupal: cuando una actualización de core lo cambie,
+`git pull` se negará a sobrescribirlo. En ese caso:
+
+```bash
+git stash          # guarda el bloque de cPanel
+git pull
+git stash pop      # lo vuelve a poner al final
+```
+
+Si `stash pop` reporta conflicto, avisar antes de seguir.
+
 ### Bots por área (2026-10-05)
 
 Además de los pasos de arriba, después de `drush cr`:
@@ -170,3 +188,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 |-------|--------|-----------|-------|
 | 2026-09-30 | `4c590f2` | Instalado y funcionando | Primer despliegue (fases 0–3C) |
 | 2026-09-30 | `4942bfc` | OK | Claves en State: `updb` 11041 (nada que mover), `cim` sin cambios, `git status` limpio, State vacío |
+| 2026-10-05 | `4e6c8c9` | OK | Bots por área: `updb` 11042, `cim` sin cambios, script creó Goblin Facturación (2) y Goblin Soporte (3), Goblin (1) es la recepción. `web/.htaccess` con el bloque de cPanel (esperado) |
