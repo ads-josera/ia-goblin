@@ -92,8 +92,12 @@ ignoraba.
 - 173 pruebas OK; `phpcs` sin observaciones nuevas en PHP; sintaxis JS con
   `node --check` (phpcs no sirve para JS y el proyecto no tiene ESLint).
 
-**No comprobado:** en goblincreative.com (falta desplegar; el sitio carga el
-script desde producción, así que se verá al desplegar, sin tocar el sitio).
+**Desplegado** (`188b527`, `updb` 11043) y **medido en goblincreative.com**
+en Chromium, WebKit y Firefox, escritorio (1280) y móvil (390): botón dentro
+del shadow root, 60×60, icono con 0 px de desvío, «Abrir chat con Goblin» /
+«Cerrar chat», abre y cierra. En móvil la ventana cabe sin salirse. El texto
+de bienvenida se ve tenue solo los primeros 240 ms (animación de entrada;
+medido: opacidad 0.11 → 1, color `rgb(23, 32, 51)`).
 
 **Visto, para después:** en el chat web la IA sigue contestando después del
 lead y prometió «lo adjunto al caso» (pendiente ya anotado: nadie lee esos
