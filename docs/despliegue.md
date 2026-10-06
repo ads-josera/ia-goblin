@@ -190,3 +190,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-09-30 | `4942bfc` | OK | Claves en State: `updb` 11041 (nada que mover), `cim` sin cambios, `git status` limpio, State vacío |
 | 2026-10-05 | `4e6c8c9` | OK | Bots por área: `updb` 11042, `cim` sin cambios, script creó Goblin Facturación (2) y Goblin Soporte (3), Goblin (1) es la recepción. `web/.htaccess` con el bloque de cPanel (esperado) |
 | 2026-10-05 | `2c38c80` | OK | El «2» del menú ya no se lee como opción de una lista vieja; Enrutamiento muestra las áreas de una recepción. Solo `git pull` + `drush cr` |
+| 2026-10-05 | `93137d7` | OK | Regla «no ofrecer revisar sistemas»: solo `git pull` + `scripts/bots/goblin.php` (3 bots actualizados) |
