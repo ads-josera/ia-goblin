@@ -8,33 +8,24 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- **En producción:** https://ia.goblincreative.com (primer despliegue
-  2026-09-30, ver [despliegue.md](despliegue.md)).
-- **Claves de proveedores:** ahora se escriben en la Configuración del módulo
-  y sobreviven a los despliegues. **Desplegado** y con la clave de OpenAI de
-  producción ya guardada desde el admin (el módulo la ve).
-- **Cron** en el crontab cada 5 min (`drush cron`, PHP 8.4); comprobado: última ejecución 18:35:01, hace 1 min.
-- **HTTPS forzado** (comprobado desde fuera: `http://` → 301 a `https://`,
-  también `www.ia.` y rutas internas).
-- **Bot Goblin responde en producción** (chat web, sin errores en el
-  registro).
+- **En producción:** https://ia.goblincreative.com (HTTPS forzado, cron cada
+  5 min, clave de OpenAI guardada desde el admin y a salvo de los
+  despliegues).
+- **Bots por área en producción y probados (2026-10-05):** «Goblin» es la
+  recepción con menú (sin IA); **Goblin Facturación** y **Goblin Soporte**
+  atienden cada área. Prueba en el chat web de producción: menú → área →
+  «Datos capturados» → **1 lead del bot Goblin Facturación**, sin errores.
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
-  **Rotarla al terminar las pruebas** (se compartió por chat).
-- **Bots por área hechos en local (2026-10-05):** «Goblin» es ahora una
-  recepción con menú (sin IA) y hay dos bots de área, **Goblin Facturación**
-  y **Goblin Soporte**, cada uno con su prompt y sus números de aviso. Probado
-  (pruebas automáticas, sabotaje, prueba en vivo con OpenAI). **Desplegado
-  en producción** (`4e6c8c9`, y `2c38c80` con el arreglo del «2» y las áreas
-  en Enrutamiento). Falta: probarlo en el chat web de producción
-  (incluye la prueba del lead) y que el equipo revise los encabezados de área
-  de los prompts.
-- **Siguiente:** prompt de **Ventas** con el equipo (se agrega como tercer
-  bot del menú, sin cambiar código) y los números de cada encargado.
-- **También pendiente:** prueba del lead en producción. En una ventana privada
-  **nueva**: Soporte técnico → «quiero cancelar mi hosting» → dar nombre y
-  celular → el bot cierra con «Datos capturados». Esperado: Conversaciones 2,
-  Leads 1. Confirmar también `options.enable_lead_notifications` = `true`
-  (comandos en la entrada de abajo).
+  **Rotarla** (se compartió por chat).
+- **Siguiente:**
+  1. Números de WhatsApp del encargado de cada área (campo «Lead
+     notification WhatsApp numbers» de cada bot de área). Sin ellos los
+     avisos no llegan a nadie.
+  2. Prompt de **Ventas** con el equipo (se agrega como tercera área del
+     menú, sin cambiar código).
+  3. Que el equipo revise los encabezados de área de `facturacion.md` y
+     `soporte.md`.
+  4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -47,9 +38,8 @@ lo **no comprobado**.
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
 | 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model», sección «Reception menu»); de paso, ocultar «Menu areas» en los bots de área | Media |
-| 2 | Bots por área: desplegar Facturación y Soporte; crear Ventas (prompt con el equipo); números de cada encargado en su bot | Alta |
+| 2 | Bots por área: crear Ventas (prompt con el equipo); números de cada encargado en su bot; revisar encabezados de área | Alta |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3 | Probar la creación de un lead en producción (ver «Dónde quedamos») | Alta |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
 | 3c | Producción: borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
@@ -58,6 +48,20 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-05 — Lead creado en producción por un bot de área
+
+**Comprobado en producción** (chat web, ventana privada limpia): «1» →
+Goblin Facturación → «quiero cancelar mi hosting» → nombre y celular →
+«Datos capturados». Resultado: `Leads: 1`, `Lead 1 -> bot: Goblin
+Facturación`, 3 conversaciones (la del 30 de septiembre, la prueba anterior
+y esta), registro sin errores. Cierra el pendiente «probar un lead en
+producción».
+
+**No comprobado:** el aviso por WhatsApp al encargado (todavía no hay
+números ni número de WhatsApp de Goblin conectado).
 
 ---
 
