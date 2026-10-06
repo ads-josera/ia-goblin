@@ -88,7 +88,7 @@ logo del encabezado; fue una decisión mía sin preguntar.
 - 174 pruebas OK; `phpcs` sin observaciones nuevas (la URL de archivos ahora
   se inyecta en el formulario, sin `\Drupal::service()`).
 
-**No comprobado:** en producción (falta desplegar).
+**Desplegado** (`e96ad1f`, `updb` 11044: 0 bots movidos). Falta que el equipo suba el icono y el logo en producción.
 
 **Pendiente (anotado):** los textos del formulario del bot siguen en inglés
 («Web widget button icon», «Custom»…), pendiente 1.

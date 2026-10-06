@@ -199,3 +199,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-05 | `93137d7` | OK | Regla «no ofrecer revisar sistemas»: solo `git pull` + `scripts/bots/goblin.php` (3 bots actualizados) |
 | 2026-10-05 | `188b527` | OK | Botón flotante aislado (shadow root) e iconos: `updb` 11043. Medido en goblincreative.com: centrado en 3 navegadores |
 | 2026-10-05 | `447aae2` | OK | Vista previa del logo en el admin; logo completo en el encabezado del chat. Solo `git pull` + `drush cr` |
+| 2026-10-05 | `e96ad1f` | OK | Icono del botón: selector visual y subida propia. `updb` 11044 (0 bots movidos) |
