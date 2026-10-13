@@ -143,7 +143,14 @@ del módulo (dijo «un proyecto», solo Drupal): por eso `cr` va antes.
 Las claves escritas en la Configuración del módulo **no se pierden** con
 `drush cim` (viven en el State, no en `config/sync`).
 
-### `web/.htaccess` modificado en el servidor (esperado)
+### `web/.htaccess` y el bloque de cPanel
+
+**Desde 2026-10-12 ya no está:** la actualización a 11.4.9 (`composer
+install`) volvió a copiar el `.htaccess` de Drupal y lo quitó; el sitio sigue
+en PHP 8.4 por `~/ia.goblincreative.com/.htaccess` y `git status` sale
+limpio. Si cPanel lo vuelve a escribir, lo de abajo aplica de nuevo.
+
+#### Antes (2026-10-05)
 
 `git status --short` muestra ` M web/.htaccess`: cPanel (MultiPHP) añadió al
 final su bloque `cPanel-generated handler` con `ea-php84`. Se deja: es como
@@ -236,3 +243,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-05 | `e96ad1f` | OK | Icono del botón: selector visual y subida propia. `updb` 11044 (0 bots movidos) |
 | 2026-10-12 | `a20d8ba` | Parcial | Traducción: `locale:check` antes de `cr` no vio el proyecto; resuelto en el siguiente |
 | 2026-10-12 | `b1f17a6` | OK | Goblin Ventas (id 4), menú de 3 áreas, números de encargados cargados en el servidor, traducción activa («Perfil del bot») |
+| 2026-10-12 | `b1adbb6` | OK | Drupal 11.4.9 con respaldo previo (base y `.htaccess` en `~/backups`). `composer install` quitó el bloque de cPanel de `web/.htaccess`; sitio OK (200, Drupal 11), `git status` limpio. 8,939 traducciones de core actualizadas |

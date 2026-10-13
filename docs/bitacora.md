@@ -75,6 +75,15 @@ admin cierra desde el menú de usuario de la barra de Drupal).
 `web/.htaccess` desde Drupal y quitar el bloque de cPanel; no rompe (el
 `.htaccess` del proyecto fija PHP 8.4), pero se respalda antes y se compara.
 
+**Desplegado** (`b1adbb6`, con respaldo de base y `.htaccess` en `~/backups`):
+`drush status` → 11.4.9; `updb` sin pendientes; traducciones de core
+actualizadas. `composer install` **quitó el bloque de cPanel** de
+`web/.htaccess`, como se previó. Comprobado desde fuera: login, chat y
+script del botón en 200 (< 1 s), «Drupal 11» en las cabeceras, el chat de
+goblincreative.com abre con el menú de 3 áreas. Deducido: PHP sigue en 8.4
+(Drupal 11.4 exige 8.3+ y el `.htaccess` del proyecto fija 8.4). Se deja sin
+el bloque: `git status` limpio en el servidor.
+
 **Equipo:** `ventas.md` aprobado (2026-10-12).
 
 ---
