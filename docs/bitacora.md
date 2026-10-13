@@ -8,27 +8,26 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- **En producción:** https://ia.goblincreative.com (HTTPS forzado, cron cada
-  5 min, clave de OpenAI guardada desde el admin y a salvo de los
-  despliegues).
-- **Bots por área en producción y probados (2026-10-05):** «Goblin» es la
-  recepción con menú (sin IA); **Goblin Facturación** y **Goblin Soporte**
-  atienden cada área. Prueba en el chat web de producción: menú → área →
-  «Datos capturados» → **1 lead del bot Goblin Facturación**, sin errores.
-- Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
-  **Rotarla** (se compartió por chat).
+- **En producción** https://ia.goblincreative.com, Drupal **11.4.9**,
+  HTTPS, cron cada 5 min, respaldo en `~/backups` antes de cada despliegue
+  grande.
+- **Bots de Goblin:** recepción con menú (1 Ventas, 2 Soporte, 3
+  Facturación), saludo fijo por área, chat reabierto empieza en el menú,
+  varios casos por conversación («Datos capturados» / «Datos adicionales»),
+  respuestas breves (mediana ~2.5 s), Ventas nunca da precios. Números de
+  los encargados cargados en el servidor.
+- **Costos reales:** tarifas oficiales de OpenAI en `config/sync`; costo por
+  el bot que respondió; el Panel lo muestra (confirmado por el equipo).
+- **Chat en goblincreative.com:** botón aislado y centrado, icono propio,
+  logo en el encabezado.
+- **QA:** `tests/visual/qa-sweep.mjs` (106 páginas, 3 roles) y
+  `embed-check.mjs` después de cada cambio; 182 pruebas automáticas.
 - **Siguiente:**
-  1. Números de los encargados: **cargados en producción** (2026-10-12; no
-     van en git). Los avisos saldrán cuando se conecte el número de WhatsApp
-     de Goblin (punto 4).
-  2. `ventas.md` aprobado por el equipo. Falta probar Ventas en el chat de
-     producción.
-  4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
-  5. Chat web después del lead: **resuelto** (2026-10-12, varios casos por
-     conversación).
-- **Chat web en goblincreative.com (2026-10-05):** botón flotante aislado y
-  centrado, icono propio («Custom») y logo en el encabezado, verificados en
-  3 navegadores.
+  1. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»):
+     con eso salen los avisos a los encargados.
+  2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
+  3. Traducir al español las demás pantallas del módulo (pendiente 1).
+  4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -94,6 +93,11 @@ a ese rol**. Correrlo después de cada cambio.
 - Pruebas nuevas: `CostByBotTest`, `OperatorLogLinksTest`, y el motor guarda
   el bot de cada respuesta (en `ReceptionMenuTest`); las tres saboteadas.
   **182 pruebas OK**; `phpcs` sin observaciones nuevas.
+
+**Desplegado y comprobado en producción** (`e688c48`): verificación del
+servidor «tarifas: 5 modelos | respuestas con bot: 25 de 25»; respuesta de IA
+de diagnóstico (sesión `diag-jarvis-costo-1791864821`) en 3.5 s; **el equipo
+confirmó que el Panel ya muestra el costo**.
 
 **Visto, sin cambiar:** títulos aún en inglés en otras pantallas
 («Evolution QR connections», «Web integration», «Upload knowledge
