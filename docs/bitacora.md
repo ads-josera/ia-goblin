@@ -87,7 +87,8 @@ nuevas.
 **Visto, para afinar con uso real:** en su primera respuesta, Ventas y
 Facturación todavía piden varios datos juntos.
 
-**No comprobado:** en producción (falta desplegar).
+**Desplegado** (`fa98dde`: 11045, traducciones, 4 bots). **No comprobado:** el
+saludo en el chat de producción (lo prueba el equipo).
 
 ---
 
