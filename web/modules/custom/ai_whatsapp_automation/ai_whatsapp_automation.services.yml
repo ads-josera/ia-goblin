@@ -50,6 +50,7 @@ services:
       - '@file_url_generator'
       - '@database'
       - '@logger.factory'
+      - '@ai_whatsapp_automation.menu_router'
 
   ai_whatsapp_automation.web_chat_frame_response_subscriber:
     class: Drupal\ai_whatsapp_automation\EventSubscriber\WebChatFrameResponseSubscriber

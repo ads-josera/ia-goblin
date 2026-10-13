@@ -55,6 +55,37 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-12 — Al reabrir el chat, el menú no funcionaba
+
+**Reportado por el equipo (capturas):** el chat mostraba el menú, el equipo
+escribía «1» o «3» y respondía la IA de **Soporte** («elegiste la opción 1 —
+Correo electrónico»). **Comprobado en producción:** conversación 6, ya en
+Soporte (había elegido «2»); al reabrir el chat, «3» y «1» los leyó Soporte.
+Los tres mensajes en la misma conversación: misma sesión del navegador
+(ventanas del mismo navegador la comparten). Con una conversación nueva, el
+menú y el saludo funcionaban (probado contra la API de producción con la
+sesión `diag-jarvis-1791861981`, sin IA).
+
+**Causa:** el chat siempre muestra el menú como bienvenida, pero el servidor
+seguía la conversación en el área donde había quedado. Un menú en pantalla
+que no funciona.
+
+**Qué se hizo:** el primer mensaje después de abrir el chat lleva
+`starts_at_menu` (`js/web-chat.js`); `WebChatService` regresa la
+conversación a su recepción antes de leerlo (`MenuRouter::
+returnToReception()`). Se conserva la conversación y su historial; solo cambia
+el área.
+
+**Comprobado:** prueba nueva que reproduce el caso (falla sin el arreglo:
+sabotaje hecho); en el navegador, interceptando la API sin gastar: 1.er
+mensaje con la marca, el 2.º sin ella, tras recargar otra vez con ella y la
+misma sesión. 177 pruebas OK; `phpcs` sin observaciones nuevas.
+
+**No comprobado:** en producción (falta desplegar). WhatsApp no tiene este
+caso: no muestra un menú al «abrir».
+
+---
+
 ## 2026-10-12 — Saludo fijo de cada área
 
 **Pedido del equipo:** al elegir «2», la IA saludaba «Hola — soy Goblin de

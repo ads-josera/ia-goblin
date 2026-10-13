@@ -149,7 +149,12 @@ final class WebChatController extends ControllerBase {
     }
 
     try {
-      $response = $this->webChat->processMessage($bot, (string) ($payload['session_id'] ?? ''), $message);
+      $response = $this->webChat->processMessage(
+        $bot,
+        (string) ($payload['session_id'] ?? ''),
+        $message,
+        ($payload['starts_at_menu'] ?? FALSE) === TRUE,
+      );
     }
     catch (WebChatLimitException $exception) {
       return $this->jsonWithCors(['error' => $exception->getMessage()], $bot, $request, Response::HTTP_TOO_MANY_REQUESTS);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_whatsapp_automation\Application\WebChat;
 
 use Drupal\ai_whatsapp_automation\Application\AI\ConversationEngineService;
+use Drupal\ai_whatsapp_automation\Application\AI\MenuRouter;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService;
 use Drupal\ai_whatsapp_automation\Exception\WebChatLimitException;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -35,6 +36,7 @@ final class WebChatService {
     private readonly FileUrlGeneratorInterface $fileUrlGenerator,
     private readonly Connection $database,
     LoggerChannelFactoryInterface $loggerFactory,
+    private readonly MenuRouter $menuRouter,
   ) {
     $this->logger = $loggerFactory->get('ai_whatsapp_automation');
   }
@@ -73,16 +75,30 @@ final class WebChatService {
   /**
    * Processes a web chat message.
    *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $bot
+   *   The bot of the chat link (a reception, for Goblin).
+   * @param string $session_id
+   *   The visitor's browser session.
+   * @param string $message
+   *   What the visitor wrote.
+   * @param bool $starts_at_menu
+   *   TRUE for the first message after the chat page opened: the visitor
+   *   sees the reception menu as the welcome, so a conversation left in an
+   *   area goes back to the reception before reading the message.
+   *
    * @return array<string, mixed>
    *   Response payload.
    */
-  public function processMessage(ContentEntityInterface $bot, string $session_id, string $message): array {
+  public function processMessage(ContentEntityInterface $bot, string $session_id, string $message, bool $starts_at_menu = FALSE): array {
     $session_id = $this->sanitizeSessionId($session_id);
     $conversation = $this->loadConversation($bot, $session_id);
     $is_new_conversation = !$conversation instanceof ContentEntityInterface;
     $this->assertUsageAllowed($bot, $conversation, $is_new_conversation);
     if (!$conversation instanceof ContentEntityInterface) {
       $conversation = $this->createConversation($bot, $session_id);
+    }
+    elseif ($starts_at_menu) {
+      $this->menuRouter->returnToReception($conversation);
     }
     $result = $this->conversationEngine->processIncomingMessage($conversation, trim($message), [
       'sender' => 'contact',

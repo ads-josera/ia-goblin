@@ -27,6 +27,11 @@
         sessionId = createSessionId();
         localStorage.setItem(storageKey, sessionId);
       }
+      // The welcome on screen is where the visitor starts: for a reception
+      // bot, its menu. The first message after the page opened tells the
+      // server so, or a conversation left in an area would read "1" as that
+      // area's own option. Cleared once a reply arrives.
+      var startsAtMenu = true;
       if (button) {
         button.dataset.aiwaLabel = button.textContent;
       }
@@ -59,7 +64,8 @@
           headers: requestHeaders(settings),
           body: JSON.stringify({
             session_id: sessionId,
-            message: text
+            message: text,
+            starts_at_menu: startsAtMenu
           })
         })
           .then(function (response) {
@@ -76,6 +82,7 @@
             });
           })
           .then(function (payload) {
+            startsAtMenu = false;
             removeElement(typing);
             // An empty reply means the assistant chose to stay quiet, so no
             // bubble is drawn rather than an empty one.

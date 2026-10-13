@@ -101,6 +101,34 @@ final class MenuRouter {
   }
 
   /**
+   * Puts a conversation back on its reception, as if "menú" was written.
+   *
+   * For a visitor who opens the web chat again: what they see first is the
+   * reception menu, so their first message must be read by it, not by the
+   * area the conversation was left in (a "1" was read by Support as its own
+   * option 1, "Correo"). Nothing happens when the conversation has no
+   * reception or is already on it.
+   *
+   * @return bool
+   *   TRUE when the conversation moved.
+   */
+  public function returnToReception(ContentEntityInterface $conversation): bool {
+    if (!$conversation->hasField('reception_bot') || $conversation->get('reception_bot')->isEmpty()) {
+      return FALSE;
+    }
+    $reception = $conversation->get('reception_bot')->entity;
+    if (!$reception instanceof ContentEntityInterface || !$this->isActive($reception) || !$this->isReception($reception)) {
+      return FALSE;
+    }
+    if ((string) $conversation->get('bot')->target_id === (string) $reception->id()) {
+      return FALSE;
+    }
+    $this->assign($conversation, $reception, $reception);
+
+    return TRUE;
+  }
+
+  /**
    * Whether a bot works as a reception (it has at least one active option).
    */
   public function isReception(ContentEntityInterface $bot): bool {

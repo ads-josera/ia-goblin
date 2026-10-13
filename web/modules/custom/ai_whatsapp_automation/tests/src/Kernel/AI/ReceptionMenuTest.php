@@ -287,6 +287,40 @@ final class ReceptionMenuTest extends KernelTestBase {
   }
 
   /**
+   * Reopening the web chat starts at the menu the visitor sees.
+   *
+   * Seen in production: a conversation left in Support, the chat reopened
+   * showing the menu, and "1" was read by Support as its own option 1.
+   */
+  public function testReopenedWebChatStartsAtTheMenu(): void {
+    $this->bots['reception']->set('web_widget_enabled', TRUE)->save();
+    $web_chat = $this->container->get('ai_whatsapp_automation.web_chat');
+    $conversations = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_conversation');
+    $bot_of = function (int|string $id) use ($conversations): string {
+      $conversations->resetCache();
+      return (string) $conversations->load($id)->get('bot')->target_id;
+    };
+
+    // First visit: into Support.
+    $first = $web_chat->processMessage($this->bots['reception'], 'returning', 'hola', TRUE);
+    $this->assistantReplies = ['Soporte aquí.'];
+    $web_chat->processMessage($this->bots['reception'], 'returning', '2');
+    $this->assertSame((string) $this->bots['support']->id(), $bot_of($first['conversation_id']));
+
+    // Same page, no reopen: "1" belongs to Support.
+    $this->assistantReplies = ['Opción 1 de soporte: correo.'];
+    $web_chat->processMessage($this->bots['reception'], 'returning', '1');
+    $this->assertSame((string) $this->bots['support']->id(), $bot_of($first['conversation_id']));
+
+    // The visitor opens the chat again, sees the menu and writes "1".
+    $this->assistantReplies = ['Facturación aquí.'];
+    $result = $web_chat->processMessage($this->bots['reception'], 'returning', '1', TRUE);
+    $this->assertSame($first['conversation_id'], $result['conversation_id'], 'Same conversation, history kept');
+    $this->assertSame((string) $this->bots['billing']->id(), $bot_of($first['conversation_id']));
+    $this->assertStringContainsString('PROMPT-FACTURACION', $this->lastOpenAiBody());
+  }
+
+  /**
    * A reception cannot offer another client's bot.
    */
   public function testMenuBotsMustBelongToTheSameClient(): void {
