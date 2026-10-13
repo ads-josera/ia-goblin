@@ -81,8 +81,11 @@ sabotaje hecho); en el navegador, interceptando la API sin gastar: 1.er
 mensaje con la marca, el 2.º sin ella, tras recargar otra vez con ella y la
 misma sesión. 177 pruebas OK; `phpcs` sin observaciones nuevas.
 
-**No comprobado:** en producción (falta desplegar). WhatsApp no tiene este
-caso: no muestra un menú al «abrir».
+**Desplegado y comprobado en producción** (`eaeeabc`): la página sirve el
+`web-chat.js` nuevo (con `starts_at_menu`); contra la API, sesión
+`diag-jarvis-reopen-1791862337`, sin IA: «2» → saludo de Soporte; «1» como
+chat reabierto → saludo de **Ventas**. WhatsApp no tiene este caso: no
+muestra un menú al «abrir».
 
 ---
 

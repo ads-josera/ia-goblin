@@ -245,3 +245,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-12 | `b1f17a6` | OK | Goblin Ventas (id 4), menú de 3 áreas, números de encargados cargados en el servidor, traducción activa («Perfil del bot») |
 | 2026-10-12 | `b1adbb6` | OK | Drupal 11.4.9 con respaldo previo (base y `.htaccess` en `~/backups`). `composer install` quitó el bloque de cPanel de `web/.htaccess`; sitio OK (200, Drupal 11), `git status` limpio. 8,939 traducciones de core actualizadas |
 | 2026-10-12 | `fa98dde` | OK | Saludo fijo por área: `updb` 11045, 2 traducciones nuevas, 4 bots actualizados, `git status` vacío |
+| 2026-10-12 | `eaeeabc` | OK | Chat reabierto empieza en el menú. Solo `git pull` + `drush cr`; `git status` vacío |
