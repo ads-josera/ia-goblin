@@ -63,6 +63,9 @@ Listo. Ya tengo la información necesaria para canalizar tu solicitud con nuestr
 
 Estas reglas tienen prioridad sobre los ejemplos del prompt:
 
+- Otra área. Si el cliente pide algo que no es de tu área (según el inicio de tu prompt), no lo atiendas, no pidas datos y no lo canalices tú: responde en un mensaje corto que escriba «menú» y elija el área que corresponde, y nada más: sin preguntas, consejos ni promesas de contacto. Ahí lo atienden.
+- Primer mensaje del área. Si el cliente acaba de elegir el área en el menú, salúdalo y hazle una sola pregunta abierta sobre lo que necesita. No pidas todavía nombre, número ni correo.
+
 - Nombre y número. En WhatsApp (Provider distinto de "web") ya tienes el número del cliente (Phone del contexto): no lo pidas y úsalo en el resumen. El campo "Name" del contexto es el nombre del perfil de WhatsApp y puede ser un apodo: no lo uses como nombre del cliente. Pregunta «¿A nombre de quién registro la solicitud?» una sola vez y solo cuando ya decidiste canalizar el caso (nunca al inicio ni mientras todavía estás entendiendo o resolviendo el problema), salvo que el cliente ya haya dicho su nombre en esta conversación. En el chat web (Provider "web") no tienes número: pide nombre y número de celular.
 - No escribas «Datos capturados:» sin un nombre dado por el cliente.
 - Después de «Datos capturados», no hagas ninguna pregunta: la conversación pasa a una persona del equipo y ya no podrás leer la respuesta.
@@ -74,18 +77,22 @@ Estas reglas tienen prioridad sobre los ejemplos del prompt:
 RULES;
 
 /*
- * Area bots, in menu order. Keywords send a contact straight to the area
- * when exactly one area matches; "cancelar mi hosting" matches both and gets
- * the menu, which is better than guessing.
+ * Area bots, in menu order (decided by the team: 1 Ventas, 2 Soporte,
+ * 3 Facturación). Keywords send a contact straight to the area when exactly
+ * one area matches; "cancelar mi hosting" matches two and gets the menu,
+ * which is better than guessing. Sales only quotes new development projects
+ * and never gives prices.
  */
 $areas = [
-  'billing' => [
-    'name' => 'Goblin Facturación',
-    'prompt' => 'facturacion.md',
-    'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, cotizaciones y contacto con un asesor.',
-    'menu_label' => 'Facturación y atención comercial',
-    'menu_keywords' => 'factura, facturas, facturacion, pago, pagos, pagar, cobro, cotizacion, cotizar, precio, precios, asesor, cancelar, cancelacion, suspendida',
-    'categories' => 'Facturación y atención comercial',
+  'sales' => [
+    'name' => 'Goblin Ventas',
+    'prompt' => 'ventas.md',
+    'description' => 'Goblin Creative, área de ventas: cotizaciones de proyectos nuevos de desarrollo (HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas personalizados). Nunca da precios: el área de ventas contacta al cliente.',
+    'menu_label' => 'Ventas y cotizaciones',
+    // Only words that mean "something new": "sitio web", "WordPress" or
+    // "sistema" also show up in support problems ("mi sitio web no carga").
+    'menu_keywords' => 'cotizacion, cotizar, cotizaciones, ventas, tienda en linea, tienda online, nuevo sitio, nueva pagina, desarrollar',
+    'categories' => 'Cotización: Desarrollo HTML5 y PHP / Drupal o WordPress / Tienda en línea / Sistema personalizado',
   ],
   'support' => [
     'name' => 'Goblin Soporte',
@@ -95,13 +102,21 @@ $areas = [
     'menu_keywords' => 'soporte, correo, correos, outlook, gmail, smtp, imap, cpanel, dominio, dns, ssl',
     'categories' => 'Correo electrónico / cPanel y hosting / Dominio y DNS / Otro soporte',
   ],
+  'billing' => [
+    'name' => 'Goblin Facturación',
+    'prompt' => 'facturacion.md',
+    'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, contratación de hosting, correo y dominios, y contacto con un asesor.',
+    'menu_label' => 'Facturación y atención comercial',
+    'menu_keywords' => 'factura, facturas, facturacion, pago, pagos, pagar, cobro, precio, precios, asesor, cancelar, cancelacion, suspendida',
+    'categories' => 'Facturación y atención comercial',
+  ],
 ];
 
 /*
  * Reception. Its prompt is never sent to the AI (a reception only answers
  * with its menu), but the field is required.
  */
-$reception_prompt = 'Bot de recepción de Goblin Creative. No llama a la IA: responde con el menú de áreas y pasa la conversación al bot del área elegida (Goblin Facturación o Goblin Soporte).';
+$reception_prompt = 'Bot de recepción de Goblin Creative. No llama a la IA: responde con el menú de áreas y pasa la conversación al bot del área elegida (Goblin Ventas, Goblin Soporte o Goblin Facturación).';
 $reception_menu_message = "👋 ¡Bienvenido a Goblin Creative!\n\nSi buscas información, una cotización, asesoría sobre nuestros servicios o necesitas soporte, estoy listo para ayudarte.\n\nSelecciona una opción:";
 
 /*

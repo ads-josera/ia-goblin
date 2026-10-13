@@ -167,6 +167,12 @@ Si `stash pop` reporta conflicto, avisar antes de seguir.
 local: `cd tests/visual && for e in chromium webkit firefox; do ENGINE=$e
 node embed-check.mjs; done` (página hostil, centrado, abrir y cerrar).
 
+### Números de los encargados (no van en git)
+
+Se guardan en cada bot de área («Números de WhatsApp de los encargados»),
+desde el admin o con un comando en el servidor. No se escriben en el script
+de bots ni en la documentación: son datos de personas del equipo.
+
 ### Bots por área (2026-10-05)
 
 Además de los pasos de arriba, después de `drush cr`:

@@ -18,13 +18,11 @@ lo **no comprobado**.
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
   **Rotarla** (se compartió por chat).
 - **Siguiente:**
-  1. Números de WhatsApp del encargado de cada área (campo «Lead
-     notification WhatsApp numbers» de cada bot de área). Sin ellos los
-     avisos no llegan a nadie.
-  2. Prompt de **Ventas** con el equipo (se agrega como tercera área del
-     menú, sin cambiar código).
-  3. Que el equipo revise los encabezados de área de `facturacion.md` y
-     `soporte.md`.
+  1. Números de los encargados: dados por el equipo (2026-10-12), se cargan
+     en producción con el despliegue de Ventas (no van en git). Los avisos
+     saldrán cuando se conecte el número de WhatsApp de Goblin (punto 4).
+  2. Que el equipo revise `ventas.md` (texto nuevo). Los encabezados de
+     Facturación y Soporte ya están aprobados.
   4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
   5. **Próxima tarea acordada (en pausa por decisión del equipo):** chat web
      después del lead — la IA sigue contestando y promete cosas («lo adjunto
@@ -54,6 +52,53 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-12 — Bot de Ventas y menú de tres áreas
+
+**Decisiones del equipo:** Ventas = solo cotizaciones de proyectos nuevos
+(HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas
+personalizados); **nunca da precios**, el área de ventas contacta; pide
+servicio y para qué, si tiene sitio o dominio, correo, nombre y celular; no
+pregunta presupuesto. Hosting, correo y dominios nuevos siguen en
+Facturación. Menú: 1 Ventas, 2 Soporte, 3 Facturación.
+
+**Qué se hizo**
+
+- `docs/bots/goblin/ventas.md` (nuevo, texto nuestro; pendiente que el
+  equipo lo revise) y bot **Goblin Ventas** en `scripts/bots/goblin.php`,
+  primera opción del menú.
+- Facturación y Soporte: «cotizaciones» pasan a Ventas (encabezados y las
+  dos líneas de cotización del prompt de Facturación). El encabezado de
+  Facturación ahora lista lo que **no** es suyo.
+- Palabras clave de Ventas solo de «algo nuevo»: con «sitio web» o
+  «WordPress», «mi sitio web no carga» se iba a Ventas.
+- Reglas de canalización nuevas (las tres áreas): otra área → solo «escribe
+  menú y elige…», sin pedir datos; primer mensaje del área → saludo y una
+  pregunta, sin pedir datos de contacto.
+- Números de los encargados: Ventas y Facturación comparten uno, Soporte
+  otro. **No van en git**: se cargan en el servidor (ver despliegue.md).
+
+**Comprobado (en vivo con OpenAI, local, copia restaurada)**
+
+- Cotización completa por el menú: no dio precio («cada tienda se cotiza
+  según lo que necesitas»), pidió los datos y creó el **lead del bot Goblin
+  Ventas** con nombre, teléfono y correo.
+- «Quiero cotizar un sistema…» → directo a Ventas. «Mi sitio web no carga» →
+  menú (no a Ventas).
+- Antes de las reglas nuevas, Soporte se ponía a cotizar y el primer mensaje
+  pedía todos los datos; después, Soporte, Ventas y Facturación mandan a
+  «menú» lo que no es suyo, y el primer mensaje es una sola pregunta.
+- Facturación: cotizar WordPress, tienda o sistema → «menú» / Ventas;
+  contratar hosting y cancelar se quedan en Facturación.
+
+**Visto, sin resolver:** a veces, tras indicar «menú», agrega una frase de
+más («ahí un asesor te dará precios…»). El modelo no es determinista;
+revisar con conversaciones reales.
+
+**No comprobado:** en producción (falta desplegar) y los avisos por WhatsApp
+(falta conectar el número de Goblin).
 
 ---
 

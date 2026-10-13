@@ -7,13 +7,14 @@ prompt y sus propios encargados.
 | Bot | Qué hace |
 |-----|----------|
 | **Goblin** (recepción) | Responde con el menú **sin llamar a la IA**. Está asignado a la cuenta de WhatsApp y tiene el chat web, así que el enlace no cambió |
-| **Goblin Facturación** | Pagos, facturas, renovaciones, cancelaciones, cotizaciones, asesor |
-| **Goblin Soporte** | Correo, cPanel / hosting, dominios y DNS |
+| **Goblin Ventas** (opción 1) | Solo cotizaciones de proyectos nuevos: HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas personalizados. **Nunca da precios**: el área de ventas contacta al cliente |
+| **Goblin Soporte** (opción 2) | Correo, cPanel / hosting, dominios y DNS |
+| **Goblin Facturación** (opción 3) | Pagos, facturas, renovaciones, cancelaciones, contratación de hosting, correo y dominios, asesor |
 
 Cómo se mueve el cliente:
 
-- **«hola» o cualquier cosa** en la recepción → el menú (1️⃣ Facturación y
-  atención comercial, 2️⃣ Soporte técnico).
+- **«hola» o cualquier cosa** en la recepción → el menú (1️⃣ Ventas y
+  cotizaciones, 2️⃣ Soporte técnico, 3️⃣ Facturación y atención comercial).
 - **El número** (`1`, `2`, `1️⃣`…) → pasa al bot de esa área, que contesta ese
   mismo mensaje.
 - **Una palabra clave** de un solo área («necesito mi factura») → pasa directo.
@@ -27,7 +28,8 @@ Cómo se mueve el cliente:
 | Archivo | Qué es |
 |---------|--------|
 | [comun.md](comun.md) | Parte común de los dos bots de área (identidad, datos del lead, escalamiento, seguridad, estilo…) |
-| [facturacion.md](facturacion.md) | Lo propio de Facturación, con un encabezado que dice qué atiende |
+| [ventas.md](ventas.md) | Ventas: encabezado y secciones V1–V6 (servicios, sin precios, datos para cotizar). Texto nuevo, no viene del prompt maestro |
+| [facturacion.md](facturacion.md) | Lo propio de Facturación, con un encabezado que dice qué atiende y qué no |
 | [soporte.md](soporte.md) | Lo propio de Soporte, con su encabezado |
 | [prompt-maestro-original.md](prompt-maestro-original.md) | El prompt único de antes, **solo como referencia**: ya no se carga en ningún bot |
 | [../../../scripts/bots/goblin.php](../../../scripts/bots/goblin.php) | Crea o actualiza los tres bots y el menú |
@@ -53,6 +55,14 @@ Se puede correr las veces que haga falta.
 
 Si se edita un prompt desde la interfaz, hay que copiarlo también al archivo
 del área, o la siguiente ejecución del script lo sobrescribe.
+
+## Ventas: qué pide y qué no
+
+Pide qué servicio y para qué, si ya tiene sitio o dominio, correo, y nombre y
+celular. No pregunta presupuesto ni fechas, no promete tiempos y nunca da
+precios ni rangos. Palabras clave que llevan directo a Ventas: solo las que
+significan «algo nuevo» (cotizar, tienda en línea, nuevo sitio…): «sitio
+web», «WordPress» o «sistema» también aparecen en problemas de soporte.
 
 ## Avisos de leads por área
 

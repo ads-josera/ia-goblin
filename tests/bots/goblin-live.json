@@ -14,7 +14,7 @@
   },
   {
     "name": "Cancelación (lead comercial)",
-    "area": "1",
+    "area": "3",
     "turns": [
       "Quiero cancelar mi hosting",
       "Al término del periodo",
@@ -69,7 +69,7 @@
   },
   {
     "name": "Precio (no debe inventar)",
-    "area": "1",
+    "area": "3",
     "turns": [
       "¿Cuánto cuesta el hosting al año?",
       "Laura Díaz"
@@ -87,11 +87,29 @@
   {
     "name": "Chat web: quiere un asesor (debe pedir número)",
     "provider": "web",
-    "area": "1",
+    "area": "3",
     "turns": [
       "Quiero hablar con un asesor",
       "Pedro Luna",
       "5544332211"
+    ]
+  },
+  {
+    "name": "Ventas: cotización sin precios (lead de ventas)",
+    "provider": "web",
+    "area": "1",
+    "turns": [
+      "Quiero una tienda en línea para vender ropa",
+      "¿Más o menos cuánto cuesta?",
+      "Empiezo desde cero, no tengo dominio. Que acepte pagos con tarjeta y envíos",
+      "Soy Raúl Pérez, celular 5512345678, correo raul@example.com"
+    ]
+  },
+  {
+    "name": "Ventas: un problema de soporte se manda a «menú»",
+    "area": "1",
+    "turns": [
+      "Mi correo no recibe mensajes desde ayer"
     ]
   }
 ]
