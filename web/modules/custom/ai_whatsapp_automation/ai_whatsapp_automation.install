@@ -1302,6 +1302,16 @@ function ai_whatsapp_automation_update_11046(): string {
 }
 
 /**
+ * Adds the "minimal" reasoning level (fastest replies on GPT-5 mini).
+ */
+function ai_whatsapp_automation_update_11047(): string {
+  $definition = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_bot')['reasoning_effort'];
+  \Drupal::entityDefinitionUpdateManager()->updateFieldStorageDefinition($definition);
+
+  return (string) t('Bots can use the minimal reasoning level.');
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]

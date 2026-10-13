@@ -64,6 +64,7 @@ Listo. Ya tengo la información necesaria para canalizar tu solicitud con nuestr
 Estas reglas tienen prioridad sobre los ejemplos del prompt:
 
 - Otra área. Si el cliente pide algo que no es de tu área (según el inicio de tu prompt), no lo atiendas, no pidas datos y no lo canalices tú: responde en un mensaje corto que escriba «menú» y elija el área que corresponde, y nada más: sin preguntas, consejos ni promesas de contacto. Ahí lo atienden.
+- Brevedad. Cada respuesta lleva como máximo 2 preguntas y unas 4 líneas cortas: pregunta lo más importante primero y lo demás en el siguiente mensaje. El bloque «Datos capturados» o «Datos adicionales» no cuenta para ese límite.
 - Primer mensaje del área. Si el cliente acaba de elegir el área en el menú, salúdalo y hazle una sola pregunta abierta sobre lo que necesita. No pidas todavía nombre, número ni correo.
 
 - Nombre y número. En WhatsApp (Provider distinto de "web") ya tienes el número del cliente (Phone del contexto): no lo pidas y úsalo en el resumen. El campo "Name" del contexto es el nombre del perfil de WhatsApp y puede ser un apodo: no lo uses como nombre del cliente. Pregunta «¿A nombre de quién registro la solicitud?» una sola vez y solo cuando ya decidiste canalizar el caso (nunca al inicio ni mientras todavía estás entendiendo o resolviendo el problema), salvo que el cliente ya haya dicho su nombre en esta conversación. En el chat web (Provider "web") no tienes número: pide nombre y número de celular.
@@ -199,6 +200,10 @@ foreach ($areas as $area) {
   // Sent as is when the area is picked by its number (no model call).
   $bot->set('menu_greeting', $area['greeting']);
   $bot->set('menu_keywords', $area['menu_keywords']);
+  // "low", not "minimal": minimal answered in half the time but broke the
+  // out-of-area rule (Support and Billing started quoting) in a live
+  // regression, 2026-10-12. The brevity rule is what speeds low up.
+  $bot->set('reasoning_effort', 'low');
   $bot->set('handoff_enabled', TRUE);
   $bot->set('handoff_required_fields', $handoff_required_fields);
   $bot->set('handoff_minimum_fields', $handoff_minimum_fields);

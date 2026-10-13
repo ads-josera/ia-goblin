@@ -122,6 +122,8 @@ final class ReasoningEffortTest extends KernelTestBase {
       'new bot defaults to low' => [['model' => 'gpt-5-mini'], ['effort' => 'low']],
       'configured medium' => [['model' => 'gpt-5-mini', 'reasoning_effort' => 'medium'], ['effort' => 'medium']],
       'gpt-5.1 also reasons' => [['model' => 'gpt-5.1', 'reasoning_effort' => 'high'], ['effort' => 'high']],
+      'minimal on gpt-5-mini' => [['model' => 'gpt-5-mini', 'reasoning_effort' => 'minimal'], ['effort' => 'minimal']],
+      'gpt-5.1 has no minimal: low' => [['model' => 'gpt-5.1', 'reasoning_effort' => 'minimal'], ['effort' => 'low']],
       'non-reasoning model gets no parameter' => [['model' => 'gpt-4.1-mini', 'reasoning_effort' => 'low'], NULL],
     ];
   }

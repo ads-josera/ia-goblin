@@ -146,6 +146,9 @@ final class Bot extends ContentEntityBase {
       ->setDefaultValue('low')
       ->setSettings([
         'allowed_values' => [
+          // About twice as fast as low on gpt-5-mini (measured 2026-10-12);
+          // GPT-5.1 has no "minimal" and gets "low" (PromptBuilderService).
+          'minimal' => t('Minimal (fastest)'),
           'low' => t('Low (fast, recommended)'),
           'medium' => t('Medium'),
           'high' => t('High (slow)'),

@@ -54,6 +54,43 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-12 — Velocidad del bot y costos que no se registraban
+
+**El equipo sentía lentas las respuestas.** Medido (local, OpenAI real):
+preparar el mensaje 0.00 s; **OpenAI 3.6–3.7 s**; entrada ~4,100 tokens,
+salida ~500 (lo que el modelo «piensa» + respuestas con 4–5 preguntas).
+
+**Comparación** (misma pregunta, 2 veces cada una): bajo 2.8 s; bajo +
+brevedad 1.8–2.5 s; mínimo 1.7–2.0 s; mínimo + brevedad 1.2–1.4 s.
+
+**Decisión: «bajo» + regla de brevedad** (máximo 2 preguntas, ~4 líneas).
+«Mínimo» se probó con los casos críticos y **rompió la regla de otra área**
+(Soporte y Facturación se pusieron a cotizar): descartado para Goblin.
+Corrección honesta: una primera prueba «con mínimo» en realidad corrió con
+«bajo», porque el módulo convertía cualquier nivel desconocido en «bajo»;
+se detectó al leer el código y se repitió con «mínimo» de verdad.
+
+- Módulo: nivel **«Mínimo»** disponible (actualización `11047`); GPT-5.1 no
+  lo acepta y recibe «bajo». Pruebas de ambos casos, saboteadas.
+- Goblin: `reasoning_effort` = `low` fijado por el script y regla de
+  brevedad en las reglas de canalización.
+- **Resultado final medido** (10 respuestas de IA, casos críticos): mediana
+  **2.5 s** (antes 3–4.5 s); todas las reglas críticas se cumplen. Menú y
+  saludos: instantáneos.
+
+**Hallazgo: los costos estaban en 0.** `openai.cost_rates` vacío desde el
+inicio: el panel mostraba costo 0 y **los topes de gasto diario nunca se
+activaban**. Se cargaron los precios oficiales de OpenAI (por 1 M de tokens,
+página sin fecha, consultada 2026-10-12): gpt-5-mini 0.25 / 2.00; gpt-5 y
+gpt-5.1 1.25 / 10.00; gpt-5-nano 0.05 / 0.40; gpt-4.1-mini 0.40 / 1.60.
+Van en `config/sync` (no son secretos). Comprobado: una respuesta real
+registra 0.0016 USD (≈ 1.6 USD por 1,000). Los mensajes anteriores siguen
+en 0 (no se recalculan).
+
+180 pruebas OK; `phpcs` sin observaciones nuevas.
+
+---
+
 ## 2026-10-12 — Chat web después de un lead: varios casos por conversación
 
 **Pregunta del equipo:** ¿apagar la IA tras el lead deja sin soporte a quien

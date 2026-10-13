@@ -121,7 +121,7 @@ final class PromptBuilderService {
         'instructions' => $this->buildInstructions($bot, $account),
         'metadata' => $this->stringifyMetadata($metadata),
         // OpenAIService drops this for models that do not reason.
-        'reasoning' => ['effort' => $this->reasoningEffort($bot)],
+        'reasoning' => ['effort' => $this->reasoningEffort($bot, (string) $this->botManager->getEffectiveModel($bot, $account))],
       ],
     ];
   }
@@ -129,10 +129,15 @@ final class PromptBuilderService {
   /**
    * Returns the bot's reasoning effort, "low" when not configured.
    */
-  private function reasoningEffort(ContentEntityInterface $bot): string {
+  private function reasoningEffort(ContentEntityInterface $bot, string $model): string {
     $effort = $bot->hasField('reasoning_effort') ? (string) $bot->get('reasoning_effort')->value : '';
+    // "minimal" exists for GPT-5, GPT-5 mini and GPT-5 nano only; GPT-5.1
+    // would reject the request, so it gets the closest level it accepts.
+    if ($effort === 'minimal' && !in_array($model, ['gpt-5', 'gpt-5-mini', 'gpt-5-nano'], TRUE)) {
+      return 'low';
+    }
 
-    return in_array($effort, ['low', 'medium', 'high'], TRUE) ? $effort : 'low';
+    return in_array($effort, ['minimal', 'low', 'medium', 'high'], TRUE) ? $effort : 'low';
   }
 
   /**

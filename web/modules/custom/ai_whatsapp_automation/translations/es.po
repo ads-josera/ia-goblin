@@ -376,3 +376,6 @@ msgstr "Saludo del área"
 
 msgid "Sent as is, without calling the AI, when a contact picks this bot by its number in a reception menu. Leave empty to let the AI greet."
 msgstr "Se envía tal cual, sin llamar a la IA, cuando el contacto elige este bot por su número en el menú de recepción. Déjalo vacío para que salude la IA."
+
+msgid "Minimal (fastest)"
+msgstr "Mínimo (el más rápido)"
