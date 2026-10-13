@@ -175,7 +175,7 @@ servidor, con respaldo:
 
 ```bash
 mkdir -p ~/backups
-drush sql:dump --gzip --result-file=$HOME/backups/antes-<versión>.sql
+drush sql:dump --gzip --extra-dump=--no-tablespaces --result-file=$HOME/backups/antes-<versión>.sql   # sin --no-tablespaces, cPanel avisa «PROCESS privilege» (el respaldo sí se guarda)
 cp web/.htaccess ~/backups/htaccess-antes-<versión>
 git pull
 composer install --no-dev -o
@@ -254,3 +254,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-12 | `b1adbb6` | OK | Drupal 11.4.9 con respaldo previo (base y `.htaccess` en `~/backups`). `composer install` quitó el bloque de cPanel de `web/.htaccess`; sitio OK (200, Drupal 11), `git status` limpio. 8,939 traducciones de core actualizadas |
 | 2026-10-12 | `fa98dde` | OK | Saludo fijo por área: `updb` 11045, 2 traducciones nuevas, 4 bots actualizados, `git status` vacío |
 | 2026-10-12 | `eaeeabc` | OK | Chat reabierto empieza en el menú. Solo `git pull` + `drush cr`; `git status` vacío |
+| 2026-10-12 | `e688c48` | OK | Varios casos tras el lead, brevedad, tarifas de OpenAI, costo por bot, enlaces de la bitácora. `updb` 11046–11048 (25 respuestas tomaron su bot), `cim` (5 tarifas), traducciones, bots. Respaldo en `~/backups/antes-qa-2026-10-12.sql.gz` |
