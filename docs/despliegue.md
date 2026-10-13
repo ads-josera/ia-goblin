@@ -161,6 +161,27 @@ git stash pop      # lo vuelve a poner al final
 
 Si `stash pop` reporta conflicto, avisar antes de seguir.
 
+### Actualizar Drupal (core)
+
+En local primero (copia de la base con `ddev snapshot`), luego en el
+servidor, con respaldo:
+
+```bash
+mkdir -p ~/backups
+drush sql:dump --gzip --result-file=$HOME/backups/antes-<versión>.sql
+cp web/.htaccess ~/backups/htaccess-antes-<versión>
+git pull
+composer install --no-dev -o
+diff ~/backups/htaccess-antes-<versión> web/.htaccess   # ¿se fue el bloque de cPanel?
+drush updb -y && drush cr
+drush locale:check && drush locale:update && drush cr
+drush status --field=drupal-version
+```
+
+Si `composer install` quitó el bloque de cPanel de `web/.htaccess`, el sitio
+sigue en PHP 8.4 por `~/ia.goblincreative.com/.htaccess`; cPanel puede volver
+a escribirlo.
+
 ### Comprobar el botón flotante del chat
 
 `js/web-chat-embed.js` se inserta en sitios de clientes. Tras cambiarlo, en

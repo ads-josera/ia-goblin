@@ -21,8 +21,8 @@ lo **no comprobado**.
   1. Números de los encargados: **cargados en producción** (2026-10-12; no
      van en git). Los avisos saldrán cuando se conecte el número de WhatsApp
      de Goblin (punto 4).
-  2. Que el equipo revise `ventas.md` (texto nuevo). Los encabezados de
-     Facturación y Soporte ya están aprobados.
+  2. `ventas.md` aprobado por el equipo. Falta probar Ventas en el chat de
+     producción.
   4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
   5. **Próxima tarea acordada (en pausa por decisión del equipo):** chat web
      después del lead — la IA sigue contestando y promete cosas («lo adjunto
@@ -52,6 +52,30 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-12 — Drupal 11.4.8 → 11.4.9
+
+**Qué es:** versión de corrección de errores (9 de octubre de 2026), **sin
+avisos de seguridad**; `composer audit` sin vulnerabilidades. Cambios:
+CKEditor 5 actualizado, la barra de navegación ya no se carga con BigPipe,
+documentación y pruebas. Sin actualizaciones de base de datos anunciadas.
+
+**Comprobado en local** (con copia de la base): `composer update
+"drupal/core-*" --with-all-dependencies` (core y 29 paquetes, Symfony 7.4.20;
+PHPUnit/PHPStan solo de desarrollo). Solo cambió `composer.lock`: **ningún
+archivo del sitio**, tampoco `web/.htaccess`. `updb`: nada pendiente;
+definiciones y configuración sin diferencias. 175 pruebas OK; botón del chat
+OK. Recorrido por rol (cliente, gestor, admin): páginas 200, salida visible,
+sin desplazamiento lateral, cierran sesión, sin errores de JavaScript (el
+admin cierra desde el menú de usuario de la barra de Drupal).
+
+**Riesgo en el servidor:** `composer install` puede reescribir
+`web/.htaccess` desde Drupal y quitar el bloque de cPanel; no rompe (el
+`.htaccess` del proyecto fija PHP 8.4), pero se respalda antes y se compara.
+
+**Equipo:** `ventas.md` aprobado (2026-10-12).
 
 ---
 
