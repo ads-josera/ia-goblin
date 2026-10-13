@@ -656,7 +656,9 @@ final class AutomationEntityListBuilder extends EntityListBuilder {
       'data' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['aiwa-message-list__conversation']],
-        'link' => $conversation instanceof EntityInterface
+        // A link only for who may open it: the manager reads the log but not
+        // conversations, and a link to "Acceso denegado" reads as broken.
+        'link' => $conversation instanceof EntityInterface && $conversation->access('view')
           ? Link::fromTextAndUrl($contact, $conversation->toUrl('canonical'))->toRenderable()
           : ['#plain_text' => (string) $contact],
       ],
@@ -967,7 +969,9 @@ final class AutomationEntityListBuilder extends EntityListBuilder {
       'data' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['aiwa-operator-action-list__conversation']],
-        'link' => $conversation instanceof EntityInterface
+        // A link only for who may open it: the manager reads this log but not
+        // conversations, and a link to "Acceso denegado" reads as broken.
+        'link' => $conversation instanceof EntityInterface && $conversation->access('view')
           ? Link::fromTextAndUrl($contact, $conversation->toUrl('canonical'))->toRenderable()
           : ['#plain_text' => (string) $contact],
       ],
@@ -1040,7 +1044,10 @@ final class AutomationEntityListBuilder extends EntityListBuilder {
         $this->getFieldValue($lead, 'email'),
         $this->getFieldValue($lead, 'phone'),
       );
-      $link = Link::fromTextAndUrl($this->t('Ver lead #@id', ['@id' => $lead->id()]), $lead->toUrl('canonical'))->toString();
+      // Plain text for who may not open the lead (see the conversation link).
+      $link = $lead->access('view')
+        ? Link::fromTextAndUrl($this->t('Ver lead #@id', ['@id' => $lead->id()]), $lead->toUrl('canonical'))->toString()
+        : Html::escape((string) $this->t('Lead #@id', ['@id' => $lead->id()]));
 
       return '<div class="aiwa-operator-action-list__result">' . $link . '<span>' . Html::escape($label) . '</span></div>';
     }

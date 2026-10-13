@@ -177,6 +177,13 @@ final class ReceptionMenuTest extends KernelTestBase {
     $this->assertSame(1, $this->openAiCalls());
     $this->assertStringContainsString('PROMPT-SOPORTE', $this->lastOpenAiBody());
     $this->assertStringNotContainsString('PROMPT-FACTURACION', $this->lastOpenAiBody());
+    // Each reply records who wrote it: the menu, the reception; this one,
+    // Support (cost by bot follows it).
+    $replies = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_message')->loadByProperties(['sender' => 'ai']);
+    $this->assertSame(
+      [(string) $this->bots['reception']->id(), (string) $this->bots['support']->id()],
+      array_values(array_map(static fn ($reply): string => (string) $reply->get('bot')->target_id, $replies)),
+    );
     // A bare "2" after an older numbered list was read as option 2 of that
     // list: the model is told it is the area choice instead.
     $this->assertStringContainsString('El cliente eligió «Soporte técnico» en el menú de áreas', $this->lastOpenAiInput());

@@ -189,6 +189,14 @@ Si `composer install` quitó el bloque de cPanel de `web/.htaccess`, el sitio
 sigue en PHP 8.4 por `~/ia.goblincreative.com/.htaccess`; cPanel puede volver
 a escribirlo.
 
+### QA después de cada cambio (local)
+
+```bash
+cd tests/visual
+node qa-sweep.mjs                 # todas las páginas, con la cuenta de cada rol
+node embed-check.mjs              # botón del chat en una página hostil
+```
+
 ### Comprobar el botón flotante del chat
 
 `js/web-chat-embed.js` se inserta en sitios de clientes. Tras cambiarlo, en

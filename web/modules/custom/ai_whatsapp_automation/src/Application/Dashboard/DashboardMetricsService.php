@@ -172,17 +172,20 @@ final class DashboardMetricsService {
     $query->join('ai_whatsapp_conversation', 'c', 'm.conversation = c.id');
     $this->applyClient($query, 'c.client', $client_id);
     $query->leftJoin('ai_whatsapp_account', 'a', 'c.whatsapp_account = a.id');
+    // Who answered each message first: a conversation can move between area
+    // bots, and its current bot would take every earlier area's cost.
+    $query->leftJoin('ai_whatsapp_bot', 'message_bot', 'm.bot = message_bot.id');
     $query->leftJoin('ai_whatsapp_bot', 'direct_bot', 'c.bot = direct_bot.id');
     $query->leftJoin('ai_whatsapp_bot', 'account_bot', 'a.bot = account_bot.id');
-    $query->addExpression('COALESCE(direct_bot.id, account_bot.id)', 'id');
-    $query->addExpression("COALESCE(direct_bot.name, account_bot.name, 'Unassigned')", 'name');
+    $query->addExpression('COALESCE(message_bot.id, direct_bot.id, account_bot.id)', 'id');
+    $query->addExpression("COALESCE(message_bot.name, direct_bot.name, account_bot.name, 'Unassigned')", 'name');
     $query->addExpression('COALESCE(SUM(m.cost), 0)', 'total_cost');
     $query->addExpression('COALESCE(SUM(m.tokens), 0)', 'total_tokens');
     $this->applyRange($query, 'm.created', $range);
-    $query->groupBy('direct_bot.id');
-    $query->groupBy('direct_bot.name');
-    $query->groupBy('account_bot.id');
-    $query->groupBy('account_bot.name');
+    // One row per resolved bot: grouping by the joined columns split one bot
+    // into several rows (one per conversation-bot combination).
+    $query->groupBy('id');
+    $query->groupBy('name');
     $query->orderBy('total_cost', 'DESC');
     $query->range(0, 10);
 
@@ -217,21 +220,23 @@ final class DashboardMetricsService {
     $query->join('ai_whatsapp_conversation', 'c', 'm.conversation = c.id');
     $this->applyClient($query, 'c.client', $client_id);
     $query->leftJoin('ai_whatsapp_account', 'a', 'c.whatsapp_account = a.id');
+    // Who answered each message first: a conversation can move between area
+    // bots, and its current bot would take every earlier area's cost.
+    $query->leftJoin('ai_whatsapp_bot', 'message_bot', 'm.bot = message_bot.id');
     $query->leftJoin('ai_whatsapp_bot', 'direct_bot', 'c.bot = direct_bot.id');
     $query->leftJoin('ai_whatsapp_bot', 'account_bot', 'a.bot = account_bot.id');
     $query->fields('c', ['provider']);
-    $query->addExpression('COALESCE(direct_bot.id, account_bot.id)', 'bot_id');
-    $query->addExpression("COALESCE(direct_bot.name, account_bot.name, 'Unassigned')", 'bot_name');
+    $query->addExpression('COALESCE(message_bot.id, direct_bot.id, account_bot.id)', 'bot_id');
+    $query->addExpression("COALESCE(message_bot.name, direct_bot.name, account_bot.name, 'Unassigned')", 'bot_name');
     $query->addExpression('COALESCE(SUM(m.cost), 0)', 'total_cost');
     $query->addExpression('COALESCE(SUM(m.tokens), 0)', 'total_tokens');
     $query->addExpression('COUNT(m.id)', 'message_count');
     $query->addExpression('COUNT(DISTINCT c.id)', 'conversation_count');
     $this->applyRange($query, 'm.created', $range);
+    // One row per channel and resolved bot (see getCostByBot()).
     $query->groupBy('c.provider');
-    $query->groupBy('direct_bot.id');
-    $query->groupBy('direct_bot.name');
-    $query->groupBy('account_bot.id');
-    $query->groupBy('account_bot.name');
+    $query->groupBy('bot_id');
+    $query->groupBy('bot_name');
     $query->orderBy('total_cost', 'DESC');
     $query->range(0, 10);
 

@@ -70,6 +70,17 @@ final class Message extends ContentEntityBase {
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
     $fields = parent::baseFieldDefinitions($entity_type);
 
+    $fields['bot'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Bot'))
+      ->setDescription(t('The bot that wrote this reply. A conversation can move between area bots, so its current bot is not who answered every message.'))
+      ->setSetting('target_type', 'ai_whatsapp_bot')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('view', [
+        'type' => 'entity_reference_label',
+        'weight' => 1,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['conversation'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Conversation'))
       ->setRequired(TRUE)

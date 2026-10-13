@@ -102,6 +102,11 @@ final class ConversationEngineService {
 
     $route = $this->menuRouter->route($conversation, $bot, $incoming_message);
     $bot = $route['bot'];
+    // The contact's message belongs to the area that handles it, so message
+    // counts per bot stay right when a conversation moves between areas.
+    if ($incoming->hasField('bot') && $incoming->get('bot')->isEmpty()) {
+      $incoming->set('bot', $bot->id())->save();
+    }
     $unintelligible = $this->unintelligibleDetector->isUnintelligible($incoming_message);
     // Noise on the menu falls through to the unreadable-message ladder, which
     // goes silent after two replies instead of repeating the menu forever.
@@ -122,6 +127,7 @@ final class ConversationEngineService {
 
     $outgoing = $this->saveMessage($conversation, [
       'sender' => 'ai',
+      'bot' => $bot->id(),
       'content' => (string) ($response['text'] ?? ''),
       'tokens' => (int) ($response['usage']['total_tokens'] ?? 0),
       'cost' => (string) ($response['cost']['estimated_cost'] ?? '0.000000'),
@@ -158,6 +164,7 @@ final class ConversationEngineService {
   ): array {
     $outgoing = $this->saveMessage($conversation, [
       'sender' => 'ai',
+      'bot' => $bot->id(),
       'content' => $reply,
     ]);
 
@@ -202,6 +209,7 @@ final class ConversationEngineService {
     if ($reply !== '') {
       $outgoing = $this->saveMessage($conversation, [
         'sender' => 'ai',
+        'bot' => $bot->id(),
         'content' => $reply,
       ]);
     }
@@ -302,6 +310,7 @@ final class ConversationEngineService {
         'tokens' => $values['tokens'] ?? 0,
         'cost' => $values['cost'] ?? '0.000000',
         'provider_message_id' => $values['provider_message_id'] ?? '',
+        'bot' => $values['bot'] ?? NULL,
       ]);
     $message->save();
 

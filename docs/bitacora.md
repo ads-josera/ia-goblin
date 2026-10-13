@@ -54,6 +54,54 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-12 — QA completo del producto (pedido del equipo: «no quiero sorpresas»)
+
+Tras el hallazgo de los costos en 0, el equipo pidió QA siempre. Se hizo un
+recorrido completo con datos reales (conversaciones con OpenAI en una copia
+local, restaurada después) y con la cuenta de cada rol.
+
+**Script nuevo: `tests/visual/qa-sweep.mjs`.** Recorre todas las páginas del
+módulo alcanzables por cada rol (admin, gestor, cliente) y revisa: estado
+HTTP, errores de PHP y de Drupal, imágenes rotas, desplazamiento lateral,
+salida visible, errores de JavaScript y **enlaces que dan «Acceso denegado»
+a ese rol**. Correrlo después de cada cambio.
+
+**Encontrado y corregido**
+
+1. **Costo por bot mal atribuido.** El panel cargaba todo el costo de una
+   conversación al área donde terminó (Soporte → Facturación: todo a
+   Facturación). Ahora cada mensaje guarda **qué bot lo atendió** (campo
+   `bot` del mensaje, actualización `11048`; los mensajes viejos toman el bot
+   de su conversación) y el panel reparte por ese dato.
+2. **«Costo por canal y bot» repetía bots** (Soporte 2 veces, Goblin 3): se
+   agrupaba por columnas internas. Ahora una fila por canal y bot.
+3. **El gestor veía en la Bitácora enlaces a conversaciones y leads que no
+   puede abrir** («Acceso denegado»). Ahora solo se enlaza lo que el rol
+   puede abrir; lo demás va como texto. (Un primer intento cambió por error
+   la lista de mensajes en vez de la bitácora: se detectó al verificar con la
+   cuenta del gestor; ese cambio también es correcto y se quedó.)
+
+**Comprobado**
+
+- Panel vs. base de datos (periodo «todo»): recibidos 29 / enviados 29,
+  leads 5, tokens 111,163, costo 0.0134 USD, conversaciones 3 + 3: **todo
+  cuadra**. Tras el arreglo, una fila por bot y la suma de mensajes por fila
+  (58) = 29 + 29.
+- `qa-sweep.mjs`: **106 páginas** (admin 63, gestor 36, cliente 7) sin
+  problemas. Las vistas previas de correos no llevan panel a propósito (se
+  abren en otra pestaña como el correo real).
+- El cliente no ve costos y solo ve su empresa. Botón del chat OK.
+- Pruebas nuevas: `CostByBotTest`, `OperatorLogLinksTest`, y el motor guarda
+  el bot de cada respuesta (en `ReceptionMenuTest`); las tres saboteadas.
+  **182 pruebas OK**; `phpcs` sin observaciones nuevas.
+
+**Visto, sin cambiar:** títulos aún en inglés en otras pantallas
+(«Evolution QR connections», «Web integration», «Upload knowledge
+document», «Añadir client»): pendiente 1. Los mensajes de antes de cargar
+tarifas siguen con costo 0 (no se recalculan).
+
+---
+
 ## 2026-10-12 — Velocidad del bot y costos que no se registraban
 
 **El equipo sentía lentas las respuestas.** Medido (local, OpenAI real):

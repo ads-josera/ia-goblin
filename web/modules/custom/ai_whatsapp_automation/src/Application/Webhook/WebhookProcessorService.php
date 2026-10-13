@@ -241,6 +241,7 @@ final class WebhookProcessorService {
         $this->entityTypeManager->getStorage('ai_whatsapp_message')->create([
           'conversation' => $conversation->id(),
           'sender' => 'ai',
+          'bot' => $this->botManager->getBotForConversation($conversation)?->id(),
           'content' => $reply,
           'tokens' => 0,
           'cost' => '0.000000',

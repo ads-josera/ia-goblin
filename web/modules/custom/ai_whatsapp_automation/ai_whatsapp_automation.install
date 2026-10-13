@@ -1312,6 +1312,43 @@ function ai_whatsapp_automation_update_11047(): string {
 }
 
 /**
+ * Records which bot wrote each reply, for cost by bot.
+ *
+ * A conversation can move between area bots: grouping costs by its current
+ * bot charged every earlier area's replies to the last one. Existing replies
+ * get their conversation's bot, the best value known for them.
+ */
+function ai_whatsapp_automation_update_11048(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('bot', 'ai_whatsapp_message') === NULL) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'bot',
+      'ai_whatsapp_message',
+      'ai_whatsapp_automation',
+      \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_message')['bot']
+    );
+  }
+
+  $database = \Drupal::database();
+  $bots = $database->select('ai_whatsapp_conversation', 'c')
+    ->fields('c', ['id', 'bot'])
+    ->isNotNull('c.bot')
+    ->execute()
+    ->fetchAllKeyed();
+  $filled = 0;
+  foreach ($bots as $conversation_id => $bot_id) {
+    $filled += (int) $database->update('ai_whatsapp_message')
+      ->fields(['bot' => $bot_id])
+      ->condition('conversation', $conversation_id)
+      ->condition('sender', 'ai')
+      ->isNull('bot')
+      ->execute();
+  }
+
+  return (string) t('Replies now record their bot; @count existing replies took their conversation\'s bot.', ['@count' => (int) $filled]);
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]
