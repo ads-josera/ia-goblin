@@ -146,9 +146,9 @@ final class Bot extends ContentEntityBase {
       ->setDefaultValue('low')
       ->setSettings([
         'allowed_values' => [
-          'low' => 'Low (fast, recommended)',
-          'medium' => 'Medium',
-          'high' => 'High (slow)',
+          'low' => t('Low (fast, recommended)'),
+          'medium' => t('Medium'),
+          'high' => t('High (slow)'),
         ],
       ])
       ->setDisplayOptions('form', [
@@ -571,8 +571,8 @@ final class Bot extends ContentEntityBase {
       ->setDefaultValue('right')
       ->setSettings([
         'allowed_values' => [
-          'right' => 'Right',
-          'left' => 'Left',
+          'right' => t('Right'),
+          'left' => t('Left'),
         ],
       ])
       ->setDisplayOptions('form', [
@@ -593,10 +593,10 @@ final class Bot extends ContentEntityBase {
       ->setRequired(TRUE)
       ->setSettings([
         'allowed_values' => [
-          'chat' => 'Chat bubble',
-          'sparkles' => 'Sparkles (AI)',
-          'help' => 'Help',
-          'custom' => 'Custom',
+          'chat' => t('Chat bubble'),
+          'sparkles' => t('Sparkles (AI)'),
+          'help' => t('Help'),
+          'custom' => t('Custom'),
         ],
       ])
       // Radios: the bot form draws each one as the real button.
@@ -629,9 +629,9 @@ final class Bot extends ContentEntityBase {
       ->setDefaultValue('medium')
       ->setSettings([
         'allowed_values' => [
-          'small' => 'Small',
-          'medium' => 'Medium',
-          'large' => 'Large',
+          'small' => t('Small', [], ['context' => 'Widget size']),
+          'medium' => t('Medium', [], ['context' => 'Widget size']),
+          'large' => t('Large', [], ['context' => 'Widget size']),
         ],
       ])
       ->setDisplayOptions('form', [
@@ -650,8 +650,8 @@ final class Bot extends ContentEntityBase {
       ->setDefaultValue('es')
       ->setSettings([
         'allowed_values' => [
-          'es' => 'Spanish',
-          'en' => 'English',
+          'es' => t('Spanish'),
+          'en' => t('English'),
         ],
       ])
       ->setDisplayOptions('form', [

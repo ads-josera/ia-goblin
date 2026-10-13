@@ -43,7 +43,7 @@ lo **no comprobado**.
 
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
-| 1 | Textos del módulo aún en inglés en algunas pantallas (p. ej. «Evolution QR connections», etiquetas de la ficha del bot: «System prompt», «Model», sección «Reception menu»); de paso, ocultar «Menu areas» en los bots de área | Media |
+| 1 | Textos aún en inglés en otras pantallas del módulo (p. ej. «Evolution QR connections», cuentas de WhatsApp). El formulario del bot ya está en español (`translations/es.po`); seguir el mismo método | Media |
 | 2 | Bots por área: crear Ventas (prompt con el equipo); números de cada encargado en su bot; revisar encabezados de área | Alta |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
 | 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
@@ -54,6 +54,45 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-12 — Formulario del bot en español
+
+**Pedido del equipo** (pendiente 7): el formulario del bot estaba en inglés.
+
+**Cómo (la forma oficial de Drupal para un módulo propio):** el módulo trae
+su traducción, `translations/es.po` (122 textos), declarada en el
+`.info.yml` (`interface translation project` / `server pattern`). Se importa
+con `drush locale:check && drush locale:update`, que ahora es paso fijo de
+cada despliegue. Viaja en git; no hay que capturar nada en el admin.
+
+- Etiquetas de las listas (razonamiento, posición, icono, tamaño, idioma)
+  envueltas en `t()`. «Medium» con **contexto** «Widget size»: «Medio» en el
+  razonamiento, «Mediano» en el tamaño del chat.
+- Nombres de secciones: «Perfil del bot», «Instrucciones de la IA», «Leads y
+  avisos», «Menú de recepción», «Chat web»…; tuteo, como el resto del módulo.
+
+**Comprobado**
+
+- Local: `locale:update` registra el proyecto con origen
+  `translations/es.po`; textos y contextos correctos; al cambiar el archivo,
+  la reimportación lo detecta.
+- Con la cuenta del Gestor: 91 textos del formulario revisados, ninguno en
+  inglés; capturas por sección. («Choose File / No file chosen» lo pone el
+  navegador en su idioma.)
+- `BotFormTranslationTest` (nueva, unitaria): falla si un texto de `Bot.php`
+  o del formulario no está en `es.po`. Se vio fallar (7 textos faltantes)
+  antes de completarlo.
+- 175 pruebas OK; `phpcs` sin observaciones nuevas.
+
+**No comprobado:** en producción (falta desplegar).
+
+**Decisiones para Ventas (2026-10-12):** encabezados de área aprobados tal
+cual; **Ventas = solo cotizaciones** de servicios nuevos (precios, asesor y
+contratación siguen en Facturación; de Facturación sale «cotizaciones»);
+menú **1 Ventas, 2 Soporte, 3 Facturación**. Esperando del equipo: los
+números de cada encargado y el contenido de Ventas.
 
 ---
 

@@ -1,0 +1,372 @@
+# Spanish translation of the AI WhatsApp Automation module (bot form).
+# Imported by drush locale:check && drush locale:update; see docs/despliegue.md.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Bot profile"
+msgstr "Perfil del bot"
+
+msgid "Identity, model, and knowledge source used for each conversation."
+msgstr "Identidad, modelo y fuente de conocimiento que usa en cada conversación."
+
+msgid "AI instructions"
+msgstr "Instrucciones de la IA"
+
+msgid "Define how this assistant responds and what it should prioritize."
+msgstr "Define cómo responde este asistente y qué debe priorizar."
+
+msgid "Lead handoff"
+msgstr "Leads y avisos"
+
+msgid "Set when a qualified conversation becomes a lead and who receives the notification."
+msgstr "Define cuándo una conversación se convierte en lead y quién recibe el aviso."
+
+msgid "Reception menu"
+msgstr "Menú de recepción"
+
+msgid "One WhatsApp number or chat link, one bot per area. A reception bot shows a numbered menu and hands the conversation to the chosen bot; the contact writes «menú» to go back. Area bots set how they appear in the menu."
+msgstr "Un número de WhatsApp o enlace de chat, un bot por área. Un bot de recepción muestra un menú numerado y pasa la conversación al bot elegido; el contacto escribe «menú» para regresar. Cada bot de área define cómo aparece en el menú."
+
+msgid "Web widget"
+msgstr "Chat web"
+
+msgid "Customize the public chat experience embedded on your website."
+msgstr "Personaliza el chat público que se inserta en el sitio web."
+
+msgid "Web widget advanced settings"
+msgstr "Chat web: ajustes avanzados"
+
+msgid "Public identifier and optional API protection for external integrations."
+msgstr "Identificador público y protección opcional para integraciones externas."
+
+msgid "Web widget usage limits"
+msgstr "Chat web: límites de uso"
+
+msgid "Control public chat consumption for this bot. A value of 0 disables an individual limit."
+msgstr "Controla el consumo del chat público de este bot. Un valor de 0 desactiva ese límite."
+
+msgid "WhatsApp usage limits"
+msgstr "WhatsApp: límites de uso"
+
+msgid "Control WhatsApp consumption for this bot. A value of 0 disables an individual limit."
+msgstr "Controla el consumo de WhatsApp de este bot. Un valor de 0 desactiva ese límite."
+
+msgid "Open web integration"
+msgstr "Abrir integración web"
+
+msgid "Saved %label."
+msgstr "Se guardó %label."
+
+msgid "Preview on the floating button"
+msgstr "Vista previa en el botón flotante"
+
+msgid "Preview in the chat header"
+msgstr "Vista previa en el encabezado del chat"
+
+msgid "Company that owns this bot."
+msgstr "Empresa a la que pertenece este bot."
+
+msgid "System prompt"
+msgstr "Instrucciones (prompt)"
+
+msgid "Model"
+msgstr "Modelo"
+
+msgid "Reasoning effort"
+msgstr "Nivel de razonamiento"
+
+msgid "How long GPT-5 models think before answering. Low answers in about 4 seconds; medium took about 18 seconds in production, over Twilio's 15-second webhook timeout. Ignored by models without reasoning."
+msgstr "Cuánto piensan los modelos GPT-5 antes de responder. «Bajo» responde en unos 4 segundos; «medio» tardó unos 18 segundos en producción, más que los 15 segundos que espera Twilio. Los modelos sin razonamiento lo ignoran."
+
+msgid "Temperature"
+msgstr "Temperatura"
+
+msgid "Default knowledge base"
+msgstr "Base de conocimiento"
+
+msgid "Enable lead handoff"
+msgstr "Crear leads"
+
+msgid "Allow this bot to create a lead, assign the conversation to human handling, and notify administrators when the configured criteria are met."
+msgstr "Permite que este bot cree un lead, pase la conversación a atención humana y avise a los encargados cuando se cumplan los criterios."
+
+msgid "Lead handoff required signals"
+msgstr "Señales para crear un lead"
+
+msgid "One signal group per line. Use commas for alternatives, for example: company, business, client. The handoff fires when enough groups are detected. Leave empty to use generic lead signals."
+msgstr "Un grupo de señales por línea; separa con comas las alternativas, por ejemplo: empresa, negocio, cliente. El lead se crea cuando se detectan suficientes grupos. Déjalo vacío para usar señales genéricas."
+
+msgid "Minimum signals for lead handoff"
+msgstr "Mínimo de señales"
+
+msgid "How many configured signal groups must be present before notifying an administrator."
+msgstr "Cuántos grupos de señales deben aparecer antes de avisar a un encargado."
+
+msgid "Lead handoff trigger phrases"
+msgstr "Frases de cierre"
+
+msgid "Words or phrases that indicate the conversation is ready for human follow-up. One phrase per line. Leave empty to use generic phrases."
+msgstr "Palabras o frases que indican que la conversación está lista para que la siga una persona. Una por línea. Déjalo vacío para usar frases genéricas."
+
+msgid "Lead handoff prompt rules"
+msgstr "Reglas de canalización"
+
+msgid "Optional bot-specific rules appended to the AI instructions, such as what to say when enough data has been collected."
+msgstr "Reglas opcionales de este bot que se agregan a las instrucciones de la IA, por ejemplo qué decir cuando ya tiene los datos."
+
+msgid "Lead notification Template SID"
+msgstr "Plantilla de aviso (Template SID)"
+
+msgid "Optional approved Twilio WhatsApp Content SID (HX...) used for this bot's qualified-lead notifications. When empty, the WhatsApp account or global template is used."
+msgstr "Opcional: Content SID (HX...) de una plantilla de WhatsApp aprobada en Twilio para los avisos de leads de este bot. Si está vacío, se usa la de la cuenta de WhatsApp o la general."
+
+msgid "Lead notification template variables"
+msgstr "Variables de la plantilla de aviso"
+
+msgid "Optional mapping for this template, one per line. Example: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Available values: lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Leave empty for the standard mapping."
+msgstr "Opcional: asignación de variables, una por línea. Ejemplo: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Valores disponibles: lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Déjalo vacío para la asignación estándar."
+
+msgid "Lead notification WhatsApp account"
+msgstr "Cuenta de WhatsApp que envía los avisos"
+
+msgid "Optional WhatsApp account used to notify administrators about this bot's leads, including leads from the web widget. When empty, the system uses the only active account assigned to this bot."
+msgstr "Opcional: cuenta de WhatsApp desde la que se avisa de los leads de este bot, incluidos los del chat web. Si está vacía, se usa la única cuenta activa asignada a este bot."
+
+msgid "Lead notification WhatsApp numbers"
+msgstr "Números de WhatsApp de los encargados"
+
+msgid "WhatsApp numbers of the people in charge of the leads of this bot, one per line. When empty, the WhatsApp account numbers or the global ones are used."
+msgstr "Números de WhatsApp de quienes atienden los leads de este bot, uno por línea. Si está vacío, se usan los de la cuenta de WhatsApp o los generales."
+
+msgid "Notification recipient auto-reply"
+msgstr "Respuesta automática a un encargado"
+
+msgid "Message sent when one of this bot's lead-notification recipients writes to the WhatsApp number. Leave empty to use the global fallback."
+msgstr "Mensaje que se envía cuando uno de los encargados de este bot escribe al número de WhatsApp. Déjalo vacío para usar el general."
+
+msgid "First reply to an unreadable message"
+msgstr "Primera respuesta a un mensaje ilegible"
+
+msgid "Sent without calling the AI when a message carries no readable request, such as keyboard mashing. Leave empty to use the global fallback."
+msgstr "Se envía sin llamar a la IA cuando un mensaje no trae una solicitud legible, por ejemplo letras al azar. Déjalo vacío para usar la general."
+
+msgid "Second reply to an unreadable message"
+msgstr "Segunda respuesta a un mensaje ilegible"
+
+msgid "Sent when a second unreadable message arrives in a row. Offer a way out here, such as naming a product or asking for a person. After this one the bot stops replying until a readable message arrives."
+msgstr "Se envía cuando llega un segundo mensaje ilegible seguido. Ofrece aquí una salida, como nombrar un producto o pedir una persona. Después de esta, el bot deja de responder hasta que llegue un mensaje legible."
+
+msgid "Reply to a voice note or an attachment"
+msgstr "Respuesta a una nota de voz o un archivo"
+
+msgid "Sent once when the contact sends audio, a photo or a file, which the AI cannot read. Leave empty to use the global fallback."
+msgstr "Se envía una vez cuando el contacto manda un audio, una foto o un archivo, que la IA no puede leer. Déjalo vacío para usar la general."
+
+msgid "Menu areas"
+msgstr "Áreas del menú"
+
+msgid "Makes this bot a reception: it answers with a numbered menu, without calling the AI, and hands the conversation to the chosen bot. Option 1 is the first bot, option 2 the second. Leave empty for a normal bot."
+msgstr "Convierte este bot en una recepción: responde con un menú numerado, sin llamar a la IA, y pasa la conversación al bot elegido. La opción 1 es el primer bot, la 2 el segundo. Déjalo vacío en un bot normal o de área."
+
+msgid "Menu message"
+msgstr "Mensaje del menú"
+
+msgid "Text shown above the numbered options. Leave empty for a generic greeting."
+msgstr "Texto que aparece arriba de las opciones. Déjalo vacío para un saludo genérico."
+
+msgid "Menu label"
+msgstr "Nombre en el menú"
+
+msgid "How this bot appears in a reception menu, for example \"Soporte técnico\". Defaults to the bot name."
+msgstr "Cómo aparece este bot en el menú de una recepción, por ejemplo «Soporte técnico». Si está vacío, se usa el nombre del bot."
+
+msgid "Menu keywords"
+msgstr "Palabras clave del menú"
+
+msgid "Words that send a contact straight to this bot from a reception menu, separated by commas, for example: factura, pago, cobro."
+msgstr "Palabras que llevan al contacto directo a este bot desde el menú, separadas por comas, por ejemplo: factura, pago, cobro."
+
+msgid "Enable web widget"
+msgstr "Activar el chat web"
+
+msgid "Allow this bot to be embedded as a public web chat widget."
+msgstr "Permite insertar este bot como chat público en un sitio web."
+
+msgid "Web widget token"
+msgstr "Token del chat web"
+
+msgid "Public UUID used in iframe and JavaScript embed URLs."
+msgstr "Identificador público que va en las direcciones de inserción (iframe y JavaScript)."
+
+msgid "Web widget primary color"
+msgstr "Color principal"
+
+msgid "Web widget secondary color"
+msgstr "Color secundario"
+
+msgid "Web widget logo URL"
+msgstr "URL del logo"
+
+msgid "Optional absolute URL for the assistant logo."
+msgstr "Opcional: dirección completa del logo del asistente."
+
+msgid "Web widget logo"
+msgstr "Logo del encabezado del chat"
+
+msgid "Upload a JPG, PNG, or SVG logo. A square 512 x 512 px image is recommended."
+msgstr "Sube un logo JPG, PNG o SVG. Se recomienda cuadrado, de 512 × 512 px."
+
+msgid "Web widget assistant name"
+msgstr "Nombre del asistente"
+
+msgid "Web widget welcome message"
+msgstr "Mensaje de bienvenida"
+
+msgid "Web widget button position"
+msgstr "Posición del botón"
+
+msgid "Web widget button icon"
+msgstr "Icono del botón"
+
+msgid "The icon on the floating chat button. \"Custom\" uses an image you upload below; it is independent of the logo in the chat header."
+msgstr "El icono del botón flotante del chat. «Personalizado» usa una imagen que subes abajo; es independiente del logo del encabezado."
+
+msgid "Custom button icon"
+msgstr "Icono personalizado del botón"
+
+msgid "Used when the button icon is \"Custom\". SVG or PNG with a transparent background, square; it is shown on a white button. JPG works if its background is white."
+msgstr "Se usa cuando el icono del botón es «Personalizado». SVG o PNG con fondo transparente, cuadrado; se muestra sobre un botón blanco. Un JPG sirve si su fondo es blanco."
+
+msgid "Web widget size"
+msgstr "Tamaño del chat"
+
+msgid "Web widget language"
+msgstr "Idioma del chat"
+
+msgid "Web widget allowed domains"
+msgstr "Dominios permitidos"
+
+msgid "Optional list of authorized domains, one per line. Leave empty to allow any domain."
+msgstr "Opcional: dominios autorizados, uno por línea. Déjalo vacío para permitir cualquier dominio."
+
+msgid "Web widget API key"
+msgstr "Clave de API del chat"
+
+msgid "Optional API key required by JavaScript and API requests. Leave empty for public domain-restricted access."
+msgstr "Opcional: clave que exigen el JavaScript y la API. Déjala vacía para acceso público limitado por dominio."
+
+msgid "Messages per visitor"
+msgstr "Mensajes por visitante"
+
+msgid "Maximum web chat messages allowed per visitor during the configured time window. Use 0 for no limit."
+msgstr "Máximo de mensajes del chat web por visitante en la ventana de tiempo. Usa 0 para no limitar."
+
+msgid "Message limit window (minutes)"
+msgstr "Ventana del límite de mensajes (minutos)"
+
+msgid "Time window used for the per-visitor message limit."
+msgstr "Ventana de tiempo del límite de mensajes por visitante."
+
+msgid "New web conversations per day"
+msgstr "Conversaciones nuevas por día (chat web)"
+
+msgid "Maximum new web chat conversations allowed for this bot each day. Use 0 for no limit."
+msgstr "Máximo de conversaciones nuevas del chat web de este bot por día. Usa 0 para no limitar."
+
+msgid "Daily web chat budget (USD)"
+msgstr "Presupuesto diario del chat web (USD)"
+
+msgid "Maximum estimated OpenAI cost for this bot's web chat per day. Use 0 for no limit. Cost rates must be configured for the selected model."
+msgstr "Costo máximo estimado de OpenAI del chat web de este bot por día. Usa 0 para no limitar. Las tarifas del modelo deben estar configuradas."
+
+msgid "WhatsApp messages per contact"
+msgstr "Mensajes de WhatsApp por contacto"
+
+msgid "Maximum incoming WhatsApp messages allowed per contact during the configured time window. Use 0 for no limit."
+msgstr "Máximo de mensajes entrantes de WhatsApp por contacto en la ventana de tiempo. Usa 0 para no limitar."
+
+msgid "WhatsApp message limit window (minutes)"
+msgstr "Ventana del límite de WhatsApp (minutos)"
+
+msgid "Time window used for the per-contact WhatsApp message limit."
+msgstr "Ventana de tiempo del límite de mensajes de WhatsApp por contacto."
+
+msgid "New WhatsApp conversations per day"
+msgstr "Conversaciones nuevas de WhatsApp por día"
+
+msgid "Maximum new WhatsApp conversations allowed for this bot each day. Use 0 for no limit."
+msgstr "Máximo de conversaciones nuevas de WhatsApp de este bot por día. Usa 0 para no limitar."
+
+msgid "Daily WhatsApp budget (USD)"
+msgstr "Presupuesto diario de WhatsApp (USD)"
+
+msgid "Maximum estimated OpenAI cost for this bot's WhatsApp conversations per day. Use 0 for no limit. Cost rates must be configured for the selected model."
+msgstr "Costo máximo estimado de OpenAI de las conversaciones de WhatsApp de este bot por día. Usa 0 para no limitar. Las tarifas del modelo deben estar configuradas."
+
+msgid "Low (fast, recommended)"
+msgstr "Bajo (rápido, recomendado)"
+
+msgid "Medium"
+msgstr "Medio"
+
+msgid "High (slow)"
+msgstr "Alto (lento)"
+
+msgid "Right"
+msgstr "Derecha"
+
+msgid "Left"
+msgstr "Izquierda"
+
+msgid "Chat bubble"
+msgstr "Burbuja de chat"
+
+msgid "Sparkles (AI)"
+msgstr "Destellos (IA)"
+
+msgid "Help"
+msgstr "Ayuda"
+
+msgid "Custom"
+msgstr "Personalizado"
+
+msgid "Spanish"
+msgstr "Español"
+
+msgid "English"
+msgstr "Inglés"
+
+msgctxt "Widget size"
+msgid "Small"
+msgstr "Pequeño"
+
+msgctxt "Widget size"
+msgid "Medium"
+msgstr "Mediano"
+
+msgctxt "Widget size"
+msgid "Large"
+msgstr "Grande"
+
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Description"
+msgstr "Descripción"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Created"
+msgstr "Creado"
+
+msgid "Changed"
+msgstr "Modificado"
+
+msgid "Enter the Twilio Auth Token for this account."
+msgstr "Escribe el Auth Token de Twilio de esta cuenta."
+
+msgid "A token is already configured. Leave empty to keep it."
+msgstr "Ya hay un token configurado. Déjalo vacío para conservarlo."

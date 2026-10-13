@@ -9,3 +9,7 @@ dependencies:
   # list_string fields and the options_select widget.
   - drupal:options
   - drupal:views
+# Spanish interface strings ship with the module and are imported by
+# `drush locale:check && drush locale:update` (part of every deployment).
+'interface translation project': ai_whatsapp_automation
+'interface translation server pattern': modules/custom/ai_whatsapp_automation/translations/%language.po

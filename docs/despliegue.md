@@ -129,9 +129,13 @@ git pull
 composer install --no-dev -o      # solo si cambió composer.lock
 drush updb -y
 drush cim -y
+drush locale:check && drush locale:update   # textos del módulo en español
 drush cr
-git status --short                # debe salir vacío
+git status --short                # solo « M web/.htaccess» (cPanel)
 ```
+
+`translations/es.po` del módulo lleva sus textos en español; `locale:update`
+lo reimporta cuando cambia (lo detecta por la fecha del archivo).
 
 Las claves escritas en la Configuración del módulo **no se pierden** con
 `drush cim` (viven en el State, no en `config/sync`).
