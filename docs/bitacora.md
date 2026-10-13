@@ -18,9 +18,9 @@ lo **no comprobado**.
 - Clave de OpenAI de pruebas en el `settings.local.php` local (fuera de git).
   **Rotarla** (se compartió por chat).
 - **Siguiente:**
-  1. Números de los encargados: dados por el equipo (2026-10-12), se cargan
-     en producción con el despliegue de Ventas (no van en git). Los avisos
-     saldrán cuando se conecte el número de WhatsApp de Goblin (punto 4).
+  1. Números de los encargados: **cargados en producción** (2026-10-12; no
+     van en git). Los avisos saldrán cuando se conecte el número de WhatsApp
+     de Goblin (punto 4).
   2. Que el equipo revise `ventas.md` (texto nuevo). Los encabezados de
      Facturación y Soporte ya están aprobados.
   4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
@@ -97,8 +97,11 @@ Facturación. Menú: 1 Ventas, 2 Soporte, 3 Facturación.
 más («ahí un asesor te dará precios…»). El modelo no es determinista;
 revisar con conversaciones reales.
 
-**No comprobado:** en producción (falta desplegar) y los avisos por WhatsApp
-(falta conectar el número de Goblin).
+**Desplegado** (`b1f17a6`): Goblin Ventas (id 4), menú de 3 áreas, números de
+los encargados cargados en los tres bots, traducción activa.
+
+**No comprobado:** una conversación de Ventas en producción; los avisos por
+WhatsApp (falta conectar el número de Goblin).
 
 ---
 
@@ -131,7 +134,8 @@ cada despliegue. Viaja en git; no hay que capturar nada en el admin.
   antes de completarlo.
 - 175 pruebas OK; `phpcs` sin observaciones nuevas.
 
-**No comprobado:** en producción (falta desplegar).
+**Desplegado y comprobado en producción:** `t("Bot profile")` → «Perfil del
+bot».
 
 **Decisiones para Ventas (2026-10-12):** encabezados de área aprobados tal
 cual; **Ventas = solo cotizaciones** de servicios nuevos (precios, asesor y
