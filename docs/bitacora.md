@@ -28,6 +28,14 @@ lo **no comprobado**.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   3. Traducir al español las demás pantallas del módulo (pendiente 1).
   4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
+  5. **Plantillas de WhatsApp en Twilio para los avisos de leads**, una por
+     área (Ventas, Facturación, Soporte): redactarlas juntos, crearlas en
+     Twilio (Content API) y mandarlas a revisión de WhatsApp mientras se
+     termina lo demás. Fuera de la ventana de 24 h, WhatsApp solo deja enviar
+     avisos con plantilla aprobada. El módulo ya las usa: cada bot de área
+     tiene «Plantilla de aviso (Template SID)» y «Variables de la plantilla»
+     (lead_id, contact, phone, email, summary, bot_name, source,
+     conversation_url).
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -42,7 +50,7 @@ lo **no comprobado**.
 | 1 | Textos aún en inglés en otras pantallas del módulo (p. ej. «Evolution QR connections», cuentas de WhatsApp). El formulario del bot ya está en español (`translations/es.po`); seguir el mismo método | Media |
 | 2 | Bots por área: crear Ventas (prompt con el equipo); números de cada encargado en su bot; revisar encabezados de área | Alta |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3b | Definir los números de WhatsApp del equipo que reciben los avisos de leads (los leads ya están activados) | Alta |
+| 3b | Plantillas de Twilio (WhatsApp) para los avisos de leads de Ventas, Facturación y Soporte: crearlas y enviarlas a revisión (ver «Dónde quedamos») | Alta |
 | 3c | Producción: borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
