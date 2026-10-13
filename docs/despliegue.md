@@ -129,6 +129,7 @@ git pull
 composer install --no-dev -o      # solo si cambió composer.lock
 drush updb -y
 drush cim -y
+drush cr                          # antes de locale: renueva la lista de proyectos traducibles
 drush locale:check && drush locale:update   # textos del módulo en español
 drush cr
 git status --short                # solo « M web/.htaccess» (cPanel)
@@ -136,6 +137,8 @@ git status --short                # solo « M web/.htaccess» (cPanel)
 
 `translations/es.po` del módulo lleva sus textos en español; `locale:update`
 lo reimporta cuando cambia (lo detecta por la fecha del archivo).
+Con `locale:check` antes de `drush cr`, la primera vez no vio el proyecto
+del módulo (dijo «un proyecto», solo Drupal): por eso `cr` va antes.
 
 Las claves escritas en la Configuración del módulo **no se pierden** con
 `drush cim` (viven en el State, no en `config/sync`).
