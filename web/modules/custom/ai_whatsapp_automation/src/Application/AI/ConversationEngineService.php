@@ -105,8 +105,8 @@ final class ConversationEngineService {
     $unintelligible = $this->unintelligibleDetector->isUnintelligible($incoming_message);
     // Noise on the menu falls through to the unreadable-message ladder, which
     // goes silent after two replies instead of repeating the menu forever.
-    if ($route['menu'] !== '' && !$unintelligible) {
-      return $this->answerWithMenu($conversation, $bot, $incoming, $route['menu']);
+    if ($route['reply'] !== '' && !$unintelligible) {
+      return $this->answerWithoutModel($conversation, $bot, $incoming, $route['reply']);
     }
 
     if ($unintelligible) {
@@ -145,23 +145,23 @@ final class ConversationEngineService {
   }
 
   /**
-   * Answers with the reception menu, without the model.
+   * Answers with a fixed text, without the model: a menu or an area greeting.
    *
    * @return array<string, mixed>
    *   Engine result.
    */
-  private function answerWithMenu(
+  private function answerWithoutModel(
     ContentEntityInterface $conversation,
     ContentEntityInterface $bot,
     ContentEntityInterface $incoming,
-    string $menu,
+    string $reply,
   ): array {
     $outgoing = $this->saveMessage($conversation, [
       'sender' => 'ai',
-      'content' => $menu,
+      'content' => $reply,
     ]);
 
-    $this->logger->info('Conversation @conversation was answered with the menu of bot @bot.', [
+    $this->logger->info('Conversation @conversation was answered with a fixed text of bot @bot (menu or greeting).', [
       '@conversation' => (string) $conversation->id(),
       '@bot' => (string) $bot->id(),
     ]);
@@ -171,7 +171,7 @@ final class ConversationEngineService {
       'bot_id' => $bot->id(),
       'incoming_message_id' => $incoming->id(),
       'outgoing_message_id' => $outgoing->id(),
-      'response_text' => $menu,
+      'response_text' => $reply,
       'menu' => TRUE,
       'delivery_status' => 'pending_provider_delivery',
     ];

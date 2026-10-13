@@ -58,41 +58,46 @@ final class MenuRouter {
    * @param string $message
    *   What the contact wrote.
    *
-   * @return array{bot: \Drupal\Core\Entity\ContentEntityInterface, menu: string, message: string}
-   *   The bot that handles the message; the menu text when the menu is the
-   *   answer (empty string otherwise); and the message the model must read,
+   * @return array{bot: \Drupal\Core\Entity\ContentEntityInterface, reply: string, message: string}
+   *   The bot that handles the message; the text sent without the model when
+   *   there is one (the menu, or the chosen area's greeting; empty string
+   *   otherwise); and the message the model must read,
    *   which is a description of the choice when an area was picked by its
    *   number. The conversation is saved when its bot changes.
    */
   public function route(ContentEntityInterface $conversation, ContentEntityInterface $bot, string $message): array {
     $reception = $this->reception($conversation, $bot);
     if ($reception === NULL) {
-      return ['bot' => $bot, 'menu' => '', 'message' => $message];
+      return ['bot' => $bot, 'reply' => '', 'message' => $message];
     }
 
     $options = $this->options($reception);
     if ($bot->id() !== $reception->id()) {
       if ($this->normalize($message) !== self::MENU_WORD) {
-        return ['bot' => $bot, 'menu' => '', 'message' => $message];
+        return ['bot' => $bot, 'reply' => '', 'message' => $message];
       }
       $this->assign($conversation, $reception, $reception);
 
-      return ['bot' => $reception, 'menu' => $this->menuText($reception, $options), 'message' => $message];
+      return ['bot' => $reception, 'reply' => $this->menuText($reception, $options), 'message' => $message];
     }
 
     $chosen = $this->match($message, $options);
     if ($chosen !== NULL) {
       $this->assign($conversation, $chosen, $reception);
       $by_number = (bool) preg_match('/^\d{1,2}$/', $this->normalize($message));
+      // Picked by its number, the area answers with its own fixed greeting
+      // when it has one: same words every time, no model call. Picked by a
+      // keyword, the message is a request the model answers.
+      $greeting = $by_number ? trim($this->fieldValue($chosen, 'menu_greeting')) : '';
 
       return [
         'bot' => $chosen,
-        'menu' => '',
+        'reply' => $greeting,
         'message' => $by_number ? sprintf(self::CHOICE_NOTE, $this->label($chosen)) : $message,
       ];
     }
 
-    return ['bot' => $reception, 'menu' => $this->menuText($reception, $options), 'message' => $message];
+    return ['bot' => $reception, 'reply' => $this->menuText($reception, $options), 'message' => $message];
   }
 
   /**

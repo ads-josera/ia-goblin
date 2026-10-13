@@ -86,6 +86,7 @@ RULES;
 $areas = [
   'sales' => [
     'name' => 'Goblin Ventas',
+    'greeting' => '👋 Hola, estás hablando con el asistente virtual de Ventas de Goblin Creative. ¿Qué proyecto te gustaría cotizar?',
     'prompt' => 'ventas.md',
     'description' => 'Goblin Creative, área de ventas: cotizaciones de proyectos nuevos de desarrollo (HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas personalizados). Nunca da precios: el área de ventas contacta al cliente.',
     'menu_label' => 'Ventas y cotizaciones',
@@ -96,6 +97,7 @@ $areas = [
   ],
   'support' => [
     'name' => 'Goblin Soporte',
+    'greeting' => '👋 Hola, estás hablando con el asistente virtual de Soporte técnico de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'soporte.md',
     'description' => 'Goblin Creative, área de soporte técnico: correo, cPanel / hosting, dominios y DNS. Resuelve primer nivel y canaliza con el equipo técnico.',
     'menu_label' => 'Soporte técnico',
@@ -104,6 +106,7 @@ $areas = [
   ],
   'billing' => [
     'name' => 'Goblin Facturación',
+    'greeting' => '👋 Hola, estás hablando con el asistente virtual de Facturación y atención comercial de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'facturacion.md',
     'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, contratación de hosting, correo y dominios, y contacto con un asesor.',
     'menu_label' => 'Facturación y atención comercial',
@@ -192,6 +195,8 @@ foreach ($areas as $area) {
   $bot->set('description', $area['description']);
   $bot->set('system_prompt', $prompt);
   $bot->set('menu_label', $area['menu_label']);
+  // Sent as is when the area is picked by its number (no model call).
+  $bot->set('menu_greeting', $area['greeting']);
   $bot->set('menu_keywords', $area['menu_keywords']);
   $bot->set('handoff_enabled', TRUE);
   $bot->set('handoff_required_fields', $handoff_required_fields);

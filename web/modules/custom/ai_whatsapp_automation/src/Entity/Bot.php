@@ -413,6 +413,20 @@ final class Bot extends ContentEntityBase {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['menu_greeting'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Area greeting'))
+      ->setDescription(t('Sent as is, without calling the AI, when a contact picks this bot by its number in a reception menu. Leave empty to let the AI greet.'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 55,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'basic_string',
+        'weight' => 55,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['menu_label'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Menu label'))
       ->setDescription(t('How this bot appears in a reception menu, for example "Soporte técnico". Defaults to the bot name.'))

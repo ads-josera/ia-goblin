@@ -55,6 +55,42 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-12 — Saludo fijo de cada área
+
+**Pedido del equipo:** al elegir «2», la IA saludaba «Hola — soy Goblin de
+Soporte técnico…»; querían «Hola, estás hablando con el asistente virtual de
+soporte de Goblin Creative…», igual en cada área.
+
+**Qué se hizo:** campo nuevo del bot **«Saludo del área»** (`menu_greeting`,
+actualización `11045`, sección «Menú de recepción»). Al elegir un área **por
+su número**, se envía tal cual, **sin llamar a la IA**; la IA contesta desde
+el siguiente mensaje. Por palabra clave, la IA responde directo a la
+solicitud (sin saludo fijo). Vacío = saluda la IA como antes. En el código,
+el menú y el saludo son la misma cosa: texto enviado sin el modelo
+(`MenuRouter` → `reply`, `answerWithoutModel()`). Saludos en
+`scripts/bots/goblin.php`:
+
+- Ventas: «👋 Hola, estás hablando con el asistente virtual de Ventas de
+  Goblin Creative. ¿Qué proyecto te gustaría cotizar?»
+- Soporte: «… de Soporte técnico de Goblin Creative. ¿En qué te puedo
+  ayudar?»
+- Facturación: «… de Facturación y atención comercial de Goblin Creative.
+  ¿En qué te puedo ayudar?»
+
+**Comprobado:** prueba nueva (saludo exacto, 0 llamadas a OpenAI, la
+siguiente la contesta la IA del área; por palabra clave, la IA); sabotaje
+hecho. En vivo (local, restaurado): los tres saludos en 0–0.1 s y la IA no
+vuelve a saludar. Con la cuenta del Gestor: el campo «Saludo del área» en
+español tras `locale:update`. 176 pruebas OK; `phpcs` sin observaciones
+nuevas.
+
+**Visto, para afinar con uso real:** en su primera respuesta, Ventas y
+Facturación todavía piden varios datos juntos.
+
+**No comprobado:** en producción (falta desplegar).
+
+---
+
 ## 2026-10-12 — Drupal 11.4.8 → 11.4.9
 
 **Qué es:** versión de corrección de errores (9 de octubre de 2026), **sin

@@ -370,3 +370,9 @@ msgstr "Escribe el Auth Token de Twilio de esta cuenta."
 
 msgid "A token is already configured. Leave empty to keep it."
 msgstr "Ya hay un token configurado. Déjalo vacío para conservarlo."
+
+msgid "Area greeting"
+msgstr "Saludo del área"
+
+msgid "Sent as is, without calling the AI, when a contact picks this bot by its number in a reception menu. Leave empty to let the AI greet."
+msgstr "Se envía tal cual, sin llamar a la IA, cuando el contacto elige este bot por su número en el menú de recepción. Déjalo vacío para que salude la IA."

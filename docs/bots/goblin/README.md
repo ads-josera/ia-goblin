@@ -15,8 +15,9 @@ Cómo se mueve el cliente:
 
 - **«hola» o cualquier cosa** en la recepción → el menú (1️⃣ Ventas y
   cotizaciones, 2️⃣ Soporte técnico, 3️⃣ Facturación y atención comercial).
-- **El número** (`1`, `2`, `1️⃣`…) → pasa al bot de esa área, que contesta ese
-  mismo mensaje.
+- **El número** (`1`, `2`, `1️⃣`…) → pasa al bot de esa área, que responde
+  con su **saludo fijo** («Hola, estás hablando con el asistente virtual de…»),
+  sin IA. Se edita en el bot, «Saludo del área», o en `scripts/bots/goblin.php`.
 - **Una palabra clave** de un solo área («necesito mi factura») → pasa directo.
   Si coinciden dos áreas («cancelar mi hosting») se muestra el menú en lugar
   de adivinar.

@@ -229,6 +229,33 @@ final class ReceptionMenuTest extends KernelTestBase {
   }
 
   /**
+   * An area with a fixed greeting answers its number with it, without AI.
+   */
+  public function testAreaGreetingIsSentWithoutTheModel(): void {
+    $greeting = '👋 Hola, estás hablando con el asistente virtual de Soporte técnico de Goblin Creative. ¿En qué te puedo ayudar?';
+    $this->bots['support']->set('menu_greeting', $greeting)->save();
+
+    $this->send('SM1', 'Hola');
+    $result = $this->send('SM2', '2');
+    $this->assertSame($greeting, $result['response_text'], 'The exact greeting, every time');
+    $this->assertSame('sent', $result['delivery']['status'] ?? NULL);
+    $this->assertSame('support', $this->currentBot());
+    $this->assertSame(0, $this->openAiCalls(), 'Menu and greeting cost nothing');
+
+    // The next message is a request: the area's AI answers it.
+    $this->assistantReplies = ['Revisemos tu correo.'];
+    $this->send('SM3', 'No me llegan correos');
+    $this->assertSame(1, $this->openAiCalls());
+    $this->assertStringContainsString('PROMPT-SOPORTE', $this->lastOpenAiBody());
+
+    // Reached by a keyword, the AI answers the request; no canned greeting.
+    $this->send('SM4', 'menú');
+    $this->assistantReplies = ['Claro, revisemos tu correo.'];
+    $result = $this->send('SM5', 'mi correo no funciona');
+    $this->assertSame('Claro, revisemos tu correo.', $result['response_text']);
+  }
+
+  /**
    * The person in charge of one area is never answered as a customer.
    */
   public function testAreaPersonIsNotTreatedAsCustomer(): void {
