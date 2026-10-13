@@ -86,6 +86,13 @@ final class PromptBuilderService {
       $context_lines[] = $knowledge_context;
     }
 
+    $cases = $this->registeredCases($conversation);
+    if ($cases !== '') {
+      $context_lines[] = '';
+      $context_lines[] = 'Cases already registered in this conversation (the team has them and will contact the customer):';
+      $context_lines[] = $cases;
+    }
+
     $history = $this->recentConversationHistory($conversation);
     if ($history !== '') {
       $context_lines[] = '';
@@ -150,6 +157,34 @@ final class PromptBuilderService {
     }
 
     return trim($instructions . "\n\n" . trim(implode("\n", $handoff_guardrails)));
+  }
+
+  /**
+   * Lists the leads already created in this conversation, newest last.
+   *
+   * Without it, the assistant promised to "attach" data to a case it could
+   * not see; with it, the handoff rules can tell more data for that case
+   * ("Datos adicionales:") from a new one ("Datos capturados:").
+   */
+  private function registeredCases(ContentEntityInterface $conversation): string {
+    $storage = $this->entityTypeManager->getStorage('ai_whatsapp_lead');
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('conversation', $conversation->id())
+      ->sort('id')
+      ->range(0, 10)
+      ->execute();
+
+    $lines = [];
+    foreach ($storage->loadMultiple($ids) as $lead) {
+      if (!$lead instanceof ContentEntityInterface) {
+        continue;
+      }
+      $bot = $lead->hasField('bot') ? $lead->get('bot')->entity : NULL;
+      $lines[] = sprintf('- Lead %d, area: %s, registered %s', $lead->id(), $bot instanceof ContentEntityInterface ? $bot->label() : '-', date('Y-m-d H:i', (int) $lead->get('created')->value));
+    }
+
+    return implode("\n", $lines);
   }
 
   /**

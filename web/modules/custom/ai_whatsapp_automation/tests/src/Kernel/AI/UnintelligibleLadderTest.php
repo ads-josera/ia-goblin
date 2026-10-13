@@ -68,6 +68,8 @@ final class UnintelligibleLadderTest extends KernelTestBase {
       'ai_whatsapp_account',
       'ai_whatsapp_conversation',
       'ai_whatsapp_message',
+      // The prompt lists the conversation's registered cases (leads).
+      'ai_whatsapp_lead',
     ] as $entity_type_id) {
       $this->installEntitySchema($entity_type_id);
     }

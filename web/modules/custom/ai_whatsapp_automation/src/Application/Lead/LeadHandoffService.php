@@ -17,6 +17,16 @@ use Psr\Log\LoggerInterface;
 final class LeadHandoffService {
 
   /**
+   * The assistant's closing that opens a new case (see the handoff rules).
+   */
+  private const NEW_CASE_CLOSING = '/datos capturados\s*:/iu';
+
+  /**
+   * The assistant's closing that adds data to the area's latest case.
+   */
+  private const UPDATE_CLOSING = '/datos adicionales\s*:/iu';
+
+  /**
    * Stored when the chat did not provide a usable contact name.
    */
   public const UNKNOWN_CONTACT_NAME = 'Nombre no capturado';
@@ -56,11 +66,25 @@ final class LeadHandoffService {
       return ['status' => 'disabled_for_bot'];
     }
 
+    // More data for a case already registered in this area: it goes to that
+    // lead, so "lo agrego a tu caso" is true. Web chat only, in practice: on
+    // WhatsApp the AI stops once a lead exists and a person takes over.
+    if (preg_match(self::UPDATE_CLOSING, $ai_response)) {
+      $lead = $this->latestLead($conversation, $bot);
+      if ($lead instanceof ContentEntityInterface) {
+        return $this->updateLead($conversation, $lead, $ai_response);
+      }
+    }
+
     if (!$this->isLeadReady($conversation, $ai_response, $bot)) {
       return ['status' => 'not_ready'];
     }
 
-    if ($this->hasHandoffAction($conversation)) {
+    // One conversation can hold several cases (a support problem, then an
+    // invoice question in Billing): an explicit new "Datos capturados:"
+    // closing opens another lead. Any other closing-like reply after the
+    // first lead does not, so a repeated summary cannot duplicate it.
+    if ($this->hasHandoffAction($conversation) && !preg_match(self::NEW_CASE_CLOSING, $ai_response)) {
       return ['status' => 'already_notified'];
     }
 
@@ -332,6 +356,59 @@ final class LeadHandoffService {
   }
 
   /**
+   * Returns the latest lead of this conversation in the bot's area, if any.
+   */
+  private function latestLead(ContentEntityInterface $conversation, ?ContentEntityInterface $bot): ?ContentEntityInterface {
+    $query = $this->entityTypeManager
+      ->getStorage('ai_whatsapp_lead')
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('conversation', $conversation->id())
+      ->sort('id', 'DESC')
+      ->range(0, 1);
+    if ($bot instanceof ContentEntityInterface) {
+      $query->condition('bot', $bot->id());
+    }
+    $ids = $query->execute();
+    $lead = $ids === [] ? NULL : $this->entityTypeManager->getStorage('ai_whatsapp_lead')->load(reset($ids));
+
+    return $lead instanceof ContentEntityInterface ? $lead : NULL;
+  }
+
+  /**
+   * Adds the contact's new data to an existing lead and tells its people.
+   *
+   * @return array<string, mixed>
+   *   Result with status "lead_updated".
+   */
+  private function updateLead(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response): array {
+    $this->entityTypeManager
+      ->getStorage('ai_whatsapp_operator_action')
+      ->create([
+        'conversation' => $conversation->id(),
+        'user' => 1,
+        'action' => 'LEAD_UPDATED',
+        'note' => 'Lead ID: ' . $lead->id() . "\n\n" . mb_substr(trim($ai_response), 0, 1500),
+      ])
+      ->save();
+
+    $bot = $lead->get('bot')->entity;
+    $notifications = $this->notifyAdministrators(
+      $conversation,
+      $lead,
+      $ai_response,
+      $bot instanceof ContentEntityInterface ? $bot : NULL,
+      'Actualización del lead ' . $lead->id(),
+    );
+
+    return [
+      'status' => 'lead_updated',
+      'lead_id' => $lead->id(),
+      'notifications' => $notifications,
+    ];
+  }
+
+  /**
    * Checks whether this conversation already had a lead handoff.
    */
   private function hasHandoffAction(ContentEntityInterface $conversation): bool {
@@ -407,14 +484,14 @@ final class LeadHandoffService {
    * @return array<int, array<string, mixed>>
    *   Delivery results.
    */
-  private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot): array {
+  private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $heading = 'Nuevo lead de WhatsApp'): array {
     $account = $this->notificationAccount($conversation, $bot);
     $numbers = $this->notificationNumbers($bot, $account);
     if ($numbers === []) {
       return [];
     }
 
-    $message = $this->buildNotificationMessage($conversation, $lead, $ai_response);
+    $message = $this->buildNotificationMessage($conversation, $lead, $ai_response, $heading);
     if (!$account instanceof ContentEntityInterface) {
       $this->logger->warning('Lead handoff for conversation @conversation has recipients but no WhatsApp account for delivery.', [
         '@conversation' => (string) $conversation->id(),
@@ -572,12 +649,12 @@ final class LeadHandoffService {
   /**
    * Builds the notification message sent to administrators.
    */
-  private function buildNotificationMessage(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response): string {
+  private function buildNotificationMessage(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, string $heading = 'Nuevo lead de WhatsApp'): string {
     $base_url = rtrim((string) ($GLOBALS['base_url'] ?? ''), '/');
     $conversation_url = $base_url . '/admin/content/ai-whatsapp/conversations/' . $conversation->id();
 
     return trim(implode("\n", [
-      'Nuevo lead de WhatsApp',
+      $heading,
       '',
       'Lead ID: ' . $lead->id(),
       'Contacto: ' . $lead->label(),

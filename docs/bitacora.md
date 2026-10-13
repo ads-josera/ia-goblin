@@ -24,9 +24,8 @@ lo **no comprobado**.
   2. `ventas.md` aprobado por el equipo. Falta probar Ventas en el chat de
      producción.
   4. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»).
-  5. **Próxima tarea acordada (en pausa por decisión del equipo):** chat web
-     después del lead — la IA sigue contestando y promete cosas («lo adjunto
-     al caso») que nadie va a leer.
+  5. Chat web después del lead: **resuelto** (2026-10-12, varios casos por
+     conversación).
 - **Chat web en goblincreative.com (2026-10-05):** botón flotante aislado y
   centrado, icono propio («Custom») y logo en el encabezado, verificados en
   3 navegadores.
@@ -52,6 +51,49 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-12 — Chat web después de un lead: varios casos por conversación
+
+**Pregunta del equipo:** ¿apagar la IA tras el lead deja sin soporte a quien
+necesita más ayuda? ¿Y si luego pregunta por su factura?
+
+**Revisado:** en WhatsApp, tras el lead una persona sigue la conversación
+desde el panel (la IA se calla: correcto). En el chat web **el panel no
+puede responder** al visitante, así que la IA no debe callarse. El problema
+real: (1) prometía «lo adjunto al caso» sin hacerlo; (2) solo había un lead
+por conversación: un segundo caso (otra área) no creaba lead ni avisaba,
+aunque al cliente le decía que sí.
+
+**Decisión del equipo:** propuesta completa.
+
+**Qué se hizo**
+
+- La IA recibe la lista de casos ya registrados en la conversación
+  (`PromptBuilderService::registeredCases()`).
+- Cierre **«Datos adicionales:»** → se agrega al lead más reciente de esa
+  área: acción `LEAD_UPDATED` en la bitácora («Datos agregados a un lead»,
+  actualización `11046`) y aviso «Actualización del lead N» a sus
+  encargados.
+- Cierre **«Datos capturados:»** con un caso ya registrado → **lead nuevo**
+  del área actual. Otro resumen cualquiera no duplica.
+- Reglas: la de «no preguntes tras el resumen» queda solo para WhatsApp;
+  nueva regla de casos registrados (nunca prometer agregar/adjuntar sin uno
+  de los dos cierres).
+
+**Comprobado**
+
+- Prueba nueva de punta a punta (Soporte → datos adicionales → Facturación
+  → resumen sin cierre): 4 sabotajes, los 4 detectados. Dos pruebas
+  existentes montaban el sitio sin la tabla de leads; se les agregó.
+- En vivo con OpenAI (local, restaurado): lead de Soporte; «se me olvidó: el
+  dominio… uso Outlook» → «Datos adicionales» → agregado al mismo lead;
+  «menú» → 3 → factura → **lead nuevo de Facturación**, reutilizando nombre y
+  celular sin volver a pedirlos.
+- 178 pruebas OK; `phpcs` sin observaciones nuevas.
+
+**No comprobado:** en producción (falta desplegar).
 
 ---
 

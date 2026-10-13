@@ -960,6 +960,7 @@ final class AutomationEntityListBuilder extends EntityListBuilder {
       'AI_REACTIVATED' => $this->t('IA reactivada'),
       'CONVERSATION_CLOSED' => $this->t('Conversación cerrada'),
       'LEAD_HANDOFF' => $this->t('Lead enviado a atención humana'),
+      'LEAD_UPDATED' => $this->t('Datos agregados a un lead'),
     ];
 
     $row['conversation'] = [
@@ -1020,7 +1021,7 @@ final class AutomationEntityListBuilder extends EntityListBuilder {
    * Builds the source label for an action row.
    */
   private function actionOriginMarkup(string $action, ?EntityInterface $operator): string {
-    if ($action === 'LEAD_HANDOFF') {
+    if (in_array($action, ['LEAD_HANDOFF', 'LEAD_UPDATED'], TRUE)) {
       return '<span class="aiwa-operator-action-list__origin aiwa-operator-action-list__origin--automation">' . Html::escape((string) $this->t('Automatización')) . '</span>';
     }
 

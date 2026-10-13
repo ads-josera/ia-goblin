@@ -59,6 +59,8 @@ final class ReasoningEffortTest extends KernelTestBase {
       'ai_whatsapp_account',
       'ai_whatsapp_conversation',
       'ai_whatsapp_message',
+      // The prompt lists the conversation's registered cases (leads).
+      'ai_whatsapp_lead',
     ];
     foreach ($entity_type_ids as $entity_type_id) {
       $this->installEntitySchema($entity_type_id);

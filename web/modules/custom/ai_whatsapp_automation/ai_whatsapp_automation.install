@@ -1289,6 +1289,19 @@ function ai_whatsapp_automation_update_11045(): string {
 }
 
 /**
+ * Adds the "lead updated" operator action.
+ *
+ * In the web chat a conversation can add data to a registered case (the
+ * assistant closes with "Datos adicionales:"); the operator log records it.
+ */
+function ai_whatsapp_automation_update_11046(): string {
+  $definition = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_operator_action')['action'];
+  \Drupal::entityDefinitionUpdateManager()->updateFieldStorageDefinition($definition);
+
+  return (string) t('Operator actions can record data added to a lead.');
+}
+
+/**
  * Returns the permissions of the client agent role.
  *
  * @return string[]

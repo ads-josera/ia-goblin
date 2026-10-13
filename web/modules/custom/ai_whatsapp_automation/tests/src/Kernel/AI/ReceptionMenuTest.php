@@ -321,6 +321,79 @@ final class ReceptionMenuTest extends KernelTestBase {
   }
 
   /**
+   * Web chat after a lead: keeps helping, adds data, opens new cases.
+   *
+   * The panel cannot reply to a web visitor, so the AI keeps answering after
+   * a lead. It now sees the registered cases, adds data to its area's case
+   * ("Datos adicionales:") and a new problem, in another area, opens a new
+   * lead for that area's people ("Datos capturados:").
+   */
+  public function testWebChatCasesAfterLead(): void {
+    $this->bots['reception']->set('web_widget_enabled', TRUE)->set('web_widget_message_limit', 0)->save();
+    $web_chat = $this->container->get('ai_whatsapp_automation.web_chat');
+    $leads = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_lead');
+    $say = function (string $message, string $reply, bool $opened = FALSE) use ($web_chat): array {
+      $this->assistantReplies = [$reply];
+      return $web_chat->processMessage($this->bots['reception'], 'cases', $message, $opened);
+    };
+
+    // A support case.
+    $say('2', 'Soporte aquí, ¿qué pasa?', TRUE);
+    $say('Soy Ana Ruiz, celular 5512345678, no me llegan correos', "Datos capturados:\nNombre: Ana Ruiz\nCelular: 5512345678\nDescripción: no recibe correos");
+    $this->assertCount(1, $leads->loadMultiple());
+    $support_lead = current($leads->loadMultiple());
+    $this->assertSame((string) $this->bots['support']->id(), (string) $support_lead->get('bot')->target_id);
+    $this->assertContains('whatsapp:' . self::SUPPORT_PERSON, $this->twilioRecipients());
+
+    // The AI keeps helping and sees the case.
+    $result = $say('ya revisé el spam', 'Gracias, sigue sin llegar entonces.');
+    $this->assertSame('Gracias, sigue sin llegar entonces.', $result['message']);
+    $this->assertStringContainsString('Cases already registered', $this->lastOpenAiInput());
+    $this->assertStringContainsString('Lead ' . $support_lead->id() . ', area: Goblin Soporte', $this->lastOpenAiInput());
+
+    // More data for that case: added to it, its people told; no new lead.
+    $result = $say('el dominio es ejemplo.com', "Datos adicionales:\nDominio: ejemplo.com");
+    $this->assertSame('lead_updated', $result['handoff']['status']);
+    $this->assertCount(1, $leads->loadMultiple());
+    $updates = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_operator_action')->loadByProperties(['action' => 'LEAD_UPDATED']);
+    $this->assertCount(1, $updates);
+    $this->assertStringContainsString('ejemplo.com', (string) reset($updates)->get('note')->value);
+    $this->assertStringContainsString('Actualización del lead ' . $support_lead->id(), $this->lastTwilioBody(self::SUPPORT_PERSON));
+
+    // An invoice question, in Billing: a new lead for Billing's people.
+    $say('menú', '');
+    $say('3', 'Facturación aquí.');
+    $result = $say('necesito mi factura de septiembre', "Datos capturados:\nNombre: Ana Ruiz\nCelular: 5512345678\nDescripción: factura de septiembre");
+    $leads->resetCache();
+    $this->assertCount(2, $leads->loadMultiple(), 'A second case in the same conversation');
+    $billing_lead = $leads->load($result['handoff']['lead_id']);
+    $this->assertSame((string) $this->bots['billing']->id(), (string) $billing_lead->get('bot')->target_id);
+    $this->assertContains('whatsapp:' . self::BILLING_PERSON, $this->twilioRecipients());
+
+    // A summary-like reply that is not a new "Datos capturados:" adds nothing.
+    $say('gracias', 'Resumen: tu solicitud ya está canalizada.');
+    $leads->resetCache();
+    $this->assertCount(2, $leads->loadMultiple());
+  }
+
+  /**
+   * Returns the body of the last Twilio message sent to a number.
+   */
+  private function lastTwilioBody(string $number): string {
+    $body = '';
+    foreach ($this->history as $transaction) {
+      if ($transaction['request']->getUri()->getHost() === 'api.twilio.com') {
+        parse_str((string) $transaction['request']->getBody(), $form);
+        if (($form['To'] ?? '') === 'whatsapp:' . $number) {
+          $body = (string) ($form['Body'] ?? '');
+        }
+      }
+    }
+
+    return $body;
+  }
+
+  /**
    * A reception cannot offer another client's bot.
    */
   public function testMenuBotsMustBelongToTheSameClient(): void {
