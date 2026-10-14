@@ -22,12 +22,13 @@ lo **no comprobado**.
 - **Chat en goblincreative.com:** botón aislado y centrado, icono propio,
   logo en el encabezado.
 - **QA:** `tests/visual/qa-sweep.mjs` (106 páginas, 3 roles) y
-  `embed-check.mjs` después de cada cambio; 182 pruebas automáticas.
+  `embed-check.mjs` después de cada cambio; 186 pruebas automáticas.
 - **Siguiente:**
   1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
-     cumplimiento (KYC) en Twilio Trust Hub. Luego: procesamiento inmediato
-     de webhooks, registrar firmas rechazadas, **devolver el número …0231 a
-     Soporte** y repetir la prueba (entrada 2026-10-14).
+     cumplimiento (KYC) en Twilio Trust Hub (enviado, en revisión). Ya
+     hecho: procesamiento inmediato de webhooks y registro de firmas
+     rechazadas (commit 64396c3; falta desplegarlo). Luego: **devolver el
+     número …0231 a Soporte** y repetir la prueba (entradas 2026-10-14).
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   3. Traducir al español las demás pantallas del módulo (pendiente 1).
   4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
@@ -52,7 +53,7 @@ lo **no comprobado**.
 | 1 | Textos aún en inglés en otras pantallas del módulo (p. ej. «Evolution QR connections», cuentas de WhatsApp). El formulario del bot ya está en español (`translations/es.po`); seguir el mismo método | Media |
 | 2 | Bots por área: crear Ventas (prompt con el equipo); números de cada encargado en su bot; revisar encabezados de área | Alta |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3b | Plantillas de Twilio (WhatsApp) para los avisos de leads de Ventas, Facturación y Soporte: crearlas y enviarlas a revisión (ver «Dónde quedamos») | Alta |
+| 3b | Plantillas de Twilio (WhatsApp) para los avisos de leads: creadas y en revisión; al aprobarse, cargar los SID en `scripts/bots/goblin.php` (ver «Dónde quedamos») | Alta |
 | 3c | Producción: borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
