@@ -29,10 +29,9 @@ lo **no comprobado**.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   3. Traducir al español las demás pantallas del módulo (pendiente 1).
   4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
-  5. **Plantillas de WhatsApp en Twilio para los avisos de leads**, una por
-     área (Ventas, Facturación, Soporte): redactarlas juntos, crearlas en
-     Twilio (Content API) y mandarlas a revisión de WhatsApp mientras se
-     termina lo demás. Fuera de la ventana de 24 h, WhatsApp solo deja enviar
+  5. **Plantillas de WhatsApp para los avisos de leads: creadas y en
+     revisión de WhatsApp** (2026-10-14; SID en la entrada de ese día).
+     Falta: aprobación → cargar SID en el script → desplegar → probar. Fuera de la ventana de 24 h, WhatsApp solo deja enviar
      avisos con plantilla aprobada. El módulo ya las usa: cada bot de área
      tiene «Plantilla de aviso (Template SID)» y «Variables de la plantilla»
      (lead_id, contact, phone, email, summary, bot_name, source,
@@ -118,8 +117,18 @@ Facturación y Soporte, en revisión mientras se termina lo demás.
 - `scripts/bots/goblin.php` cargará el SID de cada área y el orden de
   variables cuando estén aprobadas (vacío hasta entonces).
 
-**Pendiente:** que el equipo corra el script y pase los SID `HX…`; esperar
-la aprobación; cargarlos y probar un aviso real.
+**Creadas y enviadas a revisión** (2026-10-14, el equipo corrió el script):
+
+| Área | Template SID | Estado |
+|------|--------------|--------|
+| Ventas (`goblin_aviso_lead_ventas`) | `HXf5e01996925cd413936b8c42b433e5dd` | received |
+| Soporte técnico (`goblin_aviso_lead_soporte`) | `HX6ef6d0cedace2e7194030a2ff597ec1a` | received |
+| Facturación (`goblin_aviso_lead_facturacion`) | `HXffbfb1e9d55c5d2f4f7bfef9b367cf30` | received |
+
+**Pendiente:** esperar la aprobación de WhatsApp (`--estado`); entonces
+poner cada SID en `scripts/bots/goblin.php` (`template_sid`), desplegar y
+probar un aviso real. No se cargan antes: con una plantilla sin aprobar el
+aviso falla siempre.
 
 ---
 

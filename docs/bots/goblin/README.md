@@ -73,6 +73,24 @@ Cada bot de área tiene su campo **«Lead notification WhatsApp numbers»**
 Esos números tampoco reciben respuestas de la IA si escriben al número de
 Goblin.
 
+## Plantillas de aviso (WhatsApp)
+
+Fuera de la ventana de 24 h, WhatsApp solo entrega avisos con plantilla
+aprobada. Una por área, creadas con `scripts/twilio/plantillas_goblin.py`
+(`--estado` para ver la revisión):
+
+| Área | Nombre | Template SID |
+|------|--------|--------------|
+| Ventas | `goblin_aviso_lead_ventas` | `HXf5e01996925cd413936b8c42b433e5dd` |
+| Soporte técnico | `goblin_aviso_lead_soporte` | `HX6ef6d0cedace2e7194030a2ff597ec1a` |
+| Facturación | `goblin_aviso_lead_facturacion` | `HXffbfb1e9d55c5d2f4f7bfef9b367cf30` |
+
+Variables: {{1}} tipo de aviso («Nuevo lead» / «Actualización del lead»),
+{{2}} folio, {{3}} contacto, {{4}} teléfono, {{5}} correo, {{6}} resumen,
+{{7}} enlace a la conversación. Se cargan en cada bot desde el script, solo
+cuando la plantilla está aprobada. La plantilla del bot gana sobre la de la
+cuenta de WhatsApp.
+
 ## Configurar un menú desde la interfaz
 
 En el bot de recepción, sección **«Reception menu»**: «Menu areas» (los bots
