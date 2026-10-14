@@ -86,8 +86,9 @@ actualizaciones de Drupal «al día» (5), 0 de seguridad. 183 pruebas OK,
 **Desplegado el mismo día** (`cfeaf26`): `drush status` 11.4.10, `composer
 audit` sin avisos, sitio y chat de goblincreative.com funcionando.
 
-**Por decidir:** desinstalar Field UI de forma permanente (no lo usa el
-producto: el módulo define sus campos en código) para reducir superficie.
+**Decisión del equipo (2026-10-14):** Field UI **se queda** activo (ya está
+corregido con 11.4.10). Como sigue activo, mantener el core al día es clave:
+el QA y `composer audit` avisan de nuevas versiones de seguridad.
 
 ---
 
