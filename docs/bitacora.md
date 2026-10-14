@@ -93,6 +93,12 @@ sender.
 Formato del número: la documentación de Twilio indica que los números de
 México en WhatsApp llevan el 1 (`+521…`), como hace el módulo: correcto.
 
+**Perfil de cumplimiento enviado (2026-10-14):** Trust Hub → Primary
+compliance profile **Business**, razón social *Exabyte Digital Process Media
+SA de CV*, identidad Direct, estado **Pending review**. Al aprobarse:
+encender el procesamiento inmediato, borrar la cola vieja, devolver …0231 a
+Soporte y repetir la prueba por WhatsApp.
+
 ---
 
 ## 2026-10-14 — Seguridad: Drupal 11.4.9 → 11.4.10 (SA-CORE-2026-014, crítico)
