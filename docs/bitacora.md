@@ -8,8 +8,8 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- **En producción** https://ia.goblincreative.com, Drupal **11.4.9 →
-  11.4.10 pendiente de desplegar (seguridad crítica, 2026-10-14)**,
+- **En producción** https://ia.goblincreative.com, Drupal **11.4.10**
+  (seguridad crítica aplicada el 2026-10-14; `composer audit` sin avisos),
   HTTPS, cron cada 5 min, respaldo en `~/backups` antes de cada despliegue
   grande.
 - **Bots de Goblin:** recepción con menú (1 Ventas, 2 Soporte, 3
@@ -82,6 +82,9 @@ aviso: desinstalar Field UI.
 `updb` nada pendiente; `composer audit` sin avisos; estado de
 actualizaciones de Drupal «al día» (5), 0 de seguridad. 183 pruebas OK,
 `qa-sweep.mjs` 101 páginas sin problemas, botón del chat OK.
+
+**Desplegado el mismo día** (`cfeaf26`): `drush status` 11.4.10, `composer
+audit` sin avisos, sitio y chat de goblincreative.com funcionando.
 
 **Por decidir:** desinstalar Field UI de forma permanente (no lo usa el
 producto: el módulo define sus campos en código) para reducir superficie.

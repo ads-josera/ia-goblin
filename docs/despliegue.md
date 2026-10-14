@@ -255,3 +255,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-12 | `fa98dde` | OK | Saludo fijo por área: `updb` 11045, 2 traducciones nuevas, 4 bots actualizados, `git status` vacío |
 | 2026-10-12 | `eaeeabc` | OK | Chat reabierto empieza en el menú. Solo `git pull` + `drush cr`; `git status` vacío |
 | 2026-10-12 | `e688c48` | OK | Varios casos tras el lead, brevedad, tarifas de OpenAI, costo por bot, enlaces de la bitácora. `updb` 11046–11048 (25 respuestas tomaron su bot), `cim` (5 tarifas), traducciones, bots. Respaldo en `~/backups/antes-qa-2026-10-12.sql.gz` |
+| 2026-10-14 | `cfeaf26` | OK | **Seguridad: Drupal 11.4.10** (SA-CORE-2026-014 crítico, 015, 016). Respaldo `~/backups/antes-11.4.10.sql.gz`; `composer audit` sin avisos; plantillas: variable `event` y prioridad del bot |
