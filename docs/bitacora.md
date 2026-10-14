@@ -24,8 +24,10 @@ lo **no comprobado**.
 - **QA:** `tests/visual/qa-sweep.mjs` (106 páginas, 3 roles) y
   `embed-check.mjs` después de cada cambio; 182 pruebas automáticas.
 - **Siguiente:**
-  1. Conectar el número de WhatsApp de Goblin (cuenta con el bot «Goblin»):
-     con eso salen los avisos a los encargados.
+  1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
+     cumplimiento (KYC) en Twilio Trust Hub. Luego: procesamiento inmediato
+     de webhooks, registrar firmas rechazadas, **devolver el número …0231 a
+     Soporte** y repetir la prueba (entrada 2026-10-14).
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   3. Traducir al español las demás pantallas del módulo (pendiente 1).
   4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
@@ -58,6 +60,38 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-14 — Primera prueba por WhatsApp real: Twilio bloquea los envíos
+
+**Contexto:** número de Goblin conectado a Twilio (+5215668080368, sender
+«Online», nombre «Goblin Creative») y dado de alta en el panel (cuenta 1,
+Twilio, activa, bot Goblin, con SID y token). Webhook configurado en el
+sender.
+
+**Encontrado (comprobado en el servidor):**
+
+1. **Twilio rechaza todo envío:** `401` código **20003** «Primary compliance
+   profile is not approved… complete the KYC». El módulo **sí** recibió los
+   mensajes (firma válida), los procesó y generó la respuesta; Twilio no deja
+   enviar hasta aprobar el **perfil de cumplimiento principal** (Trust Hub →
+   Profiles, KYC de la empresa). Lo resuelve el equipo en la consola de
+   Twilio; no es código.
+2. **El número de prueba era el del encargado de Soporte** (…0231): el
+   sistema lo trató como encargado (a propósito) y dejó su conversación en
+   atención humana. Se quitó **temporalmente** de Soporte y la conversación
+   volvió al bot. **Pendiente: volver a ponerlo** al terminar las pruebas.
+3. **`enable_immediate_webhook_processing` está apagado:** los mensajes de
+   WhatsApp solo se encolan y los procesa el cron (cada 5 min): respuestas
+   con hasta 5 min de retraso. **Propuesta:** encenderlo (procesa al momento
+   y, si falla, encola para reintentar).
+4. **Defecto del módulo:** una firma de Twilio inválida responde 403 **sin
+   dejar registro**; si pasa, no hay forma de verlo. Corregir: registrar el
+   rechazo (sin datos sensibles).
+
+Formato del número: la documentación de Twilio indica que los números de
+México en WhatsApp llevan el 1 (`+521…`), como hace el módulo: correcto.
 
 ---
 
