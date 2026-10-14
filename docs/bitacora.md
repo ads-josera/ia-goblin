@@ -8,7 +8,8 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-- **En producción** https://ia.goblincreative.com, Drupal **11.4.9**,
+- **En producción** https://ia.goblincreative.com, Drupal **11.4.9 →
+  11.4.10 pendiente de desplegar (seguridad crítica, 2026-10-14)**,
   HTTPS, cron cada 5 min, respaldo en `~/backups` antes de cada despliegue
   grande.
 - **Bots de Goblin:** recepción con menú (1 Ventas, 2 Soporte, 3
@@ -58,6 +59,63 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-14 — Seguridad: Drupal 11.4.9 → 11.4.10 (SA-CORE-2026-014, crítico)
+
+**Detectado por el QA** (`qa-sweep.mjs` vio el aviso de Drupal en el panel)
+y confirmado con `composer audit`: el 2026-10-14 Drupal publicó tres avisos
+que afectan a 11.4.0–11.4.9:
+
+- **SA-CORE-2026-014 — Crítico (19/25), ejecución remota de código** en el
+  módulo Field UI. Una vía de explotación **no requiere iniciar sesión**.
+  Field UI está activo en el sitio. Exploit «teórico» (sin código público),
+  según el aviso.
+- SA-CORE-2026-015 y SA-CORE-2026-016 — moderadamente críticos, XSS.
+
+**Corrección:** Drupal **11.4.10** (los tres). Mitigación alternativa del
+aviso: desinstalar Field UI.
+
+**Comprobado en local** (copia de la base): `composer update
+"drupal/core-*"` → 11.4.10 (Symfony 7.4.21); solo cambia `composer.lock`;
+`updb` nada pendiente; `composer audit` sin avisos; estado de
+actualizaciones de Drupal «al día» (5), 0 de seguridad. 183 pruebas OK,
+`qa-sweep.mjs` 101 páginas sin problemas, botón del chat OK.
+
+**Por decidir:** desinstalar Field UI de forma permanente (no lo usa el
+producto: el módulo define sus campos en código) para reducir superficie.
+
+---
+
+## 2026-10-14 — Plantillas de WhatsApp para los avisos de leads
+
+**Pedido del equipo:** plantillas de Twilio para los avisos de Ventas,
+Facturación y Soporte, en revisión mientras se termina lo demás.
+
+- `scripts/twilio/plantillas_goblin.py` (Python estándar, en la Mac del
+  equipo): crea las tres plantillas (`goblin_aviso_lead_ventas`,
+  `…_soporte`, `…_facturacion`; idioma `es`, categoría UTILITY) con 7
+  variables y ejemplos, y las manda a revisión de WhatsApp. Pide las
+  credenciales sin mostrarlas y no las guarda; no recrea las que existen;
+  `--estado` consulta la revisión. Probado contra una Twilio simulada.
+  Endpoints confirmados en la documentación de Twilio (idioma de dos letras:
+  `es_MX` daría el error 92004).
+- Texto aprobado por el equipo: «Goblin Creative · <área> / Aviso: {{1}} ·
+  Folio {{2}} / Contacto {{3}}, Teléfono {{4}}, Correo {{5}} / Resumen {{6}} /
+  Ver la conversación {{7}} / Atiende a este cliente lo antes posible…».
+  Reglas de Meta comprobadas: variables en orden, 28 palabras fijas (mínimo
+  15), no empieza ni termina con variable.
+- Módulo: variable nueva **`event`** («Nuevo lead» / «Actualización del
+  lead»): sin ella, un aviso de «Datos adicionales» se leería como lead
+  nuevo. Y la **plantilla del bot gana sobre la de la cuenta** (antes al
+  revés: las tres áreas comparten cuenta y una plantilla de cuenta habría
+  tapado las de área). Prueba nueva con 3 sabotajes detectados.
+- `scripts/bots/goblin.php` cargará el SID de cada área y el orden de
+  variables cuando estén aprobadas (vacío hasta entonces).
+
+**Pendiente:** que el equipo corra el script y pase los SID `HX…`; esperar
+la aprobación; cargarlos y probar un aviso real.
 
 ---
 
