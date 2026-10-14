@@ -88,6 +88,9 @@ RULES;
 $areas = [
   'sales' => [
     'name' => 'Goblin Ventas',
+    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py).
+    // Empty until approved by WhatsApp: then the HX... SID goes here.
+    'template_sid' => '',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Ventas de Goblin Creative. ¿Qué proyecto te gustaría cotizar?',
     'prompt' => 'ventas.md',
     'description' => 'Goblin Creative, área de ventas: cotizaciones de proyectos nuevos de desarrollo (HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas personalizados). Nunca da precios: el área de ventas contacta al cliente.',
@@ -99,6 +102,9 @@ $areas = [
   ],
   'support' => [
     'name' => 'Goblin Soporte',
+    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py).
+    // Empty until approved by WhatsApp: then the HX... SID goes here.
+    'template_sid' => '',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Soporte técnico de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'soporte.md',
     'description' => 'Goblin Creative, área de soporte técnico: correo, cPanel / hosting, dominios y DNS. Resuelve primer nivel y canaliza con el equipo técnico.',
@@ -108,6 +114,9 @@ $areas = [
   ],
   'billing' => [
     'name' => 'Goblin Facturación',
+    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py).
+    // Empty until approved by WhatsApp: then the HX... SID goes here.
+    'template_sid' => '',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Facturación y atención comercial de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'facturacion.md',
     'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, contratación de hosting, correo y dominios, y contacto con un asesor.',
@@ -116,6 +125,21 @@ $areas = [
     'categories' => 'Facturación y atención comercial',
   ],
 ];
+
+/*
+ * Variables of the area templates (scripts/twilio/plantillas_goblin.py):
+ * {{1}} kind of notice, {{2}} lead, {{3}} contact, {{4}} phone, {{5}} email,
+ * {{6}} summary, {{7}} conversation link.
+ */
+$template_variables = implode("\n", [
+  '1=event',
+  '2=lead_id',
+  '3=contact',
+  '4=phone',
+  '5=email',
+  '6=summary',
+  '7=conversation_url',
+]);
 
 /*
  * Reception. Its prompt is never sent to the AI (a reception only answers
@@ -208,6 +232,12 @@ foreach ($areas as $area) {
   $bot->set('handoff_required_fields', $handoff_required_fields);
   $bot->set('handoff_minimum_fields', $handoff_minimum_fields);
   $bot->set('handoff_prompt_rules', str_replace('{categories}', $area['categories'], $handoff_prompt_rules));
+  // Only once the template is approved: with an unapproved SID every notice
+  // fails, while plain text at least works inside WhatsApp's 24-hour window.
+  if ($area['template_sid'] !== '') {
+    $bot->set('lead_notification_template_sid', $area['template_sid']);
+    $bot->set('lead_notification_template_variables', $template_variables);
+  }
   // Reached through the reception: no chat link of its own.
   $bot->set('web_widget_enabled', FALSE);
   $save($bot, $created, 'prompt ' . mb_strlen($prompt) . ' characters');

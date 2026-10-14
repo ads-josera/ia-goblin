@@ -384,6 +384,65 @@ final class ReceptionMenuTest extends KernelTestBase {
   }
 
   /**
+   * Area templates: the area's own, with the kind of notice in {{1}}.
+   *
+   * Outside WhatsApp's 24-hour window a notice must be an approved template.
+   * The three areas share one account: the bot's template must win over an
+   * account template, and a "Datos adicionales" update must not read as a
+   * new lead.
+   */
+  public function testAreaTemplateNotices(): void {
+    $mapping = "1=event\n2=lead_id\n3=contact\n4=phone\n5=email\n6=summary\n7=conversation_url";
+    $this->bots['support']->set('lead_notification_template_sid', 'HXsoporte')
+      ->set('lead_notification_template_variables', $mapping)
+      ->save();
+    $accounts = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_account')->loadMultiple();
+    reset($accounts)->set('lead_notification_template_sid', 'HXcuenta')->save();
+    $this->bots['reception']->set('web_widget_enabled', TRUE)->set('web_widget_message_limit', 0)->save();
+    $web_chat = $this->container->get('ai_whatsapp_automation.web_chat');
+    $say = function (string $message, string $reply, bool $opened = FALSE) use ($web_chat): array {
+      $this->assistantReplies = [$reply];
+      return $web_chat->processMessage($this->bots['reception'], 'templates', $message, $opened);
+    };
+
+    $say('2', 'Soporte aquí.', TRUE);
+    $result = $say('Soy Ana Ruiz, celular 5512345678, no me llegan correos', "Datos capturados:\nNombre: Ana Ruiz\nCelular: 5512345678\nDescripción: no recibe correos");
+    $notice = $this->lastTwilioForm(self::SUPPORT_PERSON);
+    $this->assertSame('HXsoporte', $notice['ContentSid'] ?? NULL, "The area's template, not the account's");
+    $variables = json_decode($notice['ContentVariables'], TRUE);
+    $this->assertSame('Nuevo lead', $variables['1']);
+    $this->assertSame((string) $result['handoff']['lead_id'], $variables['2']);
+    $this->assertSame('Ana Ruiz', $variables['3']);
+    $this->assertStringNotContainsString("\n", $variables['6'], 'WhatsApp variables are one line');
+    $this->assertStringContainsString('/admin/content/ai-whatsapp/conversations/', $variables['7']);
+
+    $say('el dominio es ejemplo.com', "Datos adicionales:\nDominio: ejemplo.com");
+    $update = json_decode($this->lastTwilioForm(self::SUPPORT_PERSON)['ContentVariables'], TRUE);
+    $this->assertSame('Actualización del lead', $update['1']);
+    $this->assertSame($variables['2'], $update['2'], 'Same lead');
+  }
+
+  /**
+   * Returns the form of the last Twilio message sent to a number.
+   *
+   * @return array<string, string>
+   *   Form fields (Body, or ContentSid and ContentVariables).
+   */
+  private function lastTwilioForm(string $number): array {
+    $last = [];
+    foreach ($this->history as $transaction) {
+      if ($transaction['request']->getUri()->getHost() === 'api.twilio.com') {
+        parse_str((string) $transaction['request']->getBody(), $form);
+        if (($form['To'] ?? '') === 'whatsapp:' . $number) {
+          $last = $form;
+        }
+      }
+    }
+
+    return $last;
+  }
+
+  /**
    * Returns the body of the last Twilio message sent to a number.
    */
   private function lastTwilioBody(string $number): string {

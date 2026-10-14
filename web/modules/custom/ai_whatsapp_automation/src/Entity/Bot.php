@@ -287,7 +287,7 @@ final class Bot extends ContentEntityBase {
 
     $fields['lead_notification_template_variables'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Lead notification template variables'))
-      ->setDescription(t('Optional mapping for this template, one per line. Example: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Available values: lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Leave empty for the standard mapping.'))
+      ->setDescription(t('Optional mapping for this template, one per line. Example: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Available values: event, lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Leave empty for the standard mapping.'))
       ->setDisplayOptions('form', [
         'type' => 'string_textarea',
         'weight' => 51,

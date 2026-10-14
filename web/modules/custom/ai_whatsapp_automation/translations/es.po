@@ -125,8 +125,8 @@ msgstr "Opcional: Content SID (HX...) de una plantilla de WhatsApp aprobada en T
 msgid "Lead notification template variables"
 msgstr "Variables de la plantilla de aviso"
 
-msgid "Optional mapping for this template, one per line. Example: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Available values: lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Leave empty for the standard mapping."
-msgstr "Opcional: asignación de variables, una por línea. Ejemplo: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Valores disponibles: lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Déjalo vacío para la asignación estándar."
+msgid "Optional mapping for this template, one per line. Example: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Available values: event, lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Leave empty for the standard mapping."
+msgstr "Opcional: asignación de variables, una por línea. Ejemplo: 1=lead_id, 2=contact, 3=phone, 4=email, 5=summary. Valores disponibles: event (tipo de aviso: «Nuevo lead» o «Actualización del lead»), lead_id, contact, phone, email, summary, bot_name, source, conversation_url. Déjalo vacío para la asignación estándar."
 
 msgid "Lead notification WhatsApp account"
 msgstr "Cuenta de WhatsApp que envía los avisos"

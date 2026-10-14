@@ -399,6 +399,7 @@ final class LeadHandoffService {
       $ai_response,
       $bot instanceof ContentEntityInterface ? $bot : NULL,
       'Actualización del lead ' . $lead->id(),
+      'Actualización del lead',
     );
 
     return [
@@ -484,7 +485,7 @@ final class LeadHandoffService {
    * @return array<int, array<string, mixed>>
    *   Delivery results.
    */
-  private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $heading = 'Nuevo lead de WhatsApp'): array {
+  private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $heading = 'Nuevo lead de WhatsApp', string $event = 'Nuevo lead'): array {
     $account = $this->notificationAccount($conversation, $bot);
     $numbers = $this->notificationNumbers($bot, $account);
     if ($numbers === []) {
@@ -511,7 +512,7 @@ final class LeadHandoffService {
         'whatsapp_account_id' => $account->id(),
       ];
       $results[] = $provider === 'twilio' && $template['sid'] !== ''
-        ? $this->messageSender->sendTemplate($provider, $recipient, $template['sid'], $this->notificationTemplateVariables($conversation, $lead, $ai_response, $bot, $template['variables']))
+        ? $this->messageSender->sendTemplate($provider, $recipient, $template['sid'], $this->notificationTemplateVariables($conversation, $lead, $ai_response, $bot, $template['variables'], $event))
         : $this->messageSender->sendText($provider, $recipient, $message);
     }
 
@@ -524,26 +525,23 @@ final class LeadHandoffService {
   }
 
   /**
-   * Resolves the lead template and its mapping by account, bot, then global.
+   * Resolves the lead template and its mapping by bot, account, then global.
    *
    * @return array{sid: string, variables: string}
    *   Template content SID and its optional variable mapping.
    */
   private function notificationTemplate(?ContentEntityInterface $account, ?ContentEntityInterface $bot): array {
-    $account_template = $this->getFieldValue($account, 'lead_notification_template_sid');
-    if ($account_template !== '') {
-      return [
-        'sid' => $account_template,
-        'variables' => $this->getFieldValue($account, 'lead_notification_template_variables'),
-      ];
-    }
-
-    $bot_template = $this->getFieldValue($bot, 'lead_notification_template_sid');
-    if ($bot_template !== '') {
-      return [
-        'sid' => $bot_template,
-        'variables' => $this->getFieldValue($bot, 'lead_notification_template_variables'),
-      ];
+    // The bot first: area bots share one WhatsApp account, and each area has
+    // its own template; an account template must not override them all.
+    // Same order as the notification numbers (bot, account, global).
+    foreach ([$bot, $account] as $source) {
+      $sid = $this->getFieldValue($source, 'lead_notification_template_sid');
+      if ($sid !== '') {
+        return [
+          'sid' => $sid,
+          'variables' => $this->getFieldValue($source, 'lead_notification_template_variables'),
+        ];
+      }
     }
 
     return [
@@ -560,9 +558,12 @@ final class LeadHandoffService {
    * @return array<string, string>
    *   Values keyed by the placeholders configured for the selected template.
    */
-  private function notificationTemplateVariables(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $mapping): array {
+  private function notificationTemplateVariables(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $mapping, string $event = 'Nuevo lead'): array {
     $base_url = rtrim((string) ($GLOBALS['base_url'] ?? ''), '/');
     $values = [
+      // What happened: a new lead or data added to one. One template serves
+      // both, so the person in charge can tell them apart.
+      'event' => $this->templateVariable($event, 'Nuevo lead'),
       'lead_id' => $this->templateVariable((string) $lead->id(), 'Sin folio'),
       'contact' => $this->templateVariable((string) $lead->label(), 'Contacto no capturado'),
       'phone' => $this->templateVariable((string) ($lead->get('phone')->value ?: ''), 'No capturado'),
@@ -601,6 +602,7 @@ final class LeadHandoffService {
     }
 
     $allowed = array_fill_keys([
+      'event',
       'lead_id',
       'contact',
       'phone',
