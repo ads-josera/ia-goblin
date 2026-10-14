@@ -46,7 +46,7 @@ options:
   enable_logs: true
   enable_storage: true
   enable_metrics: true
-  enable_immediate_webhook_processing: false
+  enable_immediate_webhook_processing: true
   auto_close_ai_hours: 24
   enable_lead_notifications: true
   lead_notification_numbers: ''

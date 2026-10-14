@@ -63,6 +63,31 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-14 — WhatsApp: respuesta al momento y firmas rechazadas registradas
+
+Las dos mejoras del módulo que salieron de la primera prueba real (decisión
+del equipo: hacerlas mientras Twilio revisa el perfil).
+
+- **Procesamiento inmediato encendido** (`options.enable_immediate_webhook_processing:
+  true` en `config/sync`). El mensaje de WhatsApp se procesa durante la
+  llamada de Twilio; si falla, queda en la cola para reintentar (como ya
+  hacía el módulo). Antes: solo cola y cron, hasta 5 min de espera.
+- **Firma rechazada registrada:** el webhook avisaba 403 sin rastro. Ahora
+  escribe «Rejected twilio webhook: invalid signature. Account: … Validated
+  URL: …» (nunca la firma, el token ni el mensaje).
+
+**Comprobado:** `TwilioWebhookEndpointTest` llama al endpoint como Twilio,
+con firma real calculada con el token de la cuenta: con procesamiento
+inmediato se envía la respuesta y la cola queda en 0; sin él, solo se
+encola; firma incorrecta → 403 y aviso en el registro sin secretos. Dos
+sabotajes detectados. 186 pruebas OK; `phpcs` sin observaciones nuevas;
+`qa-sweep.mjs` 101 páginas sin problemas.
+
+**No comprobado:** con Twilio real (bloqueado hasta aprobar el perfil de
+cumplimiento).
+
+---
+
 ## 2026-10-14 — Primera prueba por WhatsApp real: Twilio bloquea los envíos
 
 **Contexto:** número de Goblin conectado a Twilio (+5215668080368, sender

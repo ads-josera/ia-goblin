@@ -65,6 +65,17 @@ final class WebhookController extends ControllerBase {
     }
 
     if (!$this->providerService->validate($provider, $request)) {
+      // Without a trace a rejected provider looks like a provider that never
+      // called. Only what helps to diagnose it: never the signature, a token
+      // or the message. The usual cause is the URL configured at the
+      // provider differing from this one (http/https, host, trailing slash)
+      // or a stale auth token on the WhatsApp account.
+      $this->logger->warning('Rejected @provider webhook: invalid signature. Account: @account. Validated URL: @url.', [
+        '@provider' => $provider,
+        '@account' => (string) $request->request->get('AccountSid', '-') ?: '-',
+        '@url' => $request->getSchemeAndHttpHost() . $request->getRequestUri(),
+      ]);
+
       return new JsonResponse(['error' => 'Invalid webhook signature.'], Response::HTTP_FORBIDDEN);
     }
 
