@@ -27,7 +27,7 @@ lo **no comprobado**.
   1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
      cumplimiento (KYC) en Twilio Trust Hub (enviado, en revisión). Ya
      hecho: procesamiento inmediato de webhooks y registro de firmas
-     rechazadas (commit 64396c3; falta desplegarlo). Luego: **devolver el
+     rechazadas (desplegado, `cb3e4a6`). Luego: **devolver el
      número …0231 a Soporte** y repetir la prueba (entradas 2026-10-14).
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   3. Traducir al español las demás pantallas del módulo (pendiente 1).
@@ -86,6 +86,9 @@ sabotajes detectados. 186 pruebas OK; `phpcs` sin observaciones nuevas;
 
 **No comprobado:** con Twilio real (bloqueado hasta aprobar el perfil de
 cumplimiento).
+
+**Desplegado** (`cb3e4a6`): `cim` aplicó la configuración, `cget` confirma
+`true`, cola vieja borrada y `git status` limpio en el servidor.
 
 ---
 
