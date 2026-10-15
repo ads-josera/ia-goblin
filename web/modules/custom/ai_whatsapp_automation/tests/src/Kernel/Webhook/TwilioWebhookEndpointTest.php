@@ -22,7 +22,9 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  *
  * Found on the first real WhatsApp test (2026-10-14): with immediate
  * processing off, replies waited for cron (up to 5 minutes), and a rejected
- * signature left no trace. OpenAI and Twilio are mocked.
+ * signature left no trace. Then (2026-10-15) Twilio's debugger showed error
+ * 12300: the endpoint answered JSON where Twilio reads TwiML. OpenAI and
+ * Twilio are mocked.
  */
 #[Group('ai_whatsapp_automation')]
 #[RunTestsInSeparateProcesses]
@@ -123,7 +125,7 @@ final class TwilioWebhookEndpointTest extends KernelTestBase {
     $response = $this->call($this->twilioRequest('SMhola', 'hola'));
 
     $this->assertSame(200, $response->getStatusCode());
-    $this->assertSame('immediate', json_decode((string) $response->getContent(), TRUE)['processing'] ?? NULL);
+    $this->assertTwiml($response);
     $this->assertSame(0, $this->container->get('queue')->get('ai_whatsapp_automation_webhook')->numberOfItems(), 'Nothing left for cron');
     $this->assertContains('api.twilio.com', $this->hosts(), 'The reply was sent');
   }
@@ -136,7 +138,7 @@ final class TwilioWebhookEndpointTest extends KernelTestBase {
 
     $response = $this->call($this->twilioRequest('SMhola', 'hola'));
 
-    $this->assertSame('queued', json_decode((string) $response->getContent(), TRUE)['status'] ?? NULL);
+    $this->assertTwiml($response);
     $this->assertSame(1, $this->container->get('queue')->get('ai_whatsapp_automation_webhook')->numberOfItems());
     $this->assertNotContains('api.twilio.com', $this->hosts());
   }
@@ -158,6 +160,28 @@ final class TwilioWebhookEndpointTest extends KernelTestBase {
     $this->assertStringContainsString(self::URL, $logged);
     $this->assertStringNotContainsString(self::TOKEN, $logged);
     $this->assertStringNotContainsString((string) $request->headers->get('X-Twilio-Signature'), $logged);
+  }
+
+  /**
+   * Media-less delivery receipts are ignored, also answered as TwiML.
+   */
+  public function testIgnoredRequestAnswersTwiml(): void {
+    $response = $this->call($this->twilioRequest('SMreceipt', ''));
+
+    $this->assertTwiml($response);
+    $this->assertNotContains('api.twilio.com', $this->hosts());
+  }
+
+  /**
+   * Asserts the empty TwiML reply Twilio expects (no error 12300).
+   */
+  private function assertTwiml(HttpResponse $response): void {
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringStartsWith('text/xml', (string) $response->headers->get('Content-Type'));
+    $xml = simplexml_load_string((string) $response->getContent());
+    $this->assertNotFalse($xml, 'Valid XML');
+    $this->assertSame('Response', $xml->getName());
+    $this->assertSame(0, $xml->count(), 'No TwiML instructions: replies go out through the REST API');
   }
 
   /**

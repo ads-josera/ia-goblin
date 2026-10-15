@@ -22,7 +22,7 @@ lo **no comprobado**.
 - **Chat en goblincreative.com:** botón aislado y centrado, icono propio,
   logo en el encabezado.
 - **QA:** `tests/visual/qa-sweep.mjs` (106 páginas, 3 roles) y
-  `embed-check.mjs` después de cada cambio; 186 pruebas automáticas.
+  `embed-check.mjs` después de cada cambio; 187 pruebas automáticas.
 - **Siguiente:**
   1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
      cumplimiento (KYC) en Twilio Trust Hub (enviado, en revisión). Ya
@@ -61,6 +61,35 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-15 — Twilio: error 12300, el webhook respondía JSON
+
+**Qué:** el depurador de Twilio mostraba el error 12300 (Invalid
+Content-Type). Twilio lee la respuesta a un mensaje entrante como TwiML
+(XML), y nuestro webhook contestaba JSON (`{"status":"queued"}`). Ahora a
+Twilio se le responde un TwiML vacío (`<Response/>`, `text/xml`), que según
+su documentación significa «recibido, no hagas nada»: nuestras respuestas
+salen por la API REST, no por TwiML. Cloud API y Evolution siguen
+recibiendo JSON. Los rechazos (403, 405) no cambian.
+
+**Por qué no bloqueaba:** 12300 es un aviso sobre la respuesta; el mensaje
+sí llegaba (los 2 de la prueba del 14 quedaron en la cola). Lo que bloquea
+los envíos sigue siendo el perfil de cumplimiento de Twilio (error 20003).
+
+**Comprobado:**
+- `TwilioWebhookEndpointTest`: procesado inmediato, solo cola y acuse sin
+  texto responden `<Response/>` vacío con `text/xml`. Sabotaje (volver a
+  JSON) → 3 fallos.
+- Petición HTTP real al sitio local, firmada como Twilio con una cuenta
+  temporal (borrada después): `200 | text/xml; charset=UTF-8 | <Response/>`.
+  Firma mala: 403.
+- 187 pruebas OK (149 del módulo + 38); `phpcs` sin observaciones nuevas;
+  `qa-sweep.mjs` 101 páginas y `embed-check.mjs` OK.
+
+**No comprobado:** en el depurador de Twilio (tras desplegar, el 12300 ya no
+debería aparecer en mensajes nuevos).
 
 ---
 

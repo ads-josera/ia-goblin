@@ -81,13 +81,13 @@ final class WebhookController extends ControllerBase {
 
     $message = $this->providerService->normalize($provider, $request);
     if ($message === []) {
-      return new JsonResponse(['status' => 'ignored']);
+      return $this->providerService->acknowledge($provider, ['status' => 'ignored']);
     }
 
     if (!(bool) $this->settingsConfigFactory->get('ai_whatsapp_automation.settings')->get('options.enable_immediate_webhook_processing')) {
       $this->queueService->enqueue($provider, $message);
 
-      return new JsonResponse(['status' => 'queued']);
+      return $this->providerService->acknowledge($provider, ['status' => 'queued']);
     }
 
     try {
@@ -106,10 +106,10 @@ final class WebhookController extends ControllerBase {
         '@error' => $exception->getMessage(),
       ]);
 
-      return new JsonResponse(['status' => 'queued_fallback']);
+      return $this->providerService->acknowledge($provider, ['status' => 'queued_fallback']);
     }
 
-    return new JsonResponse([
+    return $this->providerService->acknowledge($provider, [
       'status' => (string) ($result['status'] ?? 'processed'),
       'processing' => 'immediate',
     ]);

@@ -7,8 +7,10 @@ namespace Drupal\ai_whatsapp_automation\Application\Webhook;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Validates and normalizes provider webhook requests.
@@ -66,6 +68,33 @@ final class WebhookProviderService {
       'evolution' => $this->normalizeEvolution($request),
       default => [],
     };
+  }
+
+  /**
+   * Builds the reply to an accepted webhook, in the format each provider reads.
+   *
+   * Twilio reads the reply to an incoming message as TwiML: anything else is
+   * logged in its debugger as error 12300 (Invalid Content-Type). Our replies
+   * go out through the REST API, so Twilio gets an empty <Response/>, which
+   * tells it to do nothing. The other providers ignore the body and get the
+   * processing status as JSON, useful when diagnosing by hand.
+   *
+   * @param string $provider
+   *   The provider that called the webhook.
+   * @param array<string, string> $status
+   *   The processing status, such as ['status' => 'queued'].
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The reply to the provider.
+   */
+  public function acknowledge(string $provider, array $status): Response {
+    if ($provider === 'twilio') {
+      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response/>', Response::HTTP_OK, [
+        'Content-Type' => 'text/xml; charset=UTF-8',
+      ]);
+    }
+
+    return new JsonResponse($status);
   }
 
   /**
