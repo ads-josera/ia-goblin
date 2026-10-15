@@ -150,6 +150,10 @@ install`) volvió a copiar el `.htaccess` de Drupal y lo quitó; el sitio sigue
 en PHP 8.4 por `~/ia.goblincreative.com/.htaccess` y `git status` sale
 limpio. Si cPanel lo vuelve a escribir, lo de abajo aplica de nuevo.
 
+**2026-10-14 22:52: cPanel lo volvió a escribir** (después de que la
+actualización a 11.4.10 lo quitara). Mismo bloque `ea-php84`; se deja y
+aplica lo de abajo.
+
 #### Antes (2026-10-05)
 
 `git status --short` muestra ` M web/.htaccess`: cPanel (MultiPHP) añadió al
@@ -257,4 +261,4 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-12 | `e688c48` | OK | Varios casos tras el lead, brevedad, tarifas de OpenAI, costo por bot, enlaces de la bitácora. `updb` 11046–11048 (25 respuestas tomaron su bot), `cim` (5 tarifas), traducciones, bots. Respaldo en `~/backups/antes-qa-2026-10-12.sql.gz` |
 | 2026-10-14 | `cfeaf26` | OK | **Seguridad: Drupal 11.4.10** (SA-CORE-2026-014 crítico, 015, 016). Respaldo `~/backups/antes-11.4.10.sql.gz`; `composer audit` sin avisos; plantillas: variable `event` y prioridad del bot |
 | 2026-10-14 | `cb3e4a6` | OK | **Webhooks de WhatsApp:** procesamiento inmediato (`cget` → `true`) y registro de firmas rechazadas; cola vieja borrada (2 mensajes de la prueba). Pendiente la prueba real: Twilio KYC en revisión |
-| 2026-10-15 | `9076021` | OK | **Twilio 12300:** el webhook responde TwiML vacío. Verificado en producción con petición firmada: `200 \| text/xml; charset=UTF-8 \| <Response/>`. `git status`: `web/.htaccess` modificado fuera de git (en revisión) |
+| 2026-10-15 | `9076021` | OK | **Twilio 12300:** el webhook responde TwiML vacío. Verificado en producción con petición firmada: `200 \| text/xml; charset=UTF-8 \| <Response/>`. `git status`: ` M web/.htaccess` = bloque de cPanel `ea-php84`, reescrito por cPanel el 2026-10-14 22:52 (esperado, ver «`web/.htaccess` y el bloque de cPanel») |

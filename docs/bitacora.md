@@ -95,8 +95,10 @@ charset=UTF-8 | <Response/>`.
 **No comprobado:** en el depurador de Twilio con un mensaje real (pendiente
 de la aprobación del perfil).
 
-**Hallazgo:** `git status` en el servidor muestra `web/.htaccess`
-modificado; este despliegue no lo tocó. En revisión.
+**`git status`** en el servidor muestra ` M web/.htaccess`: es el bloque de
+cPanel `ea-php84`, que cPanel volvió a escribir el 2026-10-14 a las 22:52.
+Esperado e inofensivo (ver despliegue.md, «`web/.htaccess` y el bloque de
+cPanel»).
 
 ---
 
