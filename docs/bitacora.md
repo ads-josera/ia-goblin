@@ -88,8 +88,15 @@ los envíos sigue siendo el perfil de cumplimiento de Twilio (error 20003).
 - 187 pruebas OK (149 del módulo + 38); `phpcs` sin observaciones nuevas;
   `qa-sweep.mjs` 101 páginas y `embed-check.mjs` OK.
 
-**No comprobado:** en el depurador de Twilio (tras desplegar, el 12300 ya no
-debería aparecer en mensajes nuevos).
+**Desplegado** (`9076021`) y verificado en producción con una petición
+firmada con el token de la cuenta (sin imprimirlo): `200 | text/xml;
+charset=UTF-8 | <Response/>`.
+
+**No comprobado:** en el depurador de Twilio con un mensaje real (pendiente
+de la aprobación del perfil).
+
+**Hallazgo:** `git status` en el servidor muestra `web/.htaccess`
+modificado; este despliegue no lo tocó. En revisión.
 
 ---
 
