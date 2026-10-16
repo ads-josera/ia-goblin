@@ -26,8 +26,8 @@ lo **no comprobado**.
 - **Siguiente:**
   1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
      cumplimiento (KYC) en Twilio Trust Hub: **rechazado dos veces** (18603
-     dirección, 18602 ID); corregir con la razón social y el RFC y reenviar
-     (entrada 2026-10-16). Ya
+     dirección, 18602 ID). **Correo enviado a Twilio (trust hub); en espera
+     de su respuesta** (entrada 2026-10-16). Ya
      hecho: procesamiento inmediato de webhooks y registro de firmas
      rechazadas (desplegado, `cb3e4a6`). Luego: **devolver el
      número …0231 a Soporte** y repetir la prueba (entradas 2026-10-14).
@@ -104,6 +104,10 @@ El RFC y el domicilio no van en git: están en la constancia que guarda el
 equipo.
 
 **Pendiente:** que el equipo corrija el perfil y lo reenvíe.
+
+**Actualización (mismo día):** el equipo ya mandó el correo a Twilio. Toca
+esperar su respuesta; cuando llegue, se revisa aquí antes de volver a tocar el
+perfil.
 
 ---
 
