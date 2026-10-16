@@ -73,10 +73,20 @@ la dirección (18603) y este por el ID de la empresa (18602: «Business ID
 could not be verified»). Twilio pide el nombre legal y el número fiscal de
 los registros fiscales.
 
-**Causa probable** (deducida de la constancia de situación fiscal, sin
-confirmar con Twilio): la empresa legal es **Exabyte Digital Process Media,
-S.A. de C.V.**; «Goblin Creative» es la marca y no aparece en el SAT ni como
-nombre comercial. Además, para México el número fiscal es el RFC, no un EIN.
+**Causa probable** (comparando el perfil con la constancia de situación
+fiscal, sin confirmar con Twilio): el nombre legal ya era el de la empresa
+(Exabyte Digital Process Media; «Goblin Creative» solo es el *friendly
+name*, que no se verifica). Lo que no coincide:
+- el RFC se capturó **con guiones**, y el RFC no los lleva;
+- el tipo de ID es «Corporate Identity Number» (el registro de empresas de
+  la India);
+- al nombre legal le falta «S.A. de C.V.»;
+- a la dirección le faltan el interior y la colonia;
+- la industria dice MEDIA, y la actividad en el SAT es consultoría en
+  computación.
+
+Una primera hipótesis («el nombre legal era Goblin Creative») resultó falsa
+al ver el perfil.
 
 **Qué se recomendó:**
 - Nombre legal: la razón social de la constancia.
