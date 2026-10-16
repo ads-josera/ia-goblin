@@ -25,7 +25,9 @@ lo **no comprobado**.
   `embed-check.mjs` después de cada cambio; 187 pruebas automáticas.
 - **Siguiente:**
   1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
-     cumplimiento (KYC) en Twilio Trust Hub (enviado, en revisión). Ya
+     cumplimiento (KYC) en Twilio Trust Hub: **rechazado dos veces** (18603
+     dirección, 18602 ID); corregir con la razón social y el RFC y reenviar
+     (entrada 2026-10-16). Ya
      hecho: procesamiento inmediato de webhooks y registro de firmas
      rechazadas (desplegado, `cb3e4a6`). Luego: **devolver el
      número …0231 a Soporte** y repetir la prueba (entradas 2026-10-14).
@@ -61,6 +63,37 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-16 — Twilio rechaza el perfil de cumplimiento (18602)
+
+**Qué:** segundo rechazo del Business Profile de Twilio. El primero fue por
+la dirección (18603) y este por el ID de la empresa (18602: «Business ID
+could not be verified»). Twilio pide el nombre legal y el número fiscal de
+los registros fiscales.
+
+**Causa probable** (deducida de la constancia de situación fiscal, sin
+confirmar con Twilio): la empresa legal es **Exabyte Digital Process Media,
+S.A. de C.V.**; «Goblin Creative» es la marca y no aparece en el SAT ni como
+nombre comercial. Además, para México el número fiscal es el RFC, no un EIN.
+
+**Qué se recomendó:**
+- Nombre legal: la razón social de la constancia.
+- Tipo de ID: *Other* o *Tax ID*, con el RFC.
+- Dirección: la del domicilio fiscal; la calle como «Av. Insurgentes Sur»,
+  porque el SAT la registra como «Insurgentes».
+- Representante: alguien con cargo en la empresa.
+- Escribir a trusthub-verify@twilio.com con la constancia adjunta, para una
+  revisión manual.
+- Leyenda en goblincreative.com («Goblin Creative es una marca de Exabyte
+  Digital Process Media, S.A. de C.V.») para evitar el 18601 (nombre y sitio
+  web no relacionados).
+
+El RFC y el domicilio no van en git: están en la constancia que guarda el
+equipo.
+
+**Pendiente:** que el equipo corrija el perfil y lo reenvíe.
 
 ---
 
