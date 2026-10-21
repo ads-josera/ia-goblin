@@ -24,23 +24,17 @@ lo **no comprobado**.
 - **QA:** `tests/visual/qa-sweep.mjs` (106 páginas, 3 roles) y
   `embed-check.mjs` después de cada cambio; 187 pruebas automáticas.
 - **Siguiente:**
-  1. **WhatsApp real bloqueado por Twilio:** aprobar el perfil de
-     cumplimiento (KYC) en Twilio Trust Hub: **rechazado dos veces** (18603
-     dirección, 18602 ID). **Correo enviado a Twilio (trust hub); en espera
-     de su respuesta** (entrada 2026-10-16). Ya
-     hecho: procesamiento inmediato de webhooks y registro de firmas
-     rechazadas (desplegado, `cb3e4a6`). Luego: **devolver el
-     número …0231 a Soporte** y repetir la prueba (entradas 2026-10-14).
+  1. **Twilio aprobó el perfil y las plantillas (2026-10-21)**; el equipo
+     ya mandó mensajes. SID de las plantillas cargados en
+     `scripts/bots/goblin.php` (entrada 2026-10-21). Falta: **desplegar**,
+     **devolver el número …0231 a Soporte** y probar un aviso real de lead.
+  1b. **Avisos de lead también por correo** (pedido del equipo, 2026-10-21):
+     propuesta en la entrada de ese día, por decidir.
+  1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
+     `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   3. Traducir al español las demás pantallas del módulo (pendiente 1).
   4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
-  5. **Plantillas de WhatsApp para los avisos de leads: creadas y en
-     revisión de WhatsApp** (2026-10-14; SID en la entrada de ese día).
-     Falta: aprobación → cargar SID en el script → desplegar → probar. Fuera de la ventana de 24 h, WhatsApp solo deja enviar
-     avisos con plantilla aprobada. El módulo ya las usa: cada bot de área
-     tiene «Plantilla de aviso (Template SID)» y «Variables de la plantilla»
-     (lead_id, contact, phone, email, summary, bot_name, source,
-     conversation_url).
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads.
@@ -55,7 +49,7 @@ lo **no comprobado**.
 | 1 | Textos aún en inglés en otras pantallas del módulo (p. ej. «Evolution QR connections», cuentas de WhatsApp). El formulario del bot ya está en español (`translations/es.po`); seguir el mismo método | Media |
 | 2 | Bots por área: crear Ventas (prompt con el equipo); números de cada encargado en su bot; revisar encabezados de área | Alta |
 | 2b | Gráfica «Actividad por día»: con valores pequeños repite la etiqueta del eje (1, 1) | Baja |
-| 3b | Plantillas de Twilio (WhatsApp) para los avisos de leads: creadas y en revisión; al aprobarse, cargar los SID en `scripts/bots/goblin.php` (ver «Dónde quedamos») | Alta |
+| 3b | Plantillas de Twilio (WhatsApp) para los avisos de leads: aprobadas y cargadas en `scripts/bots/goblin.php`; falta desplegar y probar un aviso real | Alta |
 | 3c | Producción: borrar `~/ia.goblincreative.com.anterior` cuando ya no haga falta | Media |
 | 3d | OpenAI por cliente (hoy hay una clave general; Twilio y Evolution ya son por cuenta) | Futuro |
 | 4 | Safari real: lo revisa el equipo. Automatización activada; la sesión se agotaba con Safari abierto. Reintentar con Safari cerrado: `npm run qa:real` | Media |
@@ -63,6 +57,37 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-21 — Twilio aprobado: plantillas de aviso cargadas en los bots
+
+**Qué:** Twilio aprobó el perfil de cumplimiento y WhatsApp las tres
+plantillas de aviso de lead (lo confirma el equipo; ya envió mensajes). Los
+SID se cargaron en `scripts/bots/goblin.php`, uno por área (los de la tabla
+de `docs/bots/goblin/README.md`). Con el SID puesto, el aviso al encargado
+sale **siempre** con la plantilla (`LeadHandoffService::notifyAdministrators`),
+también fuera de la ventana de 24 h.
+
+**Ojo:** desde ahora el script escribe la plantilla en cada ejecución; un
+cambio hecho a mano en el panel en esos dos campos se pierde al volver a
+correrlo. Para cambiarla, cambiar el script.
+
+**Comprobado (local):** `drush php:script scripts/bots/goblin.php` → Ventas,
+Soporte y Facturación con su SID y las variables `1=event … 7=conversation_url`
+(consulta a la base); la recepción sin plantilla (no crea leads).
+`qa-sweep.mjs`: 101 páginas, 3 roles, sin problemas. 187 pruebas OK.
+
+**No comprobado:** el envío real de la plantilla (después del despliegue).
+
+**Drupal 11.4.11** salió hoy: versión de correcciones, no de seguridad
+(`composer audit` sin avisos). Reescribe `web/.htaccess` (`assert.active` →
+`zend.assertions`). Se aplica después de la prueba real de WhatsApp, para no
+mezclar causas si algo falla.
+
+**Pedido nuevo — avisos de lead por correo:** que el aviso también pueda
+llegar por correo, con diseño, al encargado de cada área (por si no usa
+WhatsApp). Ver propuesta en el chat del día; pendiente de decisión.
 
 ---
 

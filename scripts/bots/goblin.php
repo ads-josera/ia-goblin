@@ -88,9 +88,9 @@ RULES;
 $areas = [
   'sales' => [
     'name' => 'Goblin Ventas',
-    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py).
-    // Empty until approved by WhatsApp: then the HX... SID goes here.
-    'template_sid' => '',
+    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py),
+    // approved by WhatsApp 2026-10-21. Empty = plain-text notices.
+    'template_sid' => 'HXf5e01996925cd413936b8c42b433e5dd',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Ventas de Goblin Creative. ¿Qué proyecto te gustaría cotizar?',
     'prompt' => 'ventas.md',
     'description' => 'Goblin Creative, área de ventas: cotizaciones de proyectos nuevos de desarrollo (HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas personalizados). Nunca da precios: el área de ventas contacta al cliente.',
@@ -102,9 +102,9 @@ $areas = [
   ],
   'support' => [
     'name' => 'Goblin Soporte',
-    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py).
-    // Empty until approved by WhatsApp: then the HX... SID goes here.
-    'template_sid' => '',
+    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py),
+    // approved by WhatsApp 2026-10-21. Empty = plain-text notices.
+    'template_sid' => 'HX6ef6d0cedace2e7194030a2ff597ec1a',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Soporte técnico de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'soporte.md',
     'description' => 'Goblin Creative, área de soporte técnico: correo, cPanel / hosting, dominios y DNS. Resuelve primer nivel y canaliza con el equipo técnico.',
@@ -114,9 +114,9 @@ $areas = [
   ],
   'billing' => [
     'name' => 'Goblin Facturación',
-    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py).
-    // Empty until approved by WhatsApp: then the HX... SID goes here.
-    'template_sid' => '',
+    // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py),
+    // approved by WhatsApp 2026-10-21. Empty = plain-text notices.
+    'template_sid' => 'HXffbfb1e9d55c5d2f4f7bfef9b367cf30',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Facturación y atención comercial de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'facturacion.md',
     'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, contratación de hosting, correo y dominios, y contacto con un asesor.',
