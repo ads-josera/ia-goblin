@@ -133,7 +133,13 @@ Config Ignore: sacaba todo el SMTP de git. `settings.local.php` sigue ganando.
   Pantalla vista en el navegador: campo habilitado y texto en español. 191
   pruebas OK; `qa-sweep.mjs` 101 páginas sin problemas.
 
-**No comprobado:** envío real por el servidor SMTP de producción ni cómo se
+**Desplegado** (`575b171`, `6052dea`, `3415084`): módulo `smtp` instalado
+por `cim`, bots con sus correos. Contraseña escrita en la pantalla del SMTP.
+Correo de prueba del aviso (lead 1, solo a ads@josera.com.mx): el servidor
+SMTP de producción lo **aceptó** (`[status] => sent`, «1 of 1 sent»).
+`git status` vacío.
+
+**No comprobado:** si llegó a la bandeja de entrada y cómo se
 ve en Gmail/Outlook (Outlook de escritorio ignora `max-width`: se verá a todo
 lo ancho). Falta que exista la cuenta avisos@ y su contraseña en el servidor.
 
