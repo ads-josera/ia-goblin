@@ -14,11 +14,14 @@
  * - items: list of what the person can do in the panel; may be empty.
  * - summary: block of preformatted text under the list (the bot's summary
  *   in lead notices); may be empty.
- * - action: label of the button.
- * - url: one-time login link the button points to.
- * - note: small print under the button.
+ * - action: label of the button; with url empty there is no button (lead
+ *   notices: the bot's summary already says what the case is about).
+ * - url: link the button points to (one-time login link in account e-mails).
+ * - note: small print under the button; may be empty.
  * - client: name of the client the account belongs to.
  * - logo_url: absolute URL of the logo, may be empty.
+ * - brand: text shown when there is no logo; defaults to Josera's.
+ * - tagline: line under the brand; defaults to "Panel de automatización".
  * - footer: closing line under the card.
  */
 #}
@@ -39,9 +42,9 @@
             {% if logo_url %}
               <img src="{{ logo_url }}" alt="Josera Marketing Digital" width="150" style="display:block;width:150px;max-width:60%;height:auto;margin:0 0 18px 0;border:0;">
             {% else %}
-              <p style="margin:0 0 6px 0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#b9b3d6;">Josera · Marketing Digital</p>
+              <p style="margin:0 0 6px 0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#b9b3d6;">{{ brand ?: 'Josera · Marketing Digital' }}</p>
             {% endif %}
-            <p style="margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#b9b3d6;">Panel de automatización</p>
+            <p style="margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#b9b3d6;">{{ tagline ?: 'Panel de automatización' }}</p>
             <p style="margin:4px 0 0 0;font-size:15px;color:#ffffff;font-weight:600;">{{ client }}</p>
           </td>
         </tr>
@@ -65,6 +68,7 @@
             {% endif %}
           </td>
         </tr>
+        {% if url %}
         <tr>
           <td style="padding:24px 32px 8px 32px;">
             <a href="{{ url }}" style="display:inline-block;padding:13px 26px;background:#ec1e63;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">{{ action }}</a>
@@ -72,12 +76,17 @@
         </tr>
         <tr>
           <td style="padding:8px 32px 28px 32px;font-size:13px;line-height:1.6;color:#7a7395;">
-            <p style="margin:0;">{{ note }}</p>
-            <p style="margin:12px 0 0 0;">{{ 'Si el botón no funciona, copia esta dirección en tu navegador:'|t }}<br>
+            {% if note %}<p style="margin:0 0 12px 0;">{{ note }}</p>{% endif %}
+            <p style="margin:0;">{{ 'Si el botón no funciona, copia esta dirección en tu navegador:'|t }}<br>
               <span style="word-break:break-all;color:#4a4468;">{{ url }}</span>
             </p>
           </td>
         </tr>
+        {% else %}
+        <tr>
+          <td style="padding:0 0 28px 0;"></td>
+        </tr>
+        {% endif %}
       </table>
       {% if footer %}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;">

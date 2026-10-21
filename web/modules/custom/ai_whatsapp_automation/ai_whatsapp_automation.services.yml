@@ -148,7 +148,6 @@ services:
       - '@plugin.manager.mail'
       - '@renderer'
       - '@language_manager'
-      - '@ai_whatsapp_automation.client_agent_mail'
       - '@logger.factory'
 
   ai_whatsapp_automation.dashboard_metrics:

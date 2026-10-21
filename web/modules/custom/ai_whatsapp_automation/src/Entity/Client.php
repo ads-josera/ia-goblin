@@ -78,6 +78,15 @@ final class Client extends ContentEntityBase {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['brand_name'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Brand name'))
+      ->setDescription(t('How the business presents itself, e.g. "Goblin Creative". Heads the lead notices sent to its team; when empty, the client name is used.'))
+      ->setSetting('max_length', 128)
+      ->setDisplayOptions('form', ['type' => 'string_textfield', 'weight' => 5])
+      ->setDisplayOptions('view', ['type' => 'string', 'weight' => 5])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['status'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Status'))
       ->setRequired(TRUE)

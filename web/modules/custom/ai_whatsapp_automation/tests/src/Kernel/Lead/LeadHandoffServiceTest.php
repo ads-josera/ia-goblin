@@ -38,6 +38,7 @@ final class LeadHandoffServiceTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $entity_type_ids = [
+      'ai_whatsapp_client',
       'ai_whatsapp_knowledge_base',
       'ai_whatsapp_bot',
       'ai_whatsapp_account',
@@ -162,7 +163,10 @@ final class LeadHandoffServiceTest extends KernelTestBase {
     $this->config('system.mail')->set('interface.default', 'test_mail_collector')->save();
     \Drupal::state()->set('system.test_mail_collector', []);
     $storage = fn (string $type) => $this->container->get('entity_type.manager')->getStorage($type);
+    $client = $storage('ai_whatsapp_client')->create(['name' => 'Goblin', 'brand_name' => 'Goblin Creative', 'status' => 'active']);
+    $client->save();
     $bot = $storage('ai_whatsapp_bot')->create([
+      'client' => $client->id(),
       'name' => 'Goblin Soporte',
       'status' => 'active',
       'handoff_enabled' => TRUE,
@@ -196,10 +200,13 @@ final class LeadHandoffServiceTest extends KernelTestBase {
     $this->assertSame('Nuevo lead ' . $result['lead_id'] . ' — Goblin Soporte', $mail['subject']);
     $this->assertStringStartsWith('text/html', $mail['headers']['Content-Type']);
     // The collector turns HTML into text, like php_mail: the data is there.
-    foreach (['Folio: ' . $result['lead_id'], 'Contacto: Ana López', 'Origen: Chat web', 'No envía correos desde Outlook', '/admin/content/ai-whatsapp/conversations/' . $conversation->id()] as $expected) {
+    foreach (['Goblin Creative', 'Folio: ' . $result['lead_id'], 'Contacto: Ana López', 'Origen: Chat web', 'No envía correos desde Outlook'] as $expected) {
       $this->assertStringContainsString($expected, $mail['body']);
     }
     $this->assertStringNotContainsString('**', $mail['body'], 'Chat formatting is removed');
+    // The client's mail: no Josera brand, no button or link to the panel.
+    $this->assertStringNotContainsString('Josera', $mail['body']);
+    $this->assertStringNotContainsString('/admin/content/ai-whatsapp/conversations', $mail['body']);
   }
 
   /**

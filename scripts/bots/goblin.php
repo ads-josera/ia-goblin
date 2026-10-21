@@ -26,6 +26,7 @@ declare(strict_types=1);
 use Drupal\Core\Entity\ContentEntityInterface;
 
 $client_name = 'Goblin';
+$client_brand = 'Goblin Creative';
 $prompt_dir = DRUPAL_ROOT . '/../docs/bots/goblin';
 
 /*
@@ -193,6 +194,10 @@ if (!$client) {
   $client = $etm->getStorage('ai_whatsapp_client')->create(['name' => $client_name, 'status' => 'active']);
   $client->save();
   echo "Created client \"$client_name\" (id {$client->id()})." . PHP_EOL;
+}
+// Heads the lead notice e-mails sent to the team.
+if ($client->get('brand_name')->value !== $client_brand) {
+  $client->set('brand_name', $client_brand)->save();
 }
 
 $load_or_create = static function (string $name) use ($etm, $client): array {

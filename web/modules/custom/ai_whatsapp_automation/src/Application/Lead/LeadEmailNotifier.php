@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ai_whatsapp_automation\Application\Lead;
 
-use Drupal\ai_whatsapp_automation\Mail\ClientAgentMail;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -21,10 +20,13 @@ use Psr\Log\LoggerInterface;
  * other one still arrives. Web chat leads have no WhatsApp account to send
  * from, so for them e-mail can be the only channel.
  *
- * The body uses the same branded template as the account e-mails
- * (ai_whatsapp_client_agent_mail). It is HTML: the mail backend must keep it,
- * which the SMTP module does with "Allow to send e-mails formatted as HTML"
- * (smtp.settings:smtp_allowhtml). Core's php_mail turns it into plain text.
+ * The body uses the same template as the account e-mails
+ * (ai_whatsapp_client_agent_mail), headed with the client's brand name and
+ * without a button: the bot's summary is what the team acts on.
+ *
+ * It is HTML: the mail backend must keep it, which the SMTP module does with
+ * "Allow to send e-mails formatted as HTML" (smtp.settings:smtp_allowhtml).
+ * Core's php_mail turns it into plain text.
  */
 final class LeadEmailNotifier {
 
@@ -50,7 +52,6 @@ final class LeadEmailNotifier {
     private readonly MailManagerInterface $mailManager,
     private readonly RendererInterface $renderer,
     private readonly LanguageManagerInterface $languageManager,
-    private readonly ClientAgentMail $clientAgentMail,
     LoggerChannelFactoryInterface $loggerFactory,
   ) {
     $this->logger = $loggerFactory->get('ai_whatsapp_automation');
@@ -97,7 +98,7 @@ final class LeadEmailNotifier {
 
     $params = [
       'subject' => sprintf('%s %s — %s', $event, $lead->id(), $bot->label()),
-      'body' => $this->render($conversation, $lead, $ai_response, $bot, $event),
+      'body' => $this->render($lead, $ai_response, $bot, $event),
     ];
     $langcode = $this->languageManager->getDefaultLanguage()->getId();
 
@@ -150,11 +151,9 @@ final class LeadEmailNotifier {
   /**
    * Renders the HTML body.
    */
-  private function render(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ContentEntityInterface $bot, string $event): string {
-    $base_url = rtrim((string) ($GLOBALS['base_url'] ?? ''), '/');
+  private function render(ContentEntityInterface $lead, string $ai_response, ContentEntityInterface $bot, string $event): string {
     $is_update = $event !== 'Nuevo lead';
     $source = (string) ($lead->hasField('source') ? $lead->get('source')->value : '');
-    $client = $bot->hasField('client') && !$bot->get('client')->isEmpty() ? (string) $bot->get('client')->entity?->label() : '';
 
     $build = [
       '#theme' => 'ai_whatsapp_client_agent_mail',
@@ -170,15 +169,28 @@ final class LeadEmailNotifier {
         'Origen: ' . ($source === 'web' ? 'Chat web' : 'WhatsApp'),
       ],
       '#summary' => $this->summary($ai_response),
-      '#action' => 'Ver la conversación',
-      '#url' => $base_url . '/admin/content/ai-whatsapp/conversations/' . $conversation->id(),
-      '#note' => 'Para abrir la conversación inicia sesión en el panel.',
-      '#client' => $client,
-      '#logo_url' => $this->clientAgentMail->logoUrl(),
+      // No button: the team acts on the summary, not in the panel (decided
+      // by the team, 2026-10-21). Nor Josera's logo: it is the client's mail.
+      '#brand' => $this->brand($bot),
+      '#tagline' => 'Aviso de lead',
+      '#client' => $bot->label(),
       '#footer' => sprintf('Recibes este aviso porque estás registrado como encargado de los leads de %s.', $bot->label()),
     ];
 
     return (string) $this->renderer->renderInIsolation($build);
+  }
+
+  /**
+   * The client's brand name ("Goblin Creative"), else its name.
+   */
+  private function brand(ContentEntityInterface $bot): string {
+    $client = $bot->hasField('client') ? $bot->get('client')->entity : NULL;
+    if (!$client instanceof ContentEntityInterface) {
+      return '';
+    }
+    $brand = $client->hasField('brand_name') ? trim((string) $client->get('brand_name')->value) : '';
+
+    return $brand !== '' ? $brand : (string) $client->label();
   }
 
   /**

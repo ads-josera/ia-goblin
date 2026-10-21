@@ -86,8 +86,9 @@ Los fija el script (`notification_emails` de cada área):
 | Facturación | kevinyssen@goblincreative.com |
 
 Un canal que falle no detiene al otro. Salen desde avisos@goblincreative.com
-por SMTP (ver `docs/despliegue.md`). El botón «Ver la conversación» pide
-iniciar sesión en el panel: quien lo reciba necesita una cuenta para abrirla.
+por SMTP (ver `docs/despliegue.md`). El encabezado es el «Nombre comercial»
+del cliente («Goblin Creative», lo fija el script). Sin botón ni enlace al
+panel: el equipo trabaja con el resumen del bot.
 
 ## Plantillas de aviso (WhatsApp)
 

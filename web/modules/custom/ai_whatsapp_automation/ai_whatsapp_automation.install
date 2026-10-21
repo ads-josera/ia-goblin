@@ -1395,3 +1395,20 @@ function ai_whatsapp_automation_update_11049(): string {
 
   return (string) t('Bots can now e-mail lead notices («Lead notification e-mails»).');
 }
+
+/**
+ * Adds the brand name of clients (heads their lead notice e-mails).
+ */
+function ai_whatsapp_automation_update_11050(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('brand_name', 'ai_whatsapp_client') === NULL) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'brand_name',
+      'ai_whatsapp_client',
+      'ai_whatsapp_automation',
+      \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_client')['brand_name']
+    );
+  }
+
+  return (string) t('Clients now have a brand name («Brand name»).');
+}

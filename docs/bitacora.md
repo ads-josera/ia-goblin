@@ -66,6 +66,37 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-21 — Aviso por correo: marca del cliente y sin botón
+
+**Qué (pedido del equipo, tras ver el primer correo real):** el correo de
+prueba llegó. Dos cambios, solo en el aviso de lead:
+1. El encabezado decía «Josera · Marketing Digital» → ahora **«Goblin
+   Creative»**. Sale de un campo nuevo del cliente, **«Nombre comercial»**
+   (`brand_name`, `updb` 11050); si está vacío, se usa el nombre del cliente.
+   El script de bots lo fija para Goblin. Debajo: «Aviso de lead» y el bot
+   («Goblin Soporte»). Sin el logo de Josera.
+2. **Sin botón ni enlace** a la conversación: el equipo trabaja con el
+   resumen del bot, no entra al panel.
+
+Los correos de cuenta (alta, contraseña) no cambian: son del panel de Josera.
+La plantilla acepta `brand` y `tagline`, y sin `url` no pinta el botón.
+
+**Comprobado (local):** aviso y correo de cuenta en Mailpit, vistos a 390 y
+600 px: el aviso con «Goblin Creative», sin enlaces (0 `<a>`); el de cuenta
+igual que antes (1 enlace, Josera). Prueba ampliada: exige «Goblin Creative»,
+que no aparezca «Josera» ni el enlace al panel. **Sabotaje:** sin la marca →
+falla; con el botón de vuelta → falla. (La prueba no creaba la tabla de
+clientes: se corrigió; el primer sabotaje daba error por eso y no valía.)
+Formulario del cliente: «Nombre comercial» = «Goblin Creative». 191 pruebas
+OK; `qa-sweep.mjs` 101 páginas sin problemas.
+
+**Nota:** el remitente de todo el correo del sitio es «Goblin Creative»
+(`smtp_fromname`), también para los correos de cuenta de otros clientes
+(«Cliente Demo»). Hoy solo Goblin es cliente real; con un segundo cliente
+habrá que decidir el remitente.
+
+---
+
 ## 2026-10-21 — Avisos de lead por correo y envío por SMTP
 
 **Qué:** pedido del equipo: el aviso de lead llega también por correo, con

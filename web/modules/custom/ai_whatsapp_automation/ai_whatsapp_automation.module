@@ -363,6 +363,8 @@ function ai_whatsapp_automation_theme(): array {
         'note' => NULL,
         'client' => '',
         'logo_url' => '',
+        'brand' => NULL,
+        'tagline' => NULL,
         'footer' => NULL,
       ],
     ],

@@ -149,6 +149,12 @@ msgstr "Hay una contraseña guardada; deja el campo vacío para conservarla."
 msgid "No password saved yet."
 msgstr "Todavía no hay contraseña guardada."
 
+msgid "Brand name"
+msgstr "Nombre comercial"
+
+msgid "How the business presents itself, e.g. \"Goblin Creative\". Heads the lead notices sent to its team; when empty, the client name is used."
+msgstr "Cómo se presenta el negocio, p. ej. «Goblin Creative». Encabeza los avisos de lead que recibe su equipo; si está vacío, se usa el nombre del cliente."
+
 msgid "Lead notification e-mails"
 msgstr "Correos de los encargados"
 
