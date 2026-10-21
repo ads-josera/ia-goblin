@@ -111,5 +111,19 @@
     "turns": [
       "Mi correo no recibe mensajes desde ayer"
     ]
+  },
+  {
+    "name": "Soporte real 2026-10-21 (conversación 15): correo en iPhone, «asesor», servidor caído",
+    "area": "2",
+    "turns": [
+      "Correos",
+      "3",
+      "josera@goblincreative.com\niPhone",
+      "quiero hablar con un asesor",
+      "tengo otros problemas con mi servidor",
+      "no carga el servidor",
+      "rayere.com.mx no carga nada ni cpanel ni correos",
+      "Alfonso huerta"
+    ]
   }
 ]

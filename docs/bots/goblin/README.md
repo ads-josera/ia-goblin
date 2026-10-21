@@ -169,7 +169,7 @@ sesión se guarda en el navegador).
 
 ## Prueba en vivo con OpenAI
 
-`tests/bots/goblin-live.php` + `goblin-live.json` (12 conversaciones). Gasta
+`tests/bots/goblin-live.php` + `goblin-live.json` (15 conversaciones; la 14 es la primera conversación real de Soporte, 2026-10-21). Gasta
 tokens y crea registros: correr sobre una copia (`ddev snapshot`) y
 restaurar. Instrucciones en la cabecera del script.
 

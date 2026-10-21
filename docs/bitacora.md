@@ -93,8 +93,51 @@ probarse en real.
 los 2 mensajes de la prueba del 14 que estaban en la cola (la consulta solo
 muestra la hora, no el día).
 
-**Pendiente:** confirmar con el equipo los datos de servidor de correo que
-puede dar el bot y ajustar `soporte.md` / `comun.md`; luego regresión en vivo.
+**Ajustes hechos** (`soporte.md` y reglas de `scripts/bots/goblin.php`):
+1. Pedir «asesor», «técnico» o «persona» por un problema técnico es de
+   Soporte: no se manda al menú. En cualquier área, el motivo se pregunta
+   como mucho una vez; si no lo da, se canaliza igual.
+2. Nunca deducir un nombre del correo, dominio o usuario.
+3. **Datos de correo del hosting** (confirmados por el equipo con cPanel):
+   usuario = correo completo; entrante y saliente `mail.<dominio>`; IMAP 993,
+   POP3 995, SMTP 465, todo SSL. Se dan con el dominio real, en ≤ 8 líneas y
+   la ruta del dispositivo en una línea. No aplican a Google Workspace /
+   Microsoft 365. La regla «no inventes servidores» tiene esa excepción.
+4. «Además: …» en la descripción si quedó otro problema sin confirmar.
+5. Línea «⚠️ Urgencia: alta — servicio caído» solo si no funciona nada
+   (sitio y cPanel o correo de todo el dominio); nunca se menciona al cliente.
+6. Nuevo: un número solo a mitad de la conversación responde a la última
+   lista; ya no vuelve a saludar (pasaba en la línea base).
+7. El nombre: no en el mismo mensaje que una pregunta sobre el problema y
+   como máximo dos veces.
+
+**Comprobado (local, OpenAI real, sobre `ddev snapshot` restaurado
+después):** escenario nuevo 14 en `tests/bots/goblin-live.json` (la
+conversación 15 tal cual). Línea base con el prompt anterior: sin urgencia,
+sin «Además», re-saludo tras «3». Con los prompts nuevos (6 corridas del
+escenario, las últimas con la versión final):
+
+| Punto | Resultado |
+|-------|-----------|
+| «Asesor» no manda al menú | 6/6 |
+| Sin nombre inventado | 6/6 |
+| Da `mail.goblincreative.com` con 993 y 465 | 5/6 (en la otra el «3» no apuntaba a ninguna lista y pidió aclarar: correcto) |
+| Urgencia en el resumen | 6/6 |
+| Urgencia nunca dicha al cliente | 6/6 |
+| «Además» con el problema del iPhone | **3/6** |
+| Pide el nombre ≤ 2 veces | **2/6** (solo cuando el cliente ignora la pregunta 3 veces seguidas) |
+
+Batería completa (15 escenarios) con prompts anteriores y nuevos, sin
+errores: «correo que no recibe» ahora sí crea el lead (antes no cerraba) y ya
+no se marca urgente (falso positivo corregido); chat web «quiero un asesor»
+dejó de cerrar al pedir el motivo → corregido (2/2 con lead); Ventas igual.
+
+**No resuelto:** «Además» (3/6) y la repetición del nombre cuando el cliente
+la ignora. Se dejó así para no sobreajustar el prompt a una conversación.
+Visto también (ya pasaba antes): ante «¿qué es un MX?» ofrece «revisar o
+configurar los MX», algo que no puede hacer.
+
+**Pendiente:** desplegar (`git pull` + `php:script`) y probar por WhatsApp.
 
 ---
 
