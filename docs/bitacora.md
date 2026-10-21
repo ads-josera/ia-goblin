@@ -137,7 +137,9 @@ la ignora. Se dejó así para no sobreajustar el prompt a una conversación.
 Visto también (ya pasaba antes): ante «¿qué es un MX?» ofrece «revisar o
 configurar los MX», algo que no puede hacer.
 
-**Pendiente:** desplegar (`git pull` + `php:script`) y probar por WhatsApp.
+**Desplegado** (`23e0b58`): 4 bots actualizados, Goblin Soporte con 15,030
+caracteres (igual que en local). `git status`: ` M web/.htaccess` (bloque de
+cPanel, esperado). **Pendiente:** probarlo por WhatsApp.
 
 ---
 
