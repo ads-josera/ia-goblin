@@ -93,7 +93,17 @@ mezclar causas si algo falla.
 
 **Pedido nuevo — avisos de lead por correo:** que el aviso también pueda
 llegar por correo, con diseño, al encargado de cada área (por si no usa
-WhatsApp). Ver propuesta en el chat del día; pendiente de decisión.
+WhatsApp). **Decidido por el equipo:** correo **además** de WhatsApp (sale
+por los dos canales que tenga el bot), enviado desde
+**avisos@goblincreative.com** por SMTP. Pendiente: los correos de cada área.
+
+**Hallazgo (deducido leyendo el código, sin comprobar en producción):** el
+sitio envía con `php_mail`, y el `PhpMail` de core convierte el HTML a texto
+plano (`MailFormatHelper::htmlToText`) mientras `ClientAgentMail` declara
+`Content-Type: text/html`. Los correos de cuenta con diseño (alta, contraseña)
+probablemente llegan como texto sin formato y con los saltos de línea
+perdidos. El nuevo envío por SMTP debe conservar el HTML; comprobarlo con un
+correo real.
 
 ---
 
