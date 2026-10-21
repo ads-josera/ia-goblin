@@ -31,9 +31,9 @@ lo **no comprobado**.
      aviso real de lead desde otro teléfono.
   1b. **Avisos de lead también por correo + SMTP**: hecho y probado en local
      (entrada 2026-10-21, segunda). Falta: crear la cuenta
-     avisos@goblincreative.com, poner servidor y contraseña SMTP en
-     `settings.local.php` de producción y desplegar (orden en
-     `docs/despliegue.md`).
+     avisos@goblincreative.com, poner el servidor SMTP (`settings.local.php`
+     o `config/sync`), desplegar y escribir la contraseña en la pantalla del
+     SMTP (orden en `docs/despliegue.md`).
   1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
      `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
@@ -113,6 +113,23 @@ menos a spam.
 - Suite: 189 pruebas OK. Avisos de obsolescencia: el nuestro de siempre
   (pendiente 7) y uno nuevo del módulo `smtp` (`smtp_requirements`), que es
   de ellos. `qa-sweep.mjs`: 101 páginas, 3 roles, sin problemas.
+
+**Contraseña SMTP desde el panel (decisión del equipo, opción 1 de 2):** el
+módulo `smtp` guarda la contraseña en `smtp.settings`, que `drush cim`
+reinicia con el valor vacío de git (dejaría de salir el correo tras cada
+despliegue) y `drush cex` exportaría a git. Ahora la pantalla del SMTP la
+guarda en `SecretStore` (State), igual que las claves de OpenAI y Twilio, y
+`SecretsConfigOverride` se la da al módulo al leer la configuración
+(`SmtpPasswordForm`, `hook_form_smtp_admin_settings_alter`). El almacén admite
+claves de otras configuraciones con la forma `config.name:clave`. Se descartó
+Config Ignore: sacaba todo el SMTP de git. `settings.local.php` sigue ganando.
+- **Comprobado:** prueba de kernel (la contraseña llega al módulo, no está en
+  la configuración guardada y sobrevive a un `cim` simulado) y funcional (se
+  escribe en la pantalla, el campo sigue habilitado, guardar vacío la
+  conserva, una nueva la reemplaza). **Sabotaje:** sin el guardado de la
+  pantalla → falla la funcional; sin la clave en el almacén → fallan las dos.
+  Pantalla vista en el navegador: campo habilitado y texto en español. 191
+  pruebas OK; `qa-sweep.mjs` 101 páginas sin problemas.
 
 **No comprobado:** envío real por el servidor SMTP de producción ni cómo se
 ve en Gmail/Outlook (Outlook de escritorio ignora `max-width`: se verá a todo

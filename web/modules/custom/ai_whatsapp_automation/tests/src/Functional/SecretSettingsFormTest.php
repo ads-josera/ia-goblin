@@ -18,7 +18,7 @@ final class SecretSettingsFormTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['ai_whatsapp_automation'];
+  protected static $modules = ['ai_whatsapp_automation', 'smtp'];
 
   /**
    * {@inheritdoc}
@@ -47,6 +47,38 @@ final class SecretSettingsFormTest extends BrowserTestBase {
     // Saving again with the field empty keeps the key.
     $this->submitForm([], 'Save configuration');
     $this->assertSame('sk-from-form', $this->container->get('ai_whatsapp_automation.secrets')->all()['openai.api_key'] ?? NULL);
+  }
+
+  /**
+   * The SMTP password typed on the smtp module's form stays out of config.
+   */
+  public function testSmtpPasswordEnteredInFormSurvives(): void {
+    $this->drupalLogin($this->drupalCreateUser(['administer smtp module']));
+    $secrets = fn () => $this->container->get('ai_whatsapp_automation.secrets')->all()['smtp.settings:smtp_password'] ?? NULL;
+
+    $this->drupalGet('admin/config/system/smtp');
+    $this->assertSession()->pageTextContains('No password saved yet.');
+    $this->submitForm([
+      'smtp_host' => 'mail.example.com',
+      'smtp_username' => 'avisos@example.com',
+      'smtp_password' => 'mail-from-form',
+    ], 'Save configuration');
+
+    $this->assertSame('mail-from-form', $secrets());
+    $this->assertSame('', $this->container->get('config.storage')->read('smtp.settings')['smtp_password'], 'Not in exported config');
+
+    // The field stays usable (the smtp module locks overridden fields) and
+    // saving again with it empty keeps the password.
+    $this->drupalGet('admin/config/system/smtp');
+    $this->assertSession()->pageTextContains('A password is saved; leave the field empty to keep it.');
+    $this->assertSession()->elementNotExists('css', 'input[name="smtp_password"][disabled]');
+    $this->submitForm([], 'Save configuration');
+    $this->assertSame('mail-from-form', $secrets());
+
+    // A new password replaces it.
+    $this->submitForm(['smtp_password' => 'mail-new'], 'Save configuration');
+    $this->assertSame('mail-new', $secrets());
+    $this->assertSame('', $this->container->get('config.storage')->read('smtp.settings')['smtp_password']);
   }
 
 }

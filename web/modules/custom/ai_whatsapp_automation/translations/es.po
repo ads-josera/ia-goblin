@@ -140,6 +140,15 @@ msgstr "Números de WhatsApp de los encargados"
 msgid "WhatsApp numbers of the people in charge of the leads of this bot, one per line. When empty, the WhatsApp account numbers or the global ones are used."
 msgstr "Números de WhatsApp de quienes atienden los leads de este bot, uno por línea. Si está vacío, se usan los de la cuenta de WhatsApp o los generales."
 
+msgid "@state It is saved outside the site configuration: it is not exported to git and deployments do not erase it."
+msgstr "@state Se guarda fuera de la configuración del sitio: no se exporta a git y los despliegues no la borran."
+
+msgid "A password is saved; leave the field empty to keep it."
+msgstr "Hay una contraseña guardada; deja el campo vacío para conservarla."
+
+msgid "No password saved yet."
+msgstr "Todavía no hay contraseña guardada."
+
 msgid "Lead notification e-mails"
 msgstr "Correos de los encargados"
 

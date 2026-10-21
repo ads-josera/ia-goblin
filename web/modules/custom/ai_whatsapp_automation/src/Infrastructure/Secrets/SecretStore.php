@@ -21,7 +21,10 @@ use Drupal\Core\State\StateInterface;
 final class SecretStore {
 
   /**
-   * Config keys of ai_whatsapp_automation.settings that hold secrets.
+   * Config keys that hold secrets.
+   *
+   * "group.name" is a key of ai_whatsapp_automation.settings;
+   * "config.name:key" is a top-level key of another module's config.
    */
   public const KEYS = [
     'openai.api_key',
@@ -30,7 +33,14 @@ final class SecretStore {
     'whatsapp_cloud.verify_token',
     'whatsapp_cloud.app_secret',
     'evolution.api_key',
+    // Outgoing mail (smtp module): typed on its own form, see SmtpPasswordForm.
+    'smtp.settings:smtp_password',
   ];
+
+  /**
+   * Config holding the keys written without a config name.
+   */
+  public const DEFAULT_CONFIG = 'ai_whatsapp_automation.settings';
 
   private const STATE_KEY = 'ai_whatsapp_automation.secrets';
 
@@ -78,14 +88,29 @@ final class SecretStore {
    * letting someone change a key that has no effect.
    */
   public static function isDefinedInSettings(string $key): bool {
-    $value = $GLOBALS['config']['ai_whatsapp_automation.settings'] ?? [];
-    foreach (explode('.', $key) as $part) {
+    [$config_name, $path] = self::split($key);
+    $value = $GLOBALS['config'][$config_name] ?? [];
+    foreach ($path as $part) {
       if (!is_array($value) || !array_key_exists($part, $value)) {
         return FALSE;
       }
       $value = $value[$part];
     }
     return is_string($value) && $value !== '';
+  }
+
+  /**
+   * Splits a secret key into its config name and the path inside it.
+   *
+   * @return array{0: string, 1: string[]}
+   *   Config name and key path.
+   */
+  public static function split(string $key): array {
+    if (str_contains($key, ':')) {
+      [$config_name, $name] = explode(':', $key, 2);
+      return [$config_name, [$name]];
+    }
+    return [self::DEFAULT_CONFIG, explode('.', $key, 2)];
   }
 
 }

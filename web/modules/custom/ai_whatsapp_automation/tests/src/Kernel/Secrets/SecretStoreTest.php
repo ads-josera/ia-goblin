@@ -101,6 +101,26 @@ final class SecretStoreTest extends KernelTestBase {
   }
 
   /**
+   * The SMTP password reaches the smtp module and survives a deployment.
+   *
+   * smtp.settings is in config/sync with an empty password: a `drush cim`
+   * writes that empty value back, and the site would stop sending mail.
+   */
+  public function testSmtpPasswordSurvivesDeployment(): void {
+    $this->enableModules(['smtp']);
+    $this->installConfig(['smtp']);
+    $this->container->get('ai_whatsapp_automation.secrets')->set('smtp.settings:smtp_password', 'mail-secret');
+    // What `drush cim` does with the exported config.
+    $this->container->get('config.factory')->getEditable('smtp.settings')->set('smtp_password', '')->set('smtp_port', '465')->save();
+    $this->container->get('config.factory')->reset('smtp.settings');
+
+    $this->assertSame('mail-secret', $this->container->get('config.factory')->get('smtp.settings')->get('smtp_password'));
+    $this->assertSame('', $this->container->get('config.storage')->read('smtp.settings')['smtp_password'], 'Not in exported config');
+    // Other configs are not touched by the override.
+    $this->assertSame('', (string) $this->container->get('config.factory')->get(self::NAME)->get('openai.api_key'));
+  }
+
+  /**
    * Unknown keys are refused; an empty value removes a secret.
    */
   public function testSetRules(): void {

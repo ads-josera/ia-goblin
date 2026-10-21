@@ -82,10 +82,10 @@ $settings['trusted_host_patterns'] = ['^dominio\.com$'];
 // aquí (gana sobre la del formulario):
 // $config['ai_whatsapp_automation.settings']['openai']['api_key'] = '...';
 
-// Correo saliente por SMTP (módulo smtp, desde 2026-10-21). El resto de los
-// datos (puerto 465, SSL, usuario avisos@, remitente, HTML) va en config/sync.
+// Correo saliente por SMTP (módulo smtp, desde 2026-10-21): el servidor, si
+// no está en config/sync. Puerto, SSL, usuario, remitente y HTML van en
+// config/sync; la contraseña se escribe en la pantalla del SMTP (abajo).
 $config['smtp.settings']['smtp_host'] = 'mail.dominio.com';
-$config['smtp.settings']['smtp_password'] = '...';
 ```
 
 ## Procedimiento
@@ -235,13 +235,19 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 El sitio envía todo su correo por SMTP (módulo `smtp`) desde
 `avisos@goblincreative.com`, con HTML permitido: sin eso los correos con
 diseño llegan como texto. En `config/sync` van usuario, puerto, protocolo,
-remitente y `smtp_allowhtml: true`; **servidor y contraseña solo en
-`settings.local.php`** (ver arriba). El formulario del módulo no sobrescribe
-lo que fija `settings.local.php`.
+remitente y `smtp_allowhtml: true`.
 
-**Orden obligatorio:** primero `settings.local.php`, después `cim`. Si se
-importa la configuración sin servidor SMTP, **ningún correo sale** (ni los de
-contraseña).
+- **Contraseña:** se escribe en **Configuración → Sistema → SMTP**
+  (`/admin/config/system/smtp`). El módulo la guarda en State, como las claves
+  de OpenAI y Twilio (`SecretStore`, clave `smtp.settings:smtp_password`): no
+  se exporta a git y `drush cim` no la borra. Si se pone en
+  `settings.local.php`, esa gana y el campo queda bloqueado.
+- **Servidor:** en `settings.local.php` mientras no esté en `config/sync`.
+
+**Orden obligatorio:** servidor en `settings.local.php` → desplegar (`cim`)
+→ escribir la contraseña en la pantalla del SMTP → correo de prueba. Entre
+`cim` y la contraseña **no sale ningún correo** (ni los de contraseña):
+hacerlo seguido.
 
 Comprobar después: el correo de prueba de la bitácora (entrada 2026-10-21)
 llega con diseño, y el registro (`drush ws --type=smtp`) sin errores.

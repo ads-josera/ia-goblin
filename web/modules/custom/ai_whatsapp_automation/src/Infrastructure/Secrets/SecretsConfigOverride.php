@@ -9,7 +9,10 @@ use Drupal\Core\Config\ConfigFactoryOverrideInterface;
 use Drupal\Core\Config\StorageInterface;
 
 /**
- * Puts the stored secrets on top of ai_whatsapp_automation.settings.
+ * Puts the stored secrets on top of their config.
+ *
+ * Mostly ai_whatsapp_automation.settings; also smtp.settings for the outgoing
+ * mail password.
  *
  * Every service keeps reading `openai.api_key` & co. from config and gets the
  * value saved from the admin form. Overrides are never written to config
@@ -18,8 +21,6 @@ use Drupal\Core\Config\StorageInterface;
  * settings.local.php still wins.
  */
 final class SecretsConfigOverride implements ConfigFactoryOverrideInterface {
-
-  private const CONFIG_NAME = 'ai_whatsapp_automation.settings';
 
   public function __construct(
     private readonly SecretStore $secrets,
@@ -30,15 +31,19 @@ final class SecretsConfigOverride implements ConfigFactoryOverrideInterface {
    * {@inheritdoc}
    */
   public function loadOverrides($names) {
-    if (!in_array(self::CONFIG_NAME, $names, TRUE)) {
-      return [];
-    }
-    $override = [];
+    $overrides = [];
     foreach ($this->secrets->all() as $key => $value) {
-      [$group, $name] = explode('.', $key, 2);
-      $override[$group][$name] = $value;
+      [$config_name, $path] = SecretStore::split($key);
+      if (!in_array($config_name, $names, TRUE)) {
+        continue;
+      }
+      $tree = $value;
+      foreach (array_reverse($path) as $part) {
+        $tree = [$part => $tree];
+      }
+      $overrides[$config_name] = array_replace_recursive($overrides[$config_name] ?? [], $tree);
     }
-    return $override === [] ? [] : [self::CONFIG_NAME => $override];
+    return $overrides;
   }
 
   /**
