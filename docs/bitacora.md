@@ -29,8 +29,11 @@ lo **no comprobado**.
      `scripts/bots/goblin.php` y **desplegados** (`6ac41e9`, entrada
      2026-10-21). Falta: **devolver el número …0231 a Soporte** y probar un
      aviso real de lead desde otro teléfono.
-  1b. **Avisos de lead también por correo** (pedido del equipo, 2026-10-21):
-     propuesta en la entrada de ese día, por decidir.
+  1b. **Avisos de lead también por correo + SMTP**: hecho y probado en local
+     (entrada 2026-10-21, segunda). Falta: crear la cuenta
+     avisos@goblincreative.com, poner servidor y contraseña SMTP en
+     `settings.local.php` de producción y desplegar (orden en
+     `docs/despliegue.md`).
   1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
      `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
@@ -58,6 +61,66 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-21 — Avisos de lead por correo y envío por SMTP
+
+**Qué:** pedido del equipo: el aviso de lead llega también por correo, con
+diseño, a quien atiende cada área (por si no usa WhatsApp). Decidido: los dos
+canales siempre (no uno en lugar del otro), desde avisos@goblincreative.com
+por SMTP, con el módulo `smtp` (decisión del equipo; se descartó Amazon SES
+para esto).
+
+- **Módulo `drupal/smtp` 1.4.0** (Drupal 11). Configuración en
+  `config/sync/smtp.settings.yml`: puerto 465 SSL, usuario y remitente
+  avisos@, nombre «Goblin Creative», **HTML permitido**. `system.mail` pasa a
+  `SMTPMailSystem`. Servidor y contraseña solo en `settings.local.php`.
+- **Campo nuevo del bot «Correos de los encargados»**
+  (`lead_notification_emails`, `updb` 11049), en la sección de avisos, con
+  validación: un correo mal escrito no deja guardar el bot (también desde el
+  script).
+- **`LeadEmailNotifier`** (servicio nuevo): arma el correo con la misma
+  plantilla de marca que los correos de cuenta (asunto «Nuevo lead 12 —
+  Goblin Soporte»; folio, contacto, teléfono, correo, origen, el resumen del
+  bot y el botón «Ver la conversación»). `LeadHandoffService` manda WhatsApp
+  y correo; uno que falle no detiene al otro. Un web chat lead, que no tiene
+  cuenta de WhatsApp, ahora sí avisa a alguien.
+- **Correos por área en `scripts/bots/goblin.php`:** Ventas y Facturación →
+  kevinyssen@goblincreative.com; Soporte → soporte@goblincreative.com.
+- **Plantilla de correo arreglada para celular:** medía 560 px fijos y en un
+  teléfono de 390 px se salía por la derecha (también los correos de cuenta).
+  Ahora ocupa el 100 % hasta 560 px, con margen lateral.
+
+**Por qué SMTP y no `php_mail`:** `php_mail` de core convierte el HTML a
+texto; los correos con diseño llegaban sin formato (deducido el mismo día,
+ver la entrada anterior). Además SMTP con una cuenta real del dominio llega
+menos a spam.
+
+**Comprobado (local, Mailpit de DDEV):**
+- Correo de cuenta (restablecer contraseña) por SMTP: llega como
+  `text/html` con el diseño (3,261 caracteres de HTML). **Sabotaje:**
+  `smtp_allowhtml` en falso → el HTML se pierde (845); restaurado.
+- Aviso de lead real por el servicio: asunto, datos y botón correctos; visto
+  en navegador a 600 y 390 px, sin desplazamiento horizontal (antes del
+  arreglo: 560 px de ancho en una pantalla de 390).
+- Pruebas nuevas en `LeadHandoffServiceTest`: lead del chat web con dos
+  correos → estado `notified`, 2 correos HTML con folio, contacto, origen,
+  resumen sin `**` y enlace; correo inválido → rechazado al validar.
+  **Sabotaje:** sin el envío de correo y sin la validación → las 2 fallan.
+- Formulario del bot con la cuenta del **gestor**: campo en español; guardar
+  «mal-correo» muestra «“mal-correo” no es un correo válido…» y no guarda.
+- Suite: 189 pruebas OK. Avisos de obsolescencia: el nuestro de siempre
+  (pendiente 7) y uno nuevo del módulo `smtp` (`smtp_requirements`), que es
+  de ellos. `qa-sweep.mjs`: 101 páginas, 3 roles, sin problemas.
+
+**No comprobado:** envío real por el servidor SMTP de producción ni cómo se
+ve en Gmail/Outlook (Outlook de escritorio ignora `max-width`: se verá a todo
+lo ancho). Falta que exista la cuenta avisos@ y su contraseña en el servidor.
+
+**Riesgo de despliegue:** si se importa la configuración antes de poner el
+servidor SMTP en `settings.local.php`, deja de salir todo el correo del
+sitio. Orden en `docs/despliegue.md`.
 
 ---
 

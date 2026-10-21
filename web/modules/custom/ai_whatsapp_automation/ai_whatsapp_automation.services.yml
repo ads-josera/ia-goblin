@@ -140,6 +140,16 @@ services:
       - '@ai_whatsapp_automation.provider_message_sender'
       - '@logger.factory'
       - '@ai_whatsapp_automation.lead_contact_extractor'
+      - '@ai_whatsapp_automation.lead_email_notifier'
+
+  ai_whatsapp_automation.lead_email_notifier:
+    class: Drupal\ai_whatsapp_automation\Application\Lead\LeadEmailNotifier
+    arguments:
+      - '@plugin.manager.mail'
+      - '@renderer'
+      - '@language_manager'
+      - '@ai_whatsapp_automation.client_agent_mail'
+      - '@logger.factory'
 
   ai_whatsapp_automation.dashboard_metrics:
     class: Drupal\ai_whatsapp_automation\Application\Dashboard\DashboardMetricsService

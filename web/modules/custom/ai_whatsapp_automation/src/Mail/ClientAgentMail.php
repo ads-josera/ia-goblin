@@ -180,9 +180,10 @@ final class ClientAgentMail {
    * Returns the logo to show in the header, or an empty string.
    *
    * Defaults to the logo of the login screen, so the e-mail and the panel
-   * carry the same brand without having to upload it twice.
+   * carry the same brand without having to upload it twice. Also used by
+   * the lead notice e-mail (LeadEmailNotifier).
    */
-  private function logoUrl(): string {
+  public function logoUrl(): string {
     $configured = trim((string) ($this->configFactory->get(self::CONFIG)->get('logo_url') ?? ''));
     if ($configured !== '') {
       return $configured;

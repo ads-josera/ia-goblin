@@ -329,6 +329,21 @@ final class Bot extends ContentEntityBase {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['lead_notification_emails'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Lead notification e-mails'))
+      ->setDescription(t('E-mail addresses of the people in charge of the leads of this bot, one per line. They get every notice in addition to WhatsApp, also for web chat leads.'))
+      ->addConstraint('AiWhatsappEmailList')
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 51,
+      ])
+      ->setDisplayOptions('view', [
+        'type' => 'basic_string',
+        'weight' => 51,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['notification_recipient_reply_text'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Notification recipient auto-reply'))
       ->setDescription(t('Message sent when one of this bot\'s lead-notification recipients writes to the WhatsApp number. Leave empty to use the global fallback.'))

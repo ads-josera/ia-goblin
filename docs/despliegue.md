@@ -81,6 +81,11 @@ $settings['trusted_host_patterns'] = ['^dominio\.com$'];
 // Configuración y sobreviven a los despliegues. Solo si se quiere fijar una
 // aquí (gana sobre la del formulario):
 // $config['ai_whatsapp_automation.settings']['openai']['api_key'] = '...';
+
+// Correo saliente por SMTP (módulo smtp, desde 2026-10-21). El resto de los
+// datos (puerto 465, SSL, usuario avisos@, remitente, HTML) va en config/sync.
+$config['smtp.settings']['smtp_host'] = 'mail.dominio.com';
+$config['smtp.settings']['smtp_password'] = '...';
 ```
 
 ## Procedimiento
@@ -225,6 +230,22 @@ Debe decir `Created bot "Goblin Facturación"`, `Created bot "Goblin
 Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 `11042` (campos del menú). El enlace del chat web no cambia.
 
+### Correo por SMTP y avisos de lead por correo (2026-10-21)
+
+El sitio envía todo su correo por SMTP (módulo `smtp`) desde
+`avisos@goblincreative.com`, con HTML permitido: sin eso los correos con
+diseño llegan como texto. En `config/sync` van usuario, puerto, protocolo,
+remitente y `smtp_allowhtml: true`; **servidor y contraseña solo en
+`settings.local.php`** (ver arriba). El formulario del módulo no sobrescribe
+lo que fija `settings.local.php`.
+
+**Orden obligatorio:** primero `settings.local.php`, después `cim`. Si se
+importa la configuración sin servidor SMTP, **ningún correo sale** (ni los de
+contraseña).
+
+Comprobar después: el correo de prueba de la bitácora (entrada 2026-10-21)
+llega con diseño, y el registro (`drush ws --type=smtp`) sin errores.
+
 ### Lecciones del primer despliegue
 
 - **Respetar la estructura del servidor que ya preparó el equipo** (la
@@ -261,4 +282,5 @@ Soporte"` y `Updated bot "Goblin" … menu with 2 areas`. `updb` corre la
 | 2026-10-12 | `e688c48` | OK | Varios casos tras el lead, brevedad, tarifas de OpenAI, costo por bot, enlaces de la bitácora. `updb` 11046–11048 (25 respuestas tomaron su bot), `cim` (5 tarifas), traducciones, bots. Respaldo en `~/backups/antes-qa-2026-10-12.sql.gz` |
 | 2026-10-14 | `cfeaf26` | OK | **Seguridad: Drupal 11.4.10** (SA-CORE-2026-014 crítico, 015, 016). Respaldo `~/backups/antes-11.4.10.sql.gz`; `composer audit` sin avisos; plantillas: variable `event` y prioridad del bot |
 | 2026-10-14 | `cb3e4a6` | OK | **Webhooks de WhatsApp:** procesamiento inmediato (`cget` → `true`) y registro de firmas rechazadas; cola vieja borrada (2 mensajes de la prueba). Pendiente la prueba real: Twilio KYC en revisión |
+| 2026-10-21 | `6ac41e9` | OK | Plantillas de aviso aprobadas cargadas: `php:script` actualizó los 4 bots; cada área con su SID en producción. `git status`: solo `M web/.htaccess` (cPanel, esperado) |
 | 2026-10-15 | `9076021` | OK | **Twilio 12300:** el webhook responde TwiML vacío. Verificado en producción con petición firmada: `200 \| text/xml; charset=UTF-8 \| <Response/>`. `git status`: ` M web/.htaccess` = bloque de cPanel `ea-php84`, reescrito por cPanel el 2026-10-14 22:52 (esperado, ver «`web/.htaccess` y el bloque de cPanel») |

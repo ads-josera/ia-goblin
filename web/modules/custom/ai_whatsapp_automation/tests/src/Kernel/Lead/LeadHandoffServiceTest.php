@@ -153,6 +153,71 @@ final class LeadHandoffServiceTest extends KernelTestBase {
   }
 
   /**
+   * The lead notice is e-mailed to the bot's people, even with no WhatsApp.
+   *
+   * A web chat lead has no WhatsApp account to notify from: before e-mail,
+   * nobody heard about it (status "created_without_recipients").
+   */
+  public function testLeadNoticeIsEmailedToTheBotPeople(): void {
+    $this->config('system.mail')->set('interface.default', 'test_mail_collector')->save();
+    \Drupal::state()->set('system.test_mail_collector', []);
+    $storage = fn (string $type) => $this->container->get('entity_type.manager')->getStorage($type);
+    $bot = $storage('ai_whatsapp_bot')->create([
+      'name' => 'Goblin Soporte',
+      'status' => 'active',
+      'handoff_enabled' => TRUE,
+      'handoff_minimum_fields' => 3,
+      'handoff_required_fields' => "nombre\nteléfono, telefono, whatsapp, celular\ncategoría, categoria\ndescripción, descripcion",
+      'lead_notification_emails' => "soporte@example.com\n jefe@example.com ",
+    ]);
+    $bot->save();
+    $conversation = $storage('ai_whatsapp_conversation')->create([
+      'phone' => 'web:1:session',
+      'name' => 'Web visitor',
+      'channel' => 'web',
+      'provider' => 'web',
+      'status' => 'AI_ACTIVE',
+      'bot' => $bot->id(),
+    ]);
+    $conversation->save();
+    $this->addMessage($conversation, 'contact', 'Mi correo no envía mensajes');
+    $ai_response = "Datos capturados:\n👤 Nombre: Ana López\n📱 Teléfono / WhatsApp: 5512345678\n🗂️ Categoría: Correo electrónico\n📝 Descripción: **No envía** correos desde Outlook.\n\nListo. Ya tengo la información necesaria para canalizar tu solicitud con nuestro equipo.";
+    $this->addMessage($conversation, 'ai', $ai_response);
+
+    $result = $this->container->get('ai_whatsapp_automation.lead_handoff')->handle($conversation, $ai_response);
+
+    $this->assertSame('notified', $result['status']);
+    $this->assertSame(['soporte@example.com', 'jefe@example.com'], array_column($result['notifications'], 'recipient'));
+    $mails = \Drupal::state()->get('system.test_mail_collector', []);
+    $this->assertCount(2, $mails);
+    $mail = $mails[0];
+    $this->assertSame('ai_whatsapp_automation_lead_notification', $mail['id']);
+    $this->assertSame('soporte@example.com', $mail['to']);
+    $this->assertSame('Nuevo lead ' . $result['lead_id'] . ' — Goblin Soporte', $mail['subject']);
+    $this->assertStringStartsWith('text/html', $mail['headers']['Content-Type']);
+    // The collector turns HTML into text, like php_mail: the data is there.
+    foreach (['Folio: ' . $result['lead_id'], 'Contacto: Ana López', 'Origen: Chat web', 'No envía correos desde Outlook', '/admin/content/ai-whatsapp/conversations/' . $conversation->id()] as $expected) {
+      $this->assertStringContainsString($expected, $mail['body']);
+    }
+    $this->assertStringNotContainsString('**', $mail['body'], 'Chat formatting is removed');
+  }
+
+  /**
+   * A mistyped notice address is rejected when the bot is saved.
+   */
+  public function testInvalidNoticeEmailIsRejected(): void {
+    $bot = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_bot')->create([
+      'name' => 'Goblin Ventas',
+      'status' => 'active',
+      'lead_notification_emails' => "ventas@example.com\nventas@example",
+    ]);
+    $violations = $bot->validate()->getByField('lead_notification_emails');
+
+    $this->assertCount(1, $violations);
+    $this->assertStringContainsString('ventas@example', (string) $violations[0]->getMessage());
+  }
+
+  /**
    * Stores a message in a conversation.
    */
   private function addMessage(ContentEntityInterface $conversation, string $sender, string $content): void {

@@ -17,6 +17,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ai_whatsapp_automation\Application\RAG\KnowledgeFileStorage;
 use Drupal\ai_whatsapp_automation\Entity\Handler\AutomationEntityListBuilder;
+use Drupal\ai_whatsapp_automation\Application\Lead\LeadEmailNotifier;
 use Drupal\ai_whatsapp_automation\Mail\ClientAgentMail;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -355,6 +356,7 @@ function ai_whatsapp_automation_theme(): array {
         'heading' => NULL,
         'intro' => NULL,
         'items' => [],
+        'summary' => NULL,
         'action' => NULL,
         'url' => '',
         'note' => NULL,
@@ -364,6 +366,15 @@ function ai_whatsapp_automation_theme(): array {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_mail().
+ */
+function ai_whatsapp_automation_mail(string $key, array &$message, array $params): void {
+  if ($key === LeadEmailNotifier::MAIL_KEY) {
+    LeadEmailNotifier::buildMessage($message, $params);
+  }
 }
 
 /**

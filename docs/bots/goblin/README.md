@@ -73,6 +73,22 @@ Cada bot de área tiene su campo **«Lead notification WhatsApp numbers»**
 Esos números tampoco reciben respuestas de la IA si escriben al número de
 Goblin.
 
+## Avisos por correo
+
+Además del WhatsApp, cada aviso de lead (nuevo o actualización) llega por
+correo a los «Correos de los encargados» del bot, también los del chat web.
+Los fija el script (`notification_emails` de cada área):
+
+| Área | Correo |
+|------|--------|
+| Ventas | kevinyssen@goblincreative.com |
+| Soporte técnico | soporte@goblincreative.com |
+| Facturación | kevinyssen@goblincreative.com |
+
+Un canal que falle no detiene al otro. Salen desde avisos@goblincreative.com
+por SMTP (ver `docs/despliegue.md`). El botón «Ver la conversación» pide
+iniciar sesión en el panel: quien lo reciba necesita una cuenta para abrirla.
+
 ## Plantillas de aviso (WhatsApp)
 
 Fuera de la ventana de 24 h, WhatsApp solo entrega avisos con plantilla

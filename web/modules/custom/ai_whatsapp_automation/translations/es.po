@@ -140,6 +140,18 @@ msgstr "Números de WhatsApp de los encargados"
 msgid "WhatsApp numbers of the people in charge of the leads of this bot, one per line. When empty, the WhatsApp account numbers or the global ones are used."
 msgstr "Números de WhatsApp de quienes atienden los leads de este bot, uno por línea. Si está vacío, se usan los de la cuenta de WhatsApp o los generales."
 
+msgid "Lead notification e-mails"
+msgstr "Correos de los encargados"
+
+msgid "E-mail addresses of the people in charge of the leads of this bot, one per line. They get every notice in addition to WhatsApp, also for web chat leads."
+msgstr "Correos de quienes atienden los leads de este bot, uno por línea. Reciben cada aviso además del WhatsApp, también los del chat web."
+
+msgid "«%value» is not a valid e-mail address. Write one address per line."
+msgstr "«%value» no es un correo válido. Escribe un correo por línea."
+
+msgid "List of e-mail addresses"
+msgstr "Lista de correos"
+
 msgid "Notification recipient auto-reply"
 msgstr "Respuesta automática a un encargado"
 

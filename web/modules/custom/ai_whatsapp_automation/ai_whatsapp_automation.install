@@ -1378,3 +1378,20 @@ function ai_whatsapp_automation_entity_type_ids(): array {
     'ai_whatsapp_knowledge_chunk',
   ];
 }
+
+/**
+ * Adds e-mail recipients for lead notices to bots.
+ */
+function ai_whatsapp_automation_update_11049(): string {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($definition_update_manager->getFieldStorageDefinition('lead_notification_emails', 'ai_whatsapp_bot') === NULL) {
+    $definition_update_manager->installFieldStorageDefinition(
+      'lead_notification_emails',
+      'ai_whatsapp_bot',
+      'ai_whatsapp_automation',
+      \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('ai_whatsapp_bot')['lead_notification_emails']
+    );
+  }
+
+  return (string) t('Bots can now e-mail lead notices («Lead notification e-mails»).');
+}

@@ -254,6 +254,7 @@ final class AutomationEntityForm extends ContentEntityForm {
           'lead_notification_template_variables',
           'lead_notification_account',
           'lead_notification_numbers',
+          'lead_notification_emails',
           'notification_recipient_reply_text',
         ],
       ],

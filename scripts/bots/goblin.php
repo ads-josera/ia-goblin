@@ -16,7 +16,8 @@
  *   drush php:script scripts/bots/goblin.php
  *
  * Idempotent: finds each bot by name and client and updates only the fields
- * below; anything else edited in the UI (daily limits and budget, allowed
+ * below (lead notice templates and e-mails included: change them here, not in
+ * the UI); anything else edited in the UI (daily limits and budget, allowed
  * domains, notification numbers) is left as it is.
  */
 
@@ -91,6 +92,8 @@ $areas = [
     // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py),
     // approved by WhatsApp 2026-10-21. Empty = plain-text notices.
     'template_sid' => 'HXf5e01996925cd413936b8c42b433e5dd',
+    // Lead notices by e-mail, in addition to WhatsApp (team, 2026-10-21).
+    'notification_emails' => 'kevinyssen@goblincreative.com',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Ventas de Goblin Creative. ¿Qué proyecto te gustaría cotizar?',
     'prompt' => 'ventas.md',
     'description' => 'Goblin Creative, área de ventas: cotizaciones de proyectos nuevos de desarrollo (HTML5 y PHP, Drupal y WordPress, tiendas en línea, sistemas personalizados). Nunca da precios: el área de ventas contacta al cliente.',
@@ -105,6 +108,8 @@ $areas = [
     // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py),
     // approved by WhatsApp 2026-10-21. Empty = plain-text notices.
     'template_sid' => 'HX6ef6d0cedace2e7194030a2ff597ec1a',
+    // Lead notices by e-mail, in addition to WhatsApp (team, 2026-10-21).
+    'notification_emails' => 'soporte@goblincreative.com',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Soporte técnico de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'soporte.md',
     'description' => 'Goblin Creative, área de soporte técnico: correo, cPanel / hosting, dominios y DNS. Resuelve primer nivel y canaliza con el equipo técnico.',
@@ -117,6 +122,8 @@ $areas = [
     // WhatsApp template for lead notices (scripts/twilio/plantillas_goblin.py),
     // approved by WhatsApp 2026-10-21. Empty = plain-text notices.
     'template_sid' => 'HXffbfb1e9d55c5d2f4f7bfef9b367cf30',
+    // Lead notices by e-mail, in addition to WhatsApp (team, 2026-10-21).
+    'notification_emails' => 'kevinyssen@goblincreative.com',
     'greeting' => '👋 Hola, estás hablando con el asistente virtual de Facturación y atención comercial de Goblin Creative. ¿En qué te puedo ayudar?',
     'prompt' => 'facturacion.md',
     'description' => 'Goblin Creative, área de facturación y atención comercial: pagos, facturas, renovaciones, cancelaciones, contratación de hosting, correo y dominios, y contacto con un asesor.',
@@ -238,6 +245,7 @@ foreach ($areas as $area) {
     $bot->set('lead_notification_template_sid', $area['template_sid']);
     $bot->set('lead_notification_template_variables', $template_variables);
   }
+  $bot->set('lead_notification_emails', $area['notification_emails']);
   // Reached through the reception: no chat link of its own.
   $bot->set('web_widget_enabled', FALSE);
   $save($bot, $created, 'prompt ' . mb_strlen($prompt) . ' characters');

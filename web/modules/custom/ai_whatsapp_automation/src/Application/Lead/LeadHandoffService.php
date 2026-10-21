@@ -45,6 +45,7 @@ final class LeadHandoffService {
     private readonly ProviderMessageSenderService $messageSender,
     LoggerChannelFactoryInterface $loggerFactory,
     private readonly LeadContactExtractor $contactExtractor,
+    private readonly LeadEmailNotifier $emailNotifier,
   ) {
     $this->logger = $loggerFactory->get('ai_whatsapp_automation');
   }
@@ -95,7 +96,7 @@ final class LeadHandoffService {
 
     $notifications = $this->notifyAdministrators($conversation, $lead, $ai_response, $bot);
     if ($notifications === []) {
-      $this->logger->warning('Lead handoff created for conversation @conversation, but no administrator notification numbers were configured.', [
+      $this->logger->warning('Lead handoff created for conversation @conversation, but no notification recipients (WhatsApp numbers or e-mails) were configured.', [
         '@conversation' => (string) $conversation->id(),
       ]);
 
@@ -480,12 +481,28 @@ final class LeadHandoffService {
   }
 
   /**
+   * Notifies the people in charge by WhatsApp and by e-mail.
+   *
+   * Both channels always go: one failing or not configured never stops the
+   * other (decided by the team, 2026-10-21).
+   *
+   * @return array<int, array<string, mixed>>
+   *   Delivery results of both channels.
+   */
+  private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $heading = 'Nuevo lead de WhatsApp', string $event = 'Nuevo lead'): array {
+    return array_merge(
+      $this->notifyByWhatsApp($conversation, $lead, $ai_response, $bot, $heading, $event),
+      $this->emailNotifier->notify($conversation, $lead, $ai_response, $bot, $event),
+    );
+  }
+
+  /**
    * Sends WhatsApp notifications to configured administrator numbers.
    *
    * @return array<int, array<string, mixed>>
    *   Delivery results.
    */
-  private function notifyAdministrators(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $heading = 'Nuevo lead de WhatsApp', string $event = 'Nuevo lead'): array {
+  private function notifyByWhatsApp(ContentEntityInterface $conversation, ContentEntityInterface $lead, string $ai_response, ?ContentEntityInterface $bot, string $heading, string $event): array {
     $account = $this->notificationAccount($conversation, $bot);
     $numbers = $this->notificationNumbers($bot, $account);
     if ($numbers === []) {
