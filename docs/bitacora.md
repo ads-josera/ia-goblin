@@ -31,9 +31,11 @@ lo **no comprobado**.
      aviso real de lead desde otro teléfono.
   1b. **Avisos de lead también por correo + SMTP**: hecho y probado en local
      (entrada 2026-10-21, segunda). Falta: crear la cuenta
-     avisos@goblincreative.com, poner el servidor SMTP (`settings.local.php`
-     o `config/sync`), desplegar y escribir la contraseña en la pantalla del
-     SMTP (orden en `docs/despliegue.md`).
+     avisos@goblincreative.com (hecho), **cambiar su contraseña** (se
+     expuso en el chat el 2026-10-21), escribir la nueva en la pantalla del
+     SMTP y probar. Desplegado sin servidor SMTP (no se pudo escribir
+     `settings.local.php`, solo lectura): el correo no salía hasta el commit
+     que lo puso en `config/sync` (`mail.goblincreative.com`).
   1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
      `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).

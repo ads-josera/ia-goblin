@@ -82,10 +82,9 @@ $settings['trusted_host_patterns'] = ['^dominio\.com$'];
 // aquí (gana sobre la del formulario):
 // $config['ai_whatsapp_automation.settings']['openai']['api_key'] = '...';
 
-// Correo saliente por SMTP (módulo smtp, desde 2026-10-21): el servidor, si
-// no está en config/sync. Puerto, SSL, usuario, remitente y HTML van en
-// config/sync; la contraseña se escribe en la pantalla del SMTP (abajo).
-$config['smtp.settings']['smtp_host'] = 'mail.dominio.com';
+// Correo saliente (módulo smtp, desde 2026-10-21): nada aquí. Servidor,
+// puerto, SSL, usuario, remitente y HTML van en config/sync; la contraseña se
+// escribe en la pantalla del SMTP (ver «Correo por SMTP» abajo).
 ```
 
 ## Procedimiento
@@ -242,10 +241,10 @@ remitente y `smtp_allowhtml: true`.
   de OpenAI y Twilio (`SecretStore`, clave `smtp.settings:smtp_password`): no
   se exporta a git y `drush cim` no la borra. Si se pone en
   `settings.local.php`, esa gana y el campo queda bloqueado.
-- **Servidor:** en `settings.local.php` mientras no esté en `config/sync`.
+- **Servidor:** `mail.goblincreative.com`, en `config/sync`.
 
-**Orden obligatorio:** servidor en `settings.local.php` → desplegar (`cim`)
-→ escribir la contraseña en la pantalla del SMTP → correo de prueba. Entre
+**Orden obligatorio:** desplegar (`cim`) → escribir la contraseña en la
+pantalla del SMTP → correo de prueba. Entre
 `cim` y la contraseña **no sale ningún correo** (ni los de contraseña):
 hacerlo seguido.
 
