@@ -90,6 +90,10 @@ clientes: se corrigió; el primer sabotaje daba error por eso y no valía.)
 Formulario del cliente: «Nombre comercial» = «Goblin Creative». 191 pruebas
 OK; `qa-sweep.mjs` 101 páginas sin problemas.
 
+**Desplegado** (`1ad3edf`): `updb` 11050, traducciones (11 nuevas), 4 bots
+actualizados, cliente Goblin con «Goblin Creative». `git status` vacío.
+Pendiente: que el equipo vea el correo de prueba con el encabezado nuevo.
+
 **Nota:** el remitente de todo el correo del sitio es «Goblin Creative»
 (`smtp_fromname`), también para los correos de cuenta de otros clientes
 («Cliente Demo»). Hoy solo Goblin es cliente real; con un segundo cliente
