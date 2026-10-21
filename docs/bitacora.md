@@ -66,6 +66,38 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-21 — Primera conversación real por WhatsApp (Soporte): revisión
+
+**Qué:** el equipo probó el bot por WhatsApp (conversación 15, Twilio ya
+aprobado). El bot respondió por WhatsApp, creó el lead 2 (Soporte, dominio
+caído) y el **correo de aviso llegó** a soporte@ («1 of 1 sent»). **No salió
+aviso por WhatsApp:** Soporte no tiene números de encargado (el …0231 sigue
+fuera para poder probar como cliente); la plantilla aprobada sigue sin
+probarse en real.
+
+**Encontrado en la conversación (por mejorar en el prompt de Soporte):**
+1. «Quiero hablar con un asesor» dentro de Soporte → el bot lo mandó a
+   Facturación o Ventas. La regla de `soporte.md` («asesor comercial» →
+   Facturación) se generalizó a cualquier asesor. Debe canalizar con el
+   equipo técnico.
+2. Llamó al cliente «José» sacándolo de la dirección `josera@…`: inventó un
+   nombre (luego dio otro, «Alfonso Huerta»).
+3. Configurar el correo en iPhone: respuesta muy larga para WhatsApp y con
+   datos genéricos («mail.tu-dominio.com») aunque ya sabía el dominio.
+4. El primer problema (correo en iPhone) quedó sin cerrar y no aparece en el
+   resumen del lead; el lead solo habla del servidor caído.
+5. Un caso de servicio caído (sitio, cPanel y correo) no se marca como
+   urgente en el resumen.
+
+**Probable, sin comprobar:** los dos «Hola» con hora 16:00:02 al inicio son
+los 2 mensajes de la prueba del 14 que estaban en la cola (la consulta solo
+muestra la hora, no el día).
+
+**Pendiente:** confirmar con el equipo los datos de servidor de correo que
+puede dar el bot y ajustar `soporte.md` / `comun.md`; luego regresión en vivo.
+
+---
+
 ## 2026-10-21 — Aviso por correo: marca del cliente y sin botón
 
 **Qué (pedido del equipo, tras ver el primer correo real):** el correo de
