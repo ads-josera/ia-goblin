@@ -26,8 +26,9 @@ lo **no comprobado**.
 - **Siguiente:**
   1. **Twilio aprobó el perfil y las plantillas (2026-10-21)**; el equipo
      ya mandó mensajes. SID de las plantillas cargados en
-     `scripts/bots/goblin.php` (entrada 2026-10-21). Falta: **desplegar**,
-     **devolver el número …0231 a Soporte** y probar un aviso real de lead.
+     `scripts/bots/goblin.php` y **desplegados** (`6ac41e9`, entrada
+     2026-10-21). Falta: **devolver el número …0231 a Soporte** y probar un
+     aviso real de lead desde otro teléfono.
   1b. **Avisos de lead también por correo** (pedido del equipo, 2026-10-21):
      propuesta en la entrada de ese día, por decidir.
   1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
@@ -78,7 +79,12 @@ Soporte y Facturación con su SID y las variables `1=event … 7=conversation_ur
 (consulta a la base); la recepción sin plantilla (no crea leads).
 `qa-sweep.mjs`: 101 páginas, 3 roles, sin problemas. 187 pruebas OK.
 
-**No comprobado:** el envío real de la plantilla (después del despliegue).
+**Desplegado** (`6ac41e9`): `php:script` actualizó los 4 bots y la consulta
+en producción muestra cada área con su SID (recepción NULL). `git status`:
+solo `M web/.htaccess`, el bloque de PHP de cPanel (esperado, entrada
+2026-10-15).
+
+**No comprobado:** el envío real de la plantilla (falta la prueba).
 
 **Drupal 11.4.11** salió hoy: versión de correcciones, no de seguridad
 (`composer audit` sin avisos). Reescribe `web/.htaccess` (`assert.active` →
