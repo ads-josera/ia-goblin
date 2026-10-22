@@ -48,6 +48,8 @@ options:
   enable_metrics: true
   enable_immediate_webhook_processing: true
   auto_close_ai_hours: 24
+  auto_release_human_hours: 24
+  human_waiting_reply_text: 'Tu caso ya está con el equipo de [área]; te contactarán pronto. Si necesitas algo distinto, escribe «menú».'
   enable_lead_notifications: true
   lead_notification_numbers: ''
   notification_recipient_reply_text: 'Este número es exclusivo para notificaciones del sistema. No responde mensajes ni solicitudes.'

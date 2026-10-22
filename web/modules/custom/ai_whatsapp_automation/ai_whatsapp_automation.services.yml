@@ -41,6 +41,15 @@ services:
     class: Drupal\ai_whatsapp_automation\Application\AI\MenuRouter
     arguments: ['@transliteration']
 
+  ai_whatsapp_automation.inactive_conversation_closer:
+    class: Drupal\ai_whatsapp_automation\Application\HumanOperator\InactiveConversationCloser
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@ai_whatsapp_automation.menu_router'
+      - '@datetime.time'
+      - '@logger.factory'
+
   ai_whatsapp_automation.web_chat:
     class: Drupal\ai_whatsapp_automation\Application\WebChat\WebChatService
     arguments:
@@ -83,6 +92,7 @@ services:
       - '@lock'
       - '@database'
       - '@logger.factory'
+      - '@ai_whatsapp_automation.menu_router'
 
   ai_whatsapp_automation.whatsapp_text_formatter:
     class: Drupal\ai_whatsapp_automation\Application\Webhook\WhatsAppTextFormatter

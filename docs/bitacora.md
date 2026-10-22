@@ -36,6 +36,8 @@ lo **no comprobado**.
      SMTP y probar. Desplegado sin servidor SMTP (no se pudo escribir
      `settings.local.php`, solo lectura): el correo no salía hasta el commit
      que lo puso en `config/sync` (`mail.goblincreative.com`).
+  1d. **Atención humana vuelve al bot a las 24 h** + respuesta mientras
+     tanto: hecho en local (entrada 2026-10-21); falta desplegar y probar.
   1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
      `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
@@ -63,6 +65,58 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-21 — Atención humana: vuelve al bot a las 24 h y respuesta mientras tanto
+
+**Problema (preguntado por el equipo, confirmado leyendo el código):** al
+crearse un lead la conversación pasa a «atención humana» y **nunca se cerraba
+sola** (el cierre automático solo tocaba las del bot). Como el equipo trabaja
+con el aviso y no entra al panel, un cliente que volviera un día o una semana
+después, con otro problema, **no recibía ninguna respuesta**, en las tres
+áreas. Además, mientras el caso estaba con el equipo, quien escribía («¿ya
+vieron mi caso?») tampoco recibía nada.
+
+**Decidido por el equipo:** 24 horas, y respuesta automática mientras tanto.
+
+**Qué se hizo:**
+- `InactiveConversationCloser` (servicio, lo llama el cron): cierra las del
+  bot tras `auto_close_ai_hours` (como antes) y **las de atención humana tras
+  `auto_release_human_hours` = 24** sin mensajes del contacto. Antes de
+  cerrarlas las devuelve a la **recepción**: quien vuelve ve el menú y no cae
+  en el área del caso anterior (antes también pasaba con las del bot). Al
+  volver a escribir se reabre la misma conversación (el bot conserva el
+  historial y los casos ya registrados). Una cerrada desde el panel nunca se
+  reabre (como antes).
+- **Respuesta mientras el caso está con el equipo**
+  (`human_waiting_reply_text`): «Tu caso ya está con el equipo de [área]; te
+  contactarán pronto. Si necesitas algo distinto, escribe «menú».» [área] =
+  nombre del área en el menú. Como mucho una vez cada 6 horas por
+  conversación; queda en el historial como «Sistema».
+- **«menú» funciona en atención humana:** devuelve la conversación al bot
+  (registro «AI_REACTIVATED» en las acciones) y se contesta con el menú.
+- Ajustes nuevos en la pantalla de configuración del módulo (opciones), con
+  `updb` 11051 y `config/sync`. El campo de texto quedó entre las demás
+  respuestas automáticas: en otro sitio la rejilla tapaba su título.
+
+El equipo puede seguir usando el panel: «Cerrar conversación» cuando ya
+resolvió (el siguiente mensaje abre una conversación nueva con el menú) o
+«Reactivar IA».
+
+**Comprobado (local):** `HumanHandlingReturnTest` (4 pruebas: respuesta una
+vez por ráfaga y en el historial; «menú» devuelve el bot con el menú; a las
+25 h se cierra, vuelve a la recepción y al escribir se reabre con el menú, la
+de 1 h sigue con el equipo; con 0 horas no se libera). **Sabotaje**, una por
+una: sin liberar, sin volver a la recepción, sin respuesta, sin «menú» → cada
+una hace fallar su prueba. Suite 195 OK; `qa-sweep.mjs` 101 páginas; pantalla
+de ajustes vista y medida (sin títulos encimados).
+
+**No comprobado:** con WhatsApp real.
+
+**Al desplegar:** en el siguiente cron (cada 5 min) se cierran todas las
+conversaciones en atención humana con más de 24 h sin mensajes (las pruebas
+del 14 de octubre, por ejemplo). Es lo esperado.
 
 ---
 

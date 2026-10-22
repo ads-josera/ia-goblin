@@ -155,6 +155,18 @@ msgstr "Nombre comercial"
 msgid "How the business presents itself, e.g. \"Goblin Creative\". Heads the lead notices sent to its team; when empty, the client name is used."
 msgstr "Cómo se presenta el negocio, p. ej. «Goblin Creative». Encabeza los avisos de lead que recibe su equipo; si está vacío, se usa el nombre del cliente."
 
+msgid "Return conversations in human handling to the bot"
+msgstr "Devolver al bot las conversaciones en atención humana"
+
+msgid "A conversation handed to the team (a lead was created) is closed after this many hours without messages from the contact. If the contact writes again, the bot answers with the menu. A conversation closed in the panel is never reopened. Use 0 to keep them with the team until someone closes them."
+msgstr "Una conversación que pasó al equipo (se creó un lead) se cierra tras estas horas sin mensajes del contacto. Si vuelve a escribir, el bot le responde con el menú. Una conversación cerrada desde el panel nunca se reabre. Usa 0 para dejarlas con el equipo hasta que alguien las cierre."
+
+msgid "Reply while the case is with the team"
+msgstr "Respuesta mientras el caso está con el equipo"
+
+msgid "Sent when a contact writes while the team has the case, at most once every 6 hours. [área] is replaced by the area (its menu label). Writing «menú» returns the contact to the bot. Leave empty to send nothing."
+msgstr "Se envía cuando el contacto escribe mientras el equipo tiene su caso, como máximo una vez cada 6 horas. [área] se cambia por el área (su nombre en el menú). Si escribe «menú», vuelve al bot. Déjalo vacío para no enviar nada."
+
 msgid "Lead notification e-mails"
 msgstr "Correos de los encargados"
 

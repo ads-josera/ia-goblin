@@ -103,6 +103,12 @@ ai_whatsapp_automation.settings:
         auto_close_ai_hours:
           type: integer
           label: 'Auto-close inactive AI conversations after hours'
+        auto_release_human_hours:
+          type: integer
+          label: 'Return conversations in human handling to the bot after hours without messages'
+        human_waiting_reply_text:
+          type: string
+          label: 'Reply to a contact whose case is with the team'
         enable_lead_notifications:
           type: boolean
           label: 'Enable lead handoff notifications'

@@ -73,7 +73,7 @@ final class MenuRouter {
 
     $options = $this->options($reception);
     if ($bot->id() !== $reception->id()) {
-      if ($this->normalize($message) !== self::MENU_WORD) {
+      if (!$this->isMenuCommand($message)) {
         return ['bot' => $bot, 'reply' => '', 'message' => $message];
       }
       $this->assign($conversation, $reception, $reception);
@@ -98,6 +98,13 @@ final class MenuRouter {
     }
 
     return ['bot' => $reception, 'reply' => $this->menuText($reception, $options), 'message' => $message];
+  }
+
+  /**
+   * Whether the contact wrote "menú" (any case or accent) and nothing else.
+   */
+  public function isMenuCommand(string $message): bool {
+    return $this->normalize($message) === self::MENU_WORD;
   }
 
   /**

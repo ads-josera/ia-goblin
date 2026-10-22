@@ -6,6 +6,7 @@ namespace Drupal\ai_whatsapp_automation\Application\Webhook;
 
 use Drupal\ai_whatsapp_automation\Application\AI\BotManagerService;
 use Drupal\ai_whatsapp_automation\Application\AI\ConversationEngineService;
+use Drupal\ai_whatsapp_automation\Application\AI\MenuRouter;
 use Drupal\ai_whatsapp_automation\Application\Lead\LeadHandoffService;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -19,6 +20,11 @@ use Psr\Log\LoggerInterface;
  * Processes normalized webhook messages.
  */
 final class WebhookProcessorService {
+
+  /**
+   * Seconds between two «your case is with the team» replies.
+   */
+  private const HUMAN_WAITING_REPLY_COOLDOWN = 6 * 3600;
 
   /**
    * The logger channel.
@@ -38,6 +44,7 @@ final class WebhookProcessorService {
     private readonly LockBackendInterface $lock,
     private readonly Connection $database,
     LoggerChannelFactoryInterface $loggerFactory,
+    private readonly MenuRouter $menuRouter,
   ) {
     $this->logger = $loggerFactory->get('ai_whatsapp_automation');
   }
@@ -104,6 +111,14 @@ final class WebhookProcessorService {
       return $this->handleMediaMessage($conversation, $provider, $message, $media);
     }
 
+    // "menú" while the team has the case: the contact needs something else,
+    // so the bot takes over again and the menu router answers with the menu.
+    if ($this->isHumanAssigned($conversation) && $this->menuRouter->isMenuCommand((string) ($message['body'] ?? ''))) {
+      $conversation->set('status', 'AI_ACTIVE');
+      $conversation->save();
+      $this->auditSystemAction($conversation, 'AI_REACTIVATED', 'El contacto escribió «menú» mientras su caso estaba con el equipo.');
+    }
+
     if ($conversation->hasField('status') && $conversation->get('status')->value !== 'AI_ACTIVE') {
       $incoming = $this->saveIncomingMessage($conversation, $message);
       $this->logger->notice('Webhook message @message was saved without AI processing because conversation @conversation is @status.', [
@@ -116,6 +131,9 @@ final class WebhookProcessorService {
         'status' => 'saved_without_ai',
         'conversation_id' => $conversation->id(),
         'incoming_message_id' => $incoming->id(),
+        'delivery' => $this->isHumanAssigned($conversation)
+          ? $this->sendHumanWaitingReply($conversation, $provider, $message)
+          : ['status' => 'skipped_no_reply'],
       ];
     }
 
@@ -163,6 +181,82 @@ final class WebhookProcessorService {
     $this->clearAiProcessingStarted($provider, (string) ($message['provider_message_id'] ?? ''));
 
     return $this->deliverEngineResult($provider, $message, $conversation, $engine_result);
+  }
+
+  /**
+   * Whether the team has the conversation.
+   *
+   * A lead was created, or an operator stopped the AI.
+   */
+  private function isHumanAssigned(ContentEntityInterface $conversation): bool {
+    return $conversation->hasField('status') && $conversation->get('status')->value === 'HUMAN_ASSIGNED';
+  }
+
+  /**
+   * Tells a contact whose case is with the team that it is being handled.
+   *
+   * Without it, a contact writing «¿ya vieron mi caso?» got no answer at all.
+   * Sent at most once every HUMAN_WAITING_REPLY_COOLDOWN seconds per
+   * conversation, so a burst of messages gets one reply. [área] is the menu
+   * label of the conversation's bot («Soporte técnico»). Empty text: nothing
+   * is sent.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $conversation
+   *   The conversation the team has.
+   * @param string $provider
+   *   The WhatsApp provider of the conversation.
+   * @param array<string, mixed> $message
+   *   Normalized incoming message.
+   *
+   * @return array<string, mixed>
+   *   Delivery result.
+   */
+  private function sendHumanWaitingReply(ContentEntityInterface $conversation, string $provider, array $message): array {
+    $text = trim((string) $this->setting('options.human_waiting_reply_text'));
+    $state_key = 'ai_whatsapp_automation.human_waiting_reply.' . $conversation->id();
+    if ($text === '') {
+      return ['status' => 'skipped_no_reply'];
+    }
+    if ((int) $this->state->get($state_key, 0) > time() - self::HUMAN_WAITING_REPLY_COOLDOWN) {
+      return ['status' => 'skipped_rate_limited'];
+    }
+
+    $bot = $this->botManager->getBotForConversation($conversation);
+    $area = $bot instanceof ContentEntityInterface ? trim($this->fieldValue($bot, 'menu_label')) : '';
+    if ($area === '' && $bot instanceof ContentEntityInterface) {
+      $area = (string) $bot->label();
+    }
+    $reply = str_replace('[área]', $area !== '' ? $area : 'atención', $text);
+
+    $outbound_message = $message + [
+      'whatsapp_account_id' => $conversation->hasField('whatsapp_account') ? $conversation->get('whatsapp_account')->target_id : NULL,
+    ];
+    $delivery = $this->messageSender->sendText($provider, $outbound_message, $reply);
+    if (($delivery['status'] ?? '') === 'sent') {
+      $this->state->set($state_key, time());
+      $this->entityTypeManager->getStorage('ai_whatsapp_message')->create([
+        'conversation' => $conversation->id(),
+        'sender' => 'system',
+        'content' => $reply,
+        'tokens' => 0,
+        'cost' => '0.000000',
+      ])->save();
+    }
+
+    return $delivery;
+  }
+
+  /**
+   * Records an action the system took on a conversation, for the panel.
+   */
+  private function auditSystemAction(ContentEntityInterface $conversation, string $action, string $note): void {
+    $this->entityTypeManager->getStorage('ai_whatsapp_operator_action')->create([
+      'conversation' => $conversation->id(),
+      // Same author as the lead handoff audit: the site, not a person.
+      'user' => 1,
+      'action' => $action,
+      'note' => $note,
+    ])->save();
   }
 
   /**

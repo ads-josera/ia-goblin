@@ -401,6 +401,16 @@ final class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('Conversations in AI active status are closed by cron after this many inactive hours. Use 0 to disable automatic closing.'),
       '#required' => TRUE,
     ];
+    $form['options']['auto_release_human_hours'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Return conversations in human handling to the bot'),
+      '#default_value' => $config->get('options.auto_release_human_hours') ?? 24,
+      '#min' => 0,
+      '#max' => 8760,
+      '#field_suffix' => $this->t('hours'),
+      '#description' => $this->t('A conversation handed to the team (a lead was created) is closed after this many hours without messages from the contact. If the contact writes again, the bot answers with the menu. A conversation closed in the panel is never reopened. Use 0 to keep them with the team until someone closes them.'),
+      '#required' => TRUE,
+    ];
     $form['options']['enable_lead_notifications'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable lead handoff notifications'),
@@ -420,6 +430,13 @@ final class SettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('options.notification_recipient_reply_text') ?: '',
       '#rows' => 2,
       '#description' => $this->t('Fallback used only when the bot does not define its own reply. Recipients listed above cannot use the bot. This optional message is sent at most once every 24 hours when they reply. Leave empty to block AI without sending a reply.'),
+    ];
+    $form['options']['human_waiting_reply_text'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Reply while the case is with the team'),
+      '#default_value' => $config->get('options.human_waiting_reply_text') ?? '',
+      '#rows' => 2,
+      '#description' => $this->t('Sent when a contact writes while the team has the case, at most once every 6 hours. [área] is replaced by the area (its menu label). Writing «menú» returns the contact to the bot. Leave empty to send nothing.'),
     ];
     $form['options']['unintelligible_reply_text'] = [
       '#type' => 'textarea',
@@ -531,6 +548,10 @@ final class SettingsForm extends ConfigFormBase {
     if ($auto_close_ai_hours < 0 || $auto_close_ai_hours > 8760) {
       $form_state->setErrorByName('options][auto_close_ai_hours', $this->t('Auto-close hours must be between 0 and 8760.'));
     }
+    $auto_release_human_hours = (int) $form_state->getValue(['options', 'auto_release_human_hours']);
+    if ($auto_release_human_hours < 0 || $auto_release_human_hours > 8760) {
+      $form_state->setErrorByName('options][auto_release_human_hours', $this->t('Auto-close hours must be between 0 and 8760.'));
+    }
   }
 
   /**
@@ -587,6 +608,8 @@ final class SettingsForm extends ConfigFormBase {
       ->set('options.enable_metrics', (bool) $options['enable_metrics'])
       ->set('options.enable_immediate_webhook_processing', (bool) $options['enable_immediate_webhook_processing'])
       ->set('options.auto_close_ai_hours', (int) $options['auto_close_ai_hours'])
+      ->set('options.auto_release_human_hours', (int) $options['auto_release_human_hours'])
+      ->set('options.human_waiting_reply_text', trim((string) $options['human_waiting_reply_text']))
       ->set('options.enable_lead_notifications', (bool) $options['enable_lead_notifications'])
       ->set('options.lead_notification_numbers', $options['lead_notification_numbers'])
       ->set('options.notification_recipient_reply_text', $options['notification_recipient_reply_text'])

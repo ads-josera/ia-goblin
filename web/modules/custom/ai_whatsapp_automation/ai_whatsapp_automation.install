@@ -1412,3 +1412,23 @@ function ai_whatsapp_automation_update_11050(): string {
 
   return (string) t('Clients now have a brand name («Brand name»).');
 }
+
+/**
+ * Conversations in human handling go back to the bot after 24 hours.
+ *
+ * They used to stay in human handling forever: a contact who came back with
+ * another problem got no answer. Also adds the reply sent while the case is
+ * with the team.
+ */
+function ai_whatsapp_automation_update_11051(): string {
+  $config = \Drupal::configFactory()->getEditable('ai_whatsapp_automation.settings');
+  if ($config->get('options.auto_release_human_hours') === NULL) {
+    $config->set('options.auto_release_human_hours', 24);
+  }
+  if ($config->get('options.human_waiting_reply_text') === NULL) {
+    $config->set('options.human_waiting_reply_text', 'Tu caso ya está con el equipo de [área]; te contactarán pronto. Si necesitas algo distinto, escribe «menú».');
+  }
+  $config->save();
+
+  return (string) t('Conversations in human handling return to the bot after 24 hours without messages.');
+}
