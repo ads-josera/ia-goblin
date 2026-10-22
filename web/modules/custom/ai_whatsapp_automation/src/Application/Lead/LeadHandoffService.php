@@ -533,9 +533,13 @@ final class LeadHandoffService {
         : $this->messageSender->sendText($provider, $recipient, $message);
     }
 
-    $this->logger->notice('Lead handoff notification attempted for conversation @conversation to @count administrators.', [
+    // Same line as the e-mail notice, so the log says whether it went out.
+    // A rejected send is logged as an error by ProviderMessageSenderService.
+    $this->logger->notice('Lead @lead WhatsApp notice for conversation @conversation: @sent of @count sent.', [
+      '@lead' => (string) $lead->id(),
       '@conversation' => (string) $conversation->id(),
-      '@count' => (string) count($numbers),
+      '@sent' => (string) count(array_filter($results, static fn (array $result): bool => ($result['status'] ?? '') === 'sent')),
+      '@count' => (string) count($results),
     ]);
 
     return $results;

@@ -87,9 +87,23 @@ el aviso llegó bien.** Es la primera vez que la plantilla aprobada de
 WhatsApp sale en real (por la cuenta de Twilio de la recepción, porque el
 chat web no tiene cuenta propia).
 
-**Pendiente de confirmar:** que llegaron los dos canales (WhatsApp con
-plantilla al …0231 y correo a soporte@) y si ya se desplegó `e0aa263`
-(validación de números). **Sin probar todavía:** la respuesta «Tu caso ya
+**Confirmado:** llegaron **los dos**: WhatsApp con plantilla al …0231
+(confirmado por el equipo) y correo a soporte@ (registro: «Lead 3 e-mail
+notice: 1 of 1 sent» y `smtp` «Sending mail to soporte@…»). Conversación 16
+revisada: 3 mensajes hasta canalizar, urgencia bien aplicada (dominio sin
+resolver, ni web ni correo) y no se le dijo al cliente; teléfono guardado
+como +525530050231. Detalle menor sin tocar: repitió «¿desde cuándo?» junto
+con el nombre.
+
+**Encontrado en el registro y corregido (`config/sync` + módulo):**
+1. **El registro de Drupal guardaba ~7 horas:** `dblog.settings:row_limit`
+   era 1000 y el cron (cada 5 min) escribe ~11 líneas por pasada. Por eso el
+   21 ya no había mensajes del módulo. Ahora **100000** (~30 días).
+2. El aviso por WhatsApp solo decía «attempted». Ahora: «Lead N WhatsApp
+   notice for conversation M: X of Y sent», igual que el de correo (los
+   rechazos ya se registraban como error en `ProviderMessageSenderService`).
+   Prueba: `WhatsAppPipelineTest` lee el registro (1 de 1). **Sabotaje:**
+   contar 0 enviados → falla. Suite 196 OK, `qa-sweep.mjs` 101 páginas. **Sin probar todavía:** la respuesta «Tu caso ya
 está con el equipo…», «menú» en atención humana y la liberación a las 24 h
 (solo pasan en WhatsApp: hace falta escribir desde otro número).
 

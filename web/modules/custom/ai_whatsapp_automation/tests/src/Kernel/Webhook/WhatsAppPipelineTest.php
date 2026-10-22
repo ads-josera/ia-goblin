@@ -35,6 +35,7 @@ final class WhatsAppPipelineTest extends KernelTestBase {
     'options',
     'text',
     'views',
+    'dblog',
     'ai_whatsapp_automation',
   ];
 
@@ -59,6 +60,7 @@ final class WhatsAppPipelineTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
+    $this->installSchema('dblog', ['watchdog']);
     $entity_type_ids = [
       'ai_whatsapp_knowledge_base',
       'ai_whatsapp_knowledge_document',
@@ -177,6 +179,18 @@ final class WhatsAppPipelineTest extends KernelTestBase {
     // The person in charge was notified.
     $recipients = array_map(static fn (array $form): string => (string) ($form['To'] ?? ''), $twilio_bodies);
     $this->assertContains('whatsapp:+5215599999999', $recipients);
+
+    // The log says the notice went out, not only that it was attempted.
+    $logged = $this->container->get('database')->select('watchdog', 'w')
+      ->fields('w', ['message', 'variables'])
+      ->condition('type', 'ai_whatsapp_automation')
+      ->condition('message', 'Lead @lead WhatsApp notice%', 'LIKE')
+      ->execute()
+      ->fetchAll();
+    $this->assertCount(1, $logged);
+    $variables = unserialize($logged[0]->variables, ['allowed_classes' => FALSE]);
+    $this->assertSame('1', $variables['@sent']);
+    $this->assertSame('1', $variables['@count']);
   }
 
   /**
