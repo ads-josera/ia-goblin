@@ -43,10 +43,10 @@ lo **no comprobado**.
      el correo a soporte@. Probar también: datos de correo en iPhone,
      «quiero hablar con un asesor», urgencia, la respuesta «Tu caso ya está
      con el equipo…» y «menú».
-  3. **Confirmar que la contraseña de avisos@ se cambió** (se expuso en el
-     chat el 2026-10-21) y que la nueva está en la pantalla del SMTP.
-  4. Drupal **11.4.11** (correcciones, no seguridad; reescribe
-     `web/.htaccess`): después de la prueba real.
+  3. ~~Contraseña de avisos@~~: **cambiada** (confirmado por el equipo,
+     2026-10-22).
+  4. Drupal **11.4.11**: hecho y probado en local (entrada 2026-10-22);
+     falta desplegar. Firefox de Playwright no arranca (ver entrada).
   5. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   6. Traducir al español las demás pantallas del módulo (pendiente 1).
   7. Soporte, sin resolver del todo: «Además: …» (3/6) y repetir el nombre
@@ -76,6 +76,34 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-22 — Drupal 11.4.10 → 11.4.11
+
+**Qué:** actualización de correcciones (no de seguridad; `composer audit` sin
+avisos antes y después). Junto con core: Guzzle 7.16.0, promises 2.6.0,
+psr7 2.13.2, composer/ca-bundle 1.6.0, open-telemetry/api 1.10.1. El
+*scaffold* cambió `web/.htaccess` (`php_value assert.active 0` →
+`php_value zend.assertions 0`, como anuncia la versión) y el comentario de
+`example.settings.local.php`. Sin actualizaciones de base de datos.
+
+**QA completo (local, sobre `ddev snapshot antes-11.4.11`):**
+- 196 pruebas OK (mismos 2 avisos de obsolescencia de antes).
+- `qa-sweep.mjs`: 101 páginas, 3 roles, sin problemas.
+- QA visual `run.mjs`: Chromium 28 pantallas y WebKit 28, 0 problemas.
+- Botón del chat (`embed-check.mjs`): Chromium y WebKit OK.
+- Pantalla de acceso en **Firefox real 158** (`run-real.mjs`): 0 problemas.
+- Informe de estado sin errores; `config:status` sin diferencias.
+
+**No comprobado:** `embed-check.mjs` en Firefox. El Firefox **de
+Playwright** (firefox-1543) no arranca en esta Mac (macOS 27.0.1): «Could not
+find profile folder», también sin abrir ninguna página y tras reinstalarlo.
+Es del equipo de pruebas, no del sitio. El Firefox real sí funciona.
+Pendiente: actualizar Playwright o adaptar `embed-check` a Firefox real.
+
+**Despliegue:** `web/.htaccess` del servidor tiene el bloque de cPanel →
+`git stash` / `git pull` / `git stash pop` (ver `docs/despliegue.md`).
 
 ---
 
