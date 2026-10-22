@@ -225,6 +225,31 @@ final class LeadHandoffServiceTest extends KernelTestBase {
   }
 
   /**
+   * A notice number without country code is rejected; usual formats pass.
+   *
+   * A local «55 1234 5678» was sent to a wrong number: the notice never
+   * arrived and nothing said so.
+   */
+  public function testNoticeNumberNeedsCountryCode(): void {
+    $storage = $this->container->get('entity_type.manager')->getStorage('ai_whatsapp_bot');
+    $valid = $storage->create([
+      'name' => 'Goblin Soporte',
+      'status' => 'active',
+      'lead_notification_numbers' => "+52 55 1234 5678\n+5215512345678\n+52-55-1234-5678\n+1 415 555 0100",
+    ]);
+    $this->assertCount(0, $valid->validate()->getByField('lead_notification_numbers'));
+
+    $local = $storage->create([
+      'name' => 'Goblin Ventas',
+      'status' => 'active',
+      'lead_notification_numbers' => "+5215512345678\n55 1234 5678",
+    ]);
+    $violations = $local->validate()->getByField('lead_notification_numbers');
+    $this->assertCount(1, $violations);
+    $this->assertStringContainsString('55 1234 5678', (string) $violations[0]->getMessage());
+  }
+
+  /**
    * Stores a message in a conversation.
    */
   private function addMessage(ContentEntityInterface $conversation, string $sender, string $content): void {

@@ -137,8 +137,14 @@ msgstr "Opcional: cuenta de WhatsApp desde la que se avisa de los leads de este 
 msgid "Lead notification WhatsApp numbers"
 msgstr "Números de WhatsApp de los encargados"
 
-msgid "WhatsApp numbers of the people in charge of the leads of this bot, one per line. When empty, the WhatsApp account numbers or the global ones are used."
-msgstr "Números de WhatsApp de quienes atienden los leads de este bot, uno por línea. Si está vacío, se usan los de la cuenta de WhatsApp o los generales."
+msgid "WhatsApp numbers of the people in charge of the leads of this bot, one per line, with the country code. Example: +52 55 1234 5678 (spaces and dashes are fine). When empty, the WhatsApp account numbers or the global ones are used."
+msgstr "Números de WhatsApp de quienes atienden los leads de este bot, uno por línea y con el código de país. Ejemplo: +52 55 1234 5678 (se aceptan espacios y guiones). Si está vacío, se usan los de la cuenta de WhatsApp o los generales."
+
+msgid "«%value» is missing the country code. Write it like +52 55 1234 5678, one number per line."
+msgstr "A «%value» le falta el código de país. Escríbelo así: +52 55 1234 5678, un número por línea."
+
+msgid "List of WhatsApp numbers"
+msgstr "Lista de números de WhatsApp"
 
 msgid "@state It is saved outside the site configuration: it is not exported to git and deployments do not erase it."
 msgstr "@state Se guarda fuera de la configuración del sitio: no se exporta a git y los despliegues no la borran."

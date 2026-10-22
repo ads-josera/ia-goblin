@@ -317,7 +317,8 @@ final class Bot extends ContentEntityBase {
 
     $fields['lead_notification_numbers'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Lead notification WhatsApp numbers'))
-      ->setDescription(t('WhatsApp numbers of the people in charge of the leads of this bot, one per line. When empty, the WhatsApp account numbers or the global ones are used.'))
+      ->setDescription(t('WhatsApp numbers of the people in charge of the leads of this bot, one per line, with the country code. Example: +52 55 1234 5678 (spaces and dashes are fine). When empty, the WhatsApp account numbers or the global ones are used.'))
+      ->addConstraint('AiWhatsappPhoneList')
       ->setDisplayOptions('form', [
         'type' => 'string_textarea',
         'weight' => 51,

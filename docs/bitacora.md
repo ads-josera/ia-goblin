@@ -78,6 +78,31 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-22 — Números de encargados: ejemplo y validación del código de país
+
+**Qué (pedido del equipo al cargar el …0231):** el campo «Números de
+WhatsApp de los encargados» no decía en qué formato escribir el número.
+Ahora la descripción trae el ejemplo **+52 55 1234 5678** (espacios y guiones
+valen) y **no deja guardar un número sin código de país**
+(`AiWhatsappPhoneList`: de 11 a 15 dígitos por línea).
+
+**Por qué:** al enviar, el módulo ya quita espacios y guiones y agrega el «1»
+de México (`normalizeTwilioPhone`), pero un número local de 10 dígitos se
+envía a `+55…`, otro número: el aviso no llega y nada lo dice.
+
+**Comprobado:** prueba nueva (`testNoticeNumberNeedsCountryCode`: cuatro
+formatos válidos pasan, «55 1234 5678» se rechaza). **Sabotaje:** sin la
+validación → falla. Formulario con la cuenta del **gestor**: descripción en
+español; «55 3005 0231» → «A “55 3005 0231” le falta el código de país…» y no
+guarda. Suite 196 OK; `qa-sweep.mjs` 101 páginas sin problemas.
+
+**Riesgo de despliegue:** el script de bots valida cada bot al guardarlo. Si
+un bot de producción tuviera un número sin código de país, el script fallaría
+en ese bot (y ese número tampoco recibía avisos). Antes de desplegar se
+revisan los números de producción (comando en el chat del día).
+
+---
+
 ## 2026-10-22 — Base limpia para probar desde cero
 
 **Qué:** el equipo confirmó que todas las conversaciones eran pruebas (chat
