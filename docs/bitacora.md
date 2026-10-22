@@ -8,44 +8,57 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
+*(Actualizado 2026-10-21, fin del día.)*
+
 - **En producción** https://ia.goblincreative.com, Drupal **11.4.10**
-  (seguridad crítica aplicada el 2026-10-14; `composer audit` sin avisos),
-  HTTPS, cron cada 5 min, respaldo en `~/backups` antes de cada despliegue
-  grande.
+  (`composer audit` sin avisos), HTTPS, cron cada 5 min, respaldo en
+  `~/backups` antes de cada despliegue grande. Último commit desplegado:
+  `00fb128` (+ solo documentación después).
+- **WhatsApp real funcionando:** Twilio aprobó el perfil de cumplimiento y
+  las 3 plantillas de aviso (2026-10-21); SID cargados en los bots. Primera
+  conversación real (Soporte) revisada y prompt ajustado.
+- **Avisos de lead:** por WhatsApp (plantilla) **y por correo**, siempre los
+  dos. Correo por SMTP (módulo `smtp`) desde avisos@goblincreative.com,
+  servidor `mail.goblincreative.com:465`; la contraseña se escribe en
+  Configuración → Sistema → SMTP y no se pierde al desplegar. Correos: Ventas
+  y Facturación → kevinyssen@, Soporte → soporte@. Encabezado «Goblin
+  Creative» (nombre comercial del cliente), sin botón.
+- **Atención humana:** vuelve al bot a las 24 h sin mensajes (con el menú);
+  mientras tanto el contacto recibe «Tu caso ya está con el equipo de…»;
+  «menú» le devuelve el bot.
 - **Bots de Goblin:** recepción con menú (1 Ventas, 2 Soporte, 3
-  Facturación), saludo fijo por área, chat reabierto empieza en el menú,
-  varios casos por conversación («Datos capturados» / «Datos adicionales»),
-  respuestas breves (mediana ~2.5 s), Ventas nunca da precios. Números de
-  los encargados cargados en el servidor.
-- **Costos reales:** tarifas oficiales de OpenAI en `config/sync`; costo por
-  el bot que respondió; el Panel lo muestra (confirmado por el equipo).
-- **Chat en goblincreative.com:** botón aislado y centrado, icono propio,
-  logo en el encabezado.
-- **QA:** `tests/visual/qa-sweep.mjs` (106 páginas, 3 roles) y
-  `embed-check.mjs` después de cada cambio; 187 pruebas automáticas.
-- **Siguiente:**
-  1. **Twilio aprobó el perfil y las plantillas (2026-10-21)**; el equipo
-     ya mandó mensajes. SID de las plantillas cargados en
-     `scripts/bots/goblin.php` y **desplegados** (`6ac41e9`, entrada
-     2026-10-21). Falta: **devolver el número …0231 a Soporte** y probar un
-     aviso real de lead desde otro teléfono.
-  1b. **Avisos de lead también por correo + SMTP**: hecho y probado en local
-     (entrada 2026-10-21, segunda). Falta: crear la cuenta
-     avisos@goblincreative.com (hecho), **cambiar su contraseña** (se
-     expuso en el chat el 2026-10-21), escribir la nueva en la pantalla del
-     SMTP y probar. Desplegado sin servidor SMTP (no se pudo escribir
-     `settings.local.php`, solo lectura): el correo no salía hasta el commit
-     que lo puso en `config/sync` (`mail.goblincreative.com`).
-  1d. **Atención humana vuelve al bot a las 24 h** + respuesta mientras
-     tanto: desplegado (`00fb128`); falta probar con WhatsApp real.
-  1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
-     `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
-  2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
-  3. Traducir al español las demás pantallas del módulo (pendiente 1).
-  4. Afinar con conversaciones reales (frases de más tras indicar «menú»).
+  Facturación), saludo fijo por área, varios casos por conversación,
+  respuestas breves, Ventas nunca da precios. Soporte da los datos de correo
+  del hosting (`mail.<dominio>`, 993/995/465) y marca urgencia en caídas.
+- **QA:** `tests/visual/qa-sweep.mjs` (101 páginas, 3 roles),
+  `embed-check.mjs`, **195 pruebas automáticas**; prueba en vivo
+  `tests/bots/goblin-live.php` (15 escenarios, sobre `ddev snapshot`).
+- **Siguiente (mañana, 2026-10-22):**
+  1. **Limpiar la prueba y probar desde cero:** fase 1 (respaldo con
+     `--extra-dump=--no-tablespaces` + listado de conversaciones), revisar
+     qué se borra, fase 2 (borra mensajes, acciones, leads y la
+     conversación; no hay borrado en cascada). Comandos en el chat del
+     2026-10-21; la conversación de prueba es la **15** (lead 2).
+  2. **Prueba real completa por WhatsApp:** volver a poner el **…0231 en
+     Goblin Soporte** («Números de WhatsApp de los encargados») y escribir
+     desde **otro teléfono**: debe llegar el aviso con plantilla al …0231 y
+     el correo a soporte@. Probar también: datos de correo en iPhone,
+     «quiero hablar con un asesor», urgencia, la respuesta «Tu caso ya está
+     con el equipo…» y «menú».
+  3. **Confirmar que la contraseña de avisos@ se cambió** (se expuso en el
+     chat el 2026-10-21) y que la nueva está en la pantalla del SMTP.
+  4. Drupal **11.4.11** (correcciones, no seguridad; reescribe
+     `web/.htaccess`): después de la prueba real.
+  5. Rotar la clave de pruebas de OpenAI (se compartió por chat).
+  6. Traducir al español las demás pantallas del módulo (pendiente 1).
+  7. Soporte, sin resolver del todo: «Además: …» (3/6) y repetir el nombre
+     cuando el cliente lo ignora; ante «¿qué es un MX?» ofrece revisarlos.
 
 **Por decidir (equipo):**
-- Números de WhatsApp del equipo que reciben los avisos de leads.
+- Números de WhatsApp del equipo que reciben los avisos de leads (Soporte
+  hoy no tiene ninguno: el …0231 está fuera para las pruebas).
+- Remitente de los correos si entra un segundo cliente (hoy todo sale como
+  «Goblin Creative»).
 - Color secundario del chat web: hoy no se usa en ningún sitio (el
   encabezado es un azul fijo). Propuesta: que sea el color del encabezado.
 - En el chat web la IA sigue respondiendo después de crear un lead.
