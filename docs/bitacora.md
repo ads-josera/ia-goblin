@@ -79,6 +79,36 @@ lo **no comprobado**.
 
 ---
 
+## 2026-10-22 — PHP2Shell (CVE-2026-109618/109619): el servidor ya trae el parche
+
+**Qué:** el equipo vio en las noticias que PHP 8.4.26 tiene una
+vulnerabilidad crítica (ejecución remota sin iniciar sesión, CVSS 9.8;
+corregida en PHP 8.4.27 el 2026-10-21). Producción reporta **8.4.26** y la
+cuenta de cPanel **no tiene root** (la versión de PHP la administra el
+proveedor por EasyApache/CloudLinux).
+
+**Comprobado en el servidor (`rpm -q --changelog`, sin root):** CloudLinux
+**portó el parche a 8.4.26**: `ea-php84-php-cli` y `ea-php84-php-fpm`
+`8.4.26-2.cloudlinux.1` del 2026-10-21 — «EA4D-1101: CVE-2026-109618,
+CVE-2026-109619 … upstream 506e87fa (PHP 8.4 branch)». El número no cambia a
+8.4.27, pero la corrección está. (El metapaquete `ea-php84` sigue en -1 y su
+historial no lo menciona: es solo el paquete base.)
+
+**Pendiente de confirmar:** con qué SAPI corre la web (FPM o LSAPI /
+`ea-php84-php-litespeed`) y que ese paquete también traiga el parche. No
+había procesos PHP del usuario al consultar (se crean bajo demanda).
+
+**Local:** DDEV usa PHP 8.4.18 (no expuesto a internet); actualizar la
+imagen de DDEV para no probar con otra versión que producción.
+
+**Ojo con 8.4.27:** se reportan caídas «zend_mm_heap corrupted» por otro
+cambio de esa versión (no del parche): si el proveedor sube a 8.4.27, revisar
+el registro de errores.
+
+Fuentes: almalinux.org (2026-10-21), helpnetsecurity.com, ma.ttias.be.
+
+---
+
 ## 2026-10-22 — Drupal 11.4.10 → 11.4.11
 
 **Qué:** actualización de correcciones (no de seguridad; `composer audit` sin
