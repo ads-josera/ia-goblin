@@ -37,7 +37,7 @@ lo **no comprobado**.
      `settings.local.php`, solo lectura): el correo no salía hasta el commit
      que lo puso en `config/sync` (`mail.goblincreative.com`).
   1d. **Atención humana vuelve al bot a las 24 h** + respuesta mientras
-     tanto: hecho en local (entrada 2026-10-21); falta desplegar y probar.
+     tanto: desplegado (`00fb128`); falta probar con WhatsApp real.
   1c. Drupal **11.4.11** disponible (correcciones, no seguridad; cambia
      `web/.htaccess`): aplicar después de la prueba real de WhatsApp.
   2. Rotar la clave de pruebas de OpenAI (se compartió por chat).
@@ -113,6 +113,14 @@ una hace fallar su prueba. Suite 195 OK; `qa-sweep.mjs` 101 páginas; pantalla
 de ajustes vista y medida (sin títulos encimados).
 
 **No comprobado:** con WhatsApp real.
+
+**Desplegado** (`00fb128`): `updb` 11051, `cim` sin cambios (la
+configuración ya coincidía), 4 traducciones nuevas, `cget` → 24. `git
+status`: ` M web/.htaccess` (cPanel). El respaldo previo avisó «Access denied;
+you need the PROCESS privilege… when trying to dump tablespaces»: es el
+volcado de *tablespaces*, que el usuario de cPanel no tiene permitido; el
+respaldo de las tablas sí se guarda. Se evita con
+`--extra-dump=--no-tablespaces` (anotado en `docs/despliegue.md`).
 
 **Al desplegar:** en el siguiente cron (cada 5 min) se cierran todas las
 conversaciones en atención humana con más de 24 h sin mensajes (las pruebas

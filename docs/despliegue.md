@@ -267,6 +267,17 @@ llega con diseño, y el registro (`drush ws --type=smtp`) sin errores.
   LIKE 'user.%'"` + `drush uli --uri=https://ia.goblincreative.com` (el
   enlace no se comparte) y cambiar la contraseña.
 
+### Respaldo de la base: aviso de «PROCESS privilege»
+
+`drush sql:dump` en cPanel avisa «Access denied; you need (at least one of)
+the PROCESS privilege(s)… when trying to dump tablespaces». El usuario de la
+base no tiene ese permiso global; las tablas sí se respaldan. Para no ver el
+aviso:
+
+```bash
+drush sql:dump --gzip --extra-dump=--no-tablespaces --result-file=$HOME/backups/NOMBRE.sql
+```
+
 ## Historial de despliegues
 
 | Fecha | Commit | Resultado | Notas |
@@ -291,4 +302,5 @@ llega con diseño, y el registro (`drush ws --type=smtp`) sin errores.
 | 2026-10-21 | `3415084` | OK | **Correo por SMTP y avisos de lead por correo:** `cim` instaló `smtp` y cambió `system.mail`; bots con sus correos; contraseña en la pantalla del SMTP. Primer `cim` sin servidor SMTP (`settings.local.php` es de solo lectura): se corrigió poniendo el servidor en `config/sync`. Correo de prueba aceptado por el servidor (`sent`). `git status` vacío |
 | 2026-10-21 | `1ad3edf` | OK | Aviso por correo con la marca del cliente y sin botón: `updb` 11050, traducciones (11 nuevas), 4 bots, `brand_name` = Goblin Creative. `git status` vacío |
 | 2026-10-21 | `23e0b58` | OK | Prompt de Soporte (datos de correo del hosting, «asesor», urgencia): `git pull` + `php:script`, Soporte 15,030 caracteres. `M web/.htaccess` (cPanel, esperado) |
+| 2026-10-21 | `00fb128` | OK | Atención humana vuelve al bot a las 24 h + respuesta mientras tanto: `updb` 11051, `cim` sin cambios, 4 traducciones, `auto_release_human_hours` = 24. Respaldo en `~/backups/antes-atencion-humana-2026-10-21.sql.gz` (aviso de PROCESS/tablespaces, inofensivo) |
 | 2026-10-15 | `9076021` | OK | **Twilio 12300:** el webhook responde TwiML vacío. Verificado en producción con petición firmada: `200 \| text/xml; charset=UTF-8 \| <Response/>`. `git status`: ` M web/.htaccess` = bloque de cPanel `ea-php84`, reescrito por cPanel el 2026-10-14 22:52 (esperado, ver «`web/.htaccess` y el bloque de cPanel») |
