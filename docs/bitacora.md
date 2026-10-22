@@ -94,9 +94,12 @@ CVE-2026-109619 … upstream 506e87fa (PHP 8.4 branch)». El número no cambia a
 8.4.27, pero la corrección está. (El metapaquete `ea-php84` sigue en -1 y su
 historial no lo menciona: es solo el paquete base.)
 
-**Pendiente de confirmar:** con qué SAPI corre la web (FPM o LSAPI /
-`ea-php84-php-litespeed`) y que ese paquete también traiga el parche. No
-había procesos PHP del usuario al consultar (se crean bajo demanda).
+**La web también (comprobado):** el phpinfo del panel (Informe de estado →
+PHP → más información) da **Build Date: Oct 21 2026 18:22:45**, compilada por
+CloudLinux (`buildfarm17-new.corp.cloudlinux.com`) en el mismo lote que el CLI
+parcheado (18:21:33). **Producción protegida contra PHP2Shell**; no hace
+falta pedir nada al proveedor. Si el proveedor sube a 8.4.27, vigilar
+«zend_mm_heap corrupted» en el registro.
 
 **Local:** DDEV usa PHP 8.4.18 (no expuesto a internet); actualizar la
 imagen de DDEV para no probar con otra versión que producción.
