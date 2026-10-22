@@ -36,7 +36,8 @@ lo **no comprobado**.
 - **Siguiente (mañana, 2026-10-22):**
   1. ~~Limpiar la prueba~~: **hecho 2026-10-22**, base en 0 (entrada de ese
      día).
-  2. **Prueba real completa por WhatsApp:** volver a poner el **…0231 en
+  2. **Aviso real de lead: llegó bien** (2026-10-22, desde el chat web).
+     Falta la parte que solo pasa en WhatsApp, desde otro número: volver a poner el **…0231 en
      Goblin Soporte** («Números de WhatsApp de los encargados») y escribir
      desde **otro teléfono**: debe llegar el aviso con plantilla al …0231 y
      el correo a soporte@. Probar también: datos de correo en iPhone,
@@ -75,6 +76,22 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-22 — Prueba real del aviso de lead (chat web → WhatsApp + correo)
+
+**Qué:** con el …0231 de vuelta en Goblin Soporte, el equipo dejó un caso de
+Soporte desde el chat web de goblincreative.com. **Confirmado por el equipo:
+el aviso llegó bien.** Es la primera vez que la plantilla aprobada de
+WhatsApp sale en real (por la cuenta de Twilio de la recepción, porque el
+chat web no tiene cuenta propia).
+
+**Pendiente de confirmar:** que llegaron los dos canales (WhatsApp con
+plantilla al …0231 y correo a soporte@) y si ya se desplegó `e0aa263`
+(validación de números). **Sin probar todavía:** la respuesta «Tu caso ya
+está con el equipo…», «menú» en atención humana y la liberación a las 24 h
+(solo pasan en WhatsApp: hace falta escribir desde otro número).
 
 ---
 
