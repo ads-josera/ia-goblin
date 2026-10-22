@@ -10,7 +10,7 @@ lo **no comprobado**.
 
 *(Actualizado 2026-10-21, fin del día.)*
 
-- **En producción** https://ia.goblincreative.com, Drupal **11.4.10**
+- **En producción** https://ia.goblincreative.com, Drupal **11.4.11**
   (`composer audit` sin avisos), HTTPS, cron cada 5 min, respaldo en
   `~/backups` antes de cada despliegue grande. Último commit desplegado:
   `00fb128` (+ solo documentación después).
@@ -45,8 +45,8 @@ lo **no comprobado**.
      con el equipo…» y «menú».
   3. ~~Contraseña de avisos@~~: **cambiada** (confirmado por el equipo,
      2026-10-22).
-  4. Drupal **11.4.11**: hecho y probado en local (entrada 2026-10-22);
-     falta desplegar. Firefox de Playwright no arranca (ver entrada).
+  4. ~~Drupal 11.4.11~~: **desplegado y verificado** (2026-10-22). Firefox
+     de Playwright no arranca en esta Mac (ver entrada).
   5. Rotar la clave de pruebas de OpenAI (se compartió por chat).
   6. Traducir al español las demás pantallas del módulo (pendiente 1).
   7. Soporte, sin resolver del todo: «Además: …» (3/6) y repetir el nombre
@@ -102,8 +102,21 @@ find profile folder», también sin abrir ninguna página y tras reinstalarlo.
 Es del equipo de pruebas, no del sitio. El Firefox real sí funciona.
 Pendiente: actualizar Playwright o adaptar `embed-check` a Firefox real.
 
-**Despliegue:** `web/.htaccess` del servidor tiene el bloque de cPanel →
-`git stash` / `git pull` / `git stash pop` (ver `docs/despliegue.md`).
+**Desplegado** (`af50133`): respaldo `~/backups/antes-11.4.11.sql.gz` y
+`htaccess-antes-11.4.11`; `stash` / `pull` / `stash pop` sin conflicto;
+`composer install` volvió a copiar `web/.htaccess` y **quitó el bloque de
+cPanel** (como en 11.4.9; PHP 8.4 sigue por el `.htaccess` de la raíz del
+proyecto). `updb` nada pendiente, 8941 traducciones de core actualizadas,
+`drupal-version` 11.4.11, `composer audit` sin avisos, `git status` vacío.
+
+**QA en producción (desde aquí):** `/user/login` 200 (0.2 s); `/` → 302 a
+login (correcto); goblincreative.com 200; script del chat 200
+(`application/javascript`); a 390 px el botón (60×60, «Abrir chat con
+Goblin») abre el chat de ia.goblincreative.com con el menú y la caja de
+texto. Errores de consola: **ninguno del chat**; todos son de la página de
+goblincreative.com: **AddThis** (`s7.addthis.com` ya no existe: el servicio
+cerró en 2023, sobra en esa página), reCAPTCHA de Google, metricspot y
+Google Analytics.
 
 ---
 
