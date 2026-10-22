@@ -267,17 +267,6 @@ llega con diseño, y el registro (`drush ws --type=smtp`) sin errores.
   LIKE 'user.%'"` + `drush uli --uri=https://ia.goblincreative.com` (el
   enlace no se comparte) y cambiar la contraseña.
 
-### Respaldo de la base: aviso de «PROCESS privilege»
-
-`drush sql:dump` en cPanel avisa «Access denied; you need (at least one of)
-the PROCESS privilege(s)… when trying to dump tablespaces». El usuario de la
-base no tiene ese permiso global; las tablas sí se respaldan. Para no ver el
-aviso:
-
-```bash
-drush sql:dump --gzip --extra-dump=--no-tablespaces --result-file=$HOME/backups/NOMBRE.sql
-```
-
 ## Historial de despliegues
 
 | Fecha | Commit | Resultado | Notas |

@@ -120,7 +120,7 @@ status`: ` M web/.htaccess` (cPanel). El respaldo previo avisó «Access denied;
 you need the PROCESS privilege… when trying to dump tablespaces»: es el
 volcado de *tablespaces*, que el usuario de cPanel no tiene permitido; el
 respaldo de las tablas sí se guarda. Se evita con
-`--extra-dump=--no-tablespaces` (anotado en `docs/despliegue.md`).
+`--extra-dump=--no-tablespaces` (ya estaba en `docs/despliegue.md`, «Actualizar Drupal»).
 
 **Al desplegar:** en el siguiente cron (cada 5 min) se cierran todas las
 conversaciones en atención humana con más de 24 h sin mensajes (las pruebas
