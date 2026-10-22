@@ -34,11 +34,8 @@ lo **no comprobado**.
   `embed-check.mjs`, **195 pruebas automáticas**; prueba en vivo
   `tests/bots/goblin-live.php` (15 escenarios, sobre `ddev snapshot`).
 - **Siguiente (mañana, 2026-10-22):**
-  1. **Limpiar la prueba y probar desde cero:** fase 1 (respaldo con
-     `--extra-dump=--no-tablespaces` + listado de conversaciones), revisar
-     qué se borra, fase 2 (borra mensajes, acciones, leads y la
-     conversación; no hay borrado en cascada). Comandos en el chat del
-     2026-10-21; la conversación de prueba es la **15** (lead 2).
+  1. ~~Limpiar la prueba~~: **hecho 2026-10-22**, base en 0 (entrada de ese
+     día).
   2. **Prueba real completa por WhatsApp:** volver a poner el **…0231 en
      Goblin Soporte** («Números de WhatsApp de los encargados») y escribir
      desde **otro teléfono**: debe llegar el aviso con plantilla al …0231 y
@@ -78,6 +75,25 @@ lo **no comprobado**.
 | 7 | Añadir `#[LegacyRequirementsHook]` a `ai_whatsapp_automation_requirements()` (deprecado en 11.3, se elimina en 13) | Baja |
 | 8 | Tema Goblin: campo hexadecimal junto a cada selector de color | Baja |
 | 9 | Un usuario con sesión que abre `/user/login` recibe «acceso denegado» (comportamiento de core); podría redirigirse a su inicio | Baja |
+
+---
+
+## 2026-10-22 — Base limpia para probar desde cero
+
+**Qué:** el equipo confirmó que todas las conversaciones eran pruebas (chat
+web del 1 al 14 de octubre, sesiones `diag-jarvis-…` y la de WhatsApp). Se
+borraron las 15 conversaciones con sus 92 mensajes, 2 leads y 2 acciones
+(el borrado no es en cascada: se borró cada tipo por conversación). Respaldo
+antes: `~/backups/antes-limpiar-prueba-2026-10-22.sql.gz` (1.3 MB, con
+`--no-tablespaces`, sin aviso). Conteo final: 0 / 0 / 0 / 0.
+
+**Visto antes de borrar:** la conversación 15 seguía en atención humana a
+las ~17 h de su último mensaje (correcto: se libera a las 24 h); ya no se
+verá en ella. `drush ws --type=ai_whatsapp_automation` dice que el tipo no
+existe: hoy el registro solo tiene cron / página no encontrada / acceso
+denegado (sin comprobar por qué; probable recorte del registro).
+
+**Siguiente:** …0231 en Goblin Soporte y prueba desde otro teléfono.
 
 ---
 
