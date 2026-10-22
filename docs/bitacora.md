@@ -8,49 +8,44 @@ lo **no comprobado**.
 
 ## Dónde quedamos
 
-*(Actualizado 2026-10-21, fin del día.)*
+*(Actualizado 2026-10-22, fin del día. El equipo presenta el sistema hoy.)*
 
 - **En producción** https://ia.goblincreative.com, Drupal **11.4.11**
-  (`composer audit` sin avisos), HTTPS, cron cada 5 min, respaldo en
-  `~/backups` antes de cada despliegue grande. Último commit desplegado:
-  `00fb128` (+ solo documentación después).
-- **WhatsApp real funcionando:** Twilio aprobó el perfil de cumplimiento y
-  las 3 plantillas de aviso (2026-10-21); SID cargados en los bots. Primera
-  conversación real (Soporte) revisada y prompt ajustado.
-- **Avisos de lead:** por WhatsApp (plantilla) **y por correo**, siempre los
-  dos. Correo por SMTP (módulo `smtp`) desde avisos@goblincreative.com,
-  servidor `mail.goblincreative.com:465`; la contraseña se escribe en
-  Configuración → Sistema → SMTP y no se pierde al desplegar. Correos: Ventas
-  y Facturación → kevinyssen@, Soporte → soporte@. Encabezado «Goblin
-  Creative» (nombre comercial del cliente), sin botón.
+  (`composer audit` sin avisos), PHP 8.4.26 de CloudLinux **con el parche de
+  PHP2Shell** (CVE-2026-109618/109619, compilación del 2026-10-21), HTTPS,
+  cron cada 5 min, respaldo en `~/backups` antes de cada despliegue. Último
+  commit desplegado: `af50133` (después, solo documentación).
+- **Base limpia** (2026-10-22): se borraron todas las conversaciones de
+  prueba; lo que hay desde entonces es real o de la prueba del día (conv. 16,
+  lead 3).
+- **WhatsApp real funcionando** (Twilio aprobado, 3 plantillas). **Aviso de
+  lead probado en real:** desde el chat web llegó la plantilla por WhatsApp
+  al …0231 y el correo a soporte@.
+- **Avisos de lead:** WhatsApp (plantilla) + correo, siempre los dos. Correo
+  por SMTP desde avisos@goblincreative.com (`mail.goblincreative.com:465`;
+  contraseña cambiada el 22, se escribe en Configuración → Sistema → SMTP).
+  Ventas y Facturación → kevinyssen@, Soporte → soporte@ y WhatsApp …5529
+  (Ventas/Facturación) y …0231 (Soporte). Los números exigen código de país.
 - **Atención humana:** vuelve al bot a las 24 h sin mensajes (con el menú);
-  mientras tanto el contacto recibe «Tu caso ya está con el equipo de…»;
-  «menú» le devuelve el bot.
-- **Bots de Goblin:** recepción con menú (1 Ventas, 2 Soporte, 3
-  Facturación), saludo fijo por área, varios casos por conversación,
-  respuestas breves, Ventas nunca da precios. Soporte da los datos de correo
-  del hosting (`mail.<dominio>`, 993/995/465) y marca urgencia en caídas.
-- **QA:** `tests/visual/qa-sweep.mjs` (101 páginas, 3 roles),
-  `embed-check.mjs`, **195 pruebas automáticas**; prueba en vivo
-  `tests/bots/goblin-live.php` (15 escenarios, sobre `ddev snapshot`).
-- **Siguiente (mañana, 2026-10-22):**
-  1. ~~Limpiar la prueba~~: **hecho 2026-10-22**, base en 0 (entrada de ese
-     día).
-  2. **Aviso real de lead: llegó bien** (2026-10-22, desde el chat web).
-     Falta la parte que solo pasa en WhatsApp, desde otro número: volver a poner el **…0231 en
-     Goblin Soporte** («Números de WhatsApp de los encargados») y escribir
-     desde **otro teléfono**: debe llegar el aviso con plantilla al …0231 y
-     el correo a soporte@. Probar también: datos de correo en iPhone,
-     «quiero hablar con un asesor», urgencia, la respuesta «Tu caso ya está
-     con el equipo…» y «menú».
-  3. ~~Contraseña de avisos@~~: **cambiada** (confirmado por el equipo,
-     2026-10-22).
-  4. ~~Drupal 11.4.11~~: **desplegado y verificado** (2026-10-22). Firefox
-     de Playwright no arranca en esta Mac (ver entrada).
-  5. Rotar la clave de pruebas de OpenAI (se compartió por chat).
-  6. Traducir al español las demás pantallas del módulo (pendiente 1).
-  7. Soporte, sin resolver del todo: «Además: …» (3/6) y repetir el nombre
-     cuando el cliente lo ignora; ante «¿qué es un MX?» ofrece revisarlos.
+  mientras tanto «Tu caso ya está con el equipo de…»; «menú» devuelve el bot.
+- **Registro de Drupal:** 100000 líneas (~30 días); el aviso por WhatsApp
+  registra «X of Y sent».
+- **QA:** 196 pruebas, `qa-sweep.mjs` (101 páginas, 3 roles), `run.mjs`
+  (Chromium y WebKit, 28 pantallas), `embed-check.mjs`, `run-real.mjs`
+  (Firefox real), prueba en vivo `tests/bots/goblin-live.php` (15 escenarios).
+- **Siguiente:**
+  1. **Prueba por WhatsApp desde otro número** (no el …0231, que es
+     encargado): después del lead, «¿ya vieron mi caso?» → «Tu caso ya está
+     con el equipo…»; «menú» → menú; a las 24 h vuelve sola al bot.
+  2. Firefox de Playwright no arranca en esta Mac (macOS 27.0.1): actualizar
+     Playwright o adaptar `embed-check` al Firefox real.
+  3. PHP de DDEV en local (8.4.18): actualizar para igualar producción.
+  4. Rotar la clave de pruebas de OpenAI (se compartió por chat).
+  5. Traducir al español las demás pantallas del módulo (pendiente 1).
+  6. Soporte, sin resolver del todo: «Además: …» (3/6), repetir el nombre
+     cuando el cliente lo ignora, y ante «¿qué es un MX?» ofrece revisarlos.
+  7. Sugerencia para el sitio goblincreative.com: quitar el script de
+     **AddThis** (el servicio cerró en 2023; da error en cada visita).
 
 **Por decidir (equipo):**
 - Números de WhatsApp del equipo que reciben los avisos de leads (Soporte
